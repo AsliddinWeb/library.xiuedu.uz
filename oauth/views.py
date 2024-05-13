@@ -23,6 +23,31 @@ class AuthLoginView(View):
 class AuthCallbackView(View):
     def get(self, request):
 
-        params = request.GET
+        code = request.GET.get('code')
+        if code is None: return JsonResponse({'error': 'code is missing!'})
 
-        return JsonResponse({'code': params.get('code')})
+        client = oAuth2Client(
+            client_id = settings.CLIENT_ID,
+            client_secret = settings.CLIENT_SECRET,
+            redirect_uri = settings.REDIRECT_URI,
+            authorize_url = settings.AUTHORIZE_URL,
+            token_url = settings.ACCESS_TOKEN_URL,
+            resource_owner_url = settings.RESOURCE_OWNER_URL
+        )
+        access_token_response = client.get_access_token(code)
+
+        full_info = {}
+        if 'access_token' in access_token_response:
+            access_token = access_token_response['access_token']
+            user_details = client.get_user_details(access_token)
+            full_info['details'] = user_details
+            full_info['token'] = access_token
+            return JsonResponse(full_info)
+        else:
+            return JsonResponse(
+                {
+                    'status': False,
+                    'error': 'Failed to obtain access token'
+                },
+                status=400
+            )

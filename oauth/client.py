@@ -24,14 +24,18 @@ class oAuth2Client:
         return url
 
     def get_access_token(self, auth_code):
-        print("A"*90)
+        payload = {
+            'client_id': self.client_id,
+            'client_secret': self.client_secret,
+            'redirect_uri': self.redirect_uri,
+            'response_type': 'code',
+        }
         payload = {
             'client_id': self.client_id,
             'client_secret': self.client_secret,
             'code': auth_code,
             'redirect_uri': self.redirect_uri,
-            # 'grant_type': 'authorization_code'
-            'grant_type': 'one_code'
+            'grant_type': 'authorization_code'
         }
         response = requests.post(self.token_url, data=payload)
         print(response.status_code)
