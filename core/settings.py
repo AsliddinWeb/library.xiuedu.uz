@@ -9,8 +9,12 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# loading env
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -124,9 +128,9 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-CLIENT_ID = 4
-CLIENT_SECRET = 'ZhCtBuwbJXALp6VG1BiqrExJEZ5fUKJEsWuXUD8g'
-REDIRECT_URI = 'https://d30d-195-158-14-110.ngrok-free.app/callback/'
-AUTHORIZE_URL = 'https://hemis.uzfi.uz/oauth/authorize'
-ACCESS_TOKEN_URL = 'https://hemis.uzfi.uz/oauth/access-token'
-RESOURCE_OWNER_URL = 'https://hemis.uzfi.uz/oauth/api/user?fields=id,uuid,employee_id_number,type,roles,name,login,email,picture,firstname,surname,patronymic,birth_date,university_id,phone'
+CLIENT_ID = os.getenv('CLIENT_ID')
+CLIENT_SECRET = os.getenv('CLIENT_SECRET')
+REDIRECT_URI = os.getenv('REDIRECT_URI')
+AUTHORIZE_URL = os.getenv('AUTHORIZE_URL')
+ACCESS_TOKEN_URL = os.getenv('ACCESS_TOKEN_URL')
+RESOURCE_OWNER_URL = os.getenv('RESOURCE_OWNER_URL')
