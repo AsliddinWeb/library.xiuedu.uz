@@ -44,7 +44,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -124,10 +124,9 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-CLIENT_ID=4
-CLIENT_SECRET='ZhCtBuwbJXALp6VG1BiqrExJEZ5fUKJEsWuXUD8g'
-REDIRECT_URI='https://d30d-195-158-14-110.ngrok-free.app/callback/'
-AUTHORIZE_URL='https://hemis.uzfi.uz/oauth/authorize'
+CLIENT_ID = 4
+CLIENT_SECRET = 'ZhCtBuwbJXALp6VG1BiqrExJEZ5fUKJEsWuXUD8g'
+REDIRECT_URI = 'https://d30d-195-158-14-110.ngrok-free.app/callback/'
+AUTHORIZE_URL = 'https://hemis.uzfi.uz/oauth/authorize'
 ACCESS_TOKEN_URL = 'https://hemis.uzfi.uz/oauth/access-token'
-RESOURCE_OWNER_URL = 'https://univer.hemis.uz/oauth/api/user?fields=id,uuid,employee_id_number,type,roles,name,login,email,picture,firstname,surname,patronymic,birth_date,university_id,phone'
-
+RESOURCE_OWNER_URL = 'https://hemis.uzfi.uz/oauth/api/user?fields=id,uuid,employee_id_number,type,roles,name,login,email,picture,firstname,surname,patronymic,birth_date,university_id,phone'

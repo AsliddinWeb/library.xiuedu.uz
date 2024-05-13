@@ -13,12 +13,10 @@ class oAuth2Client:
 
     def get_authorization_url(self):
         payload = {
-            'clientId': self.client_id,
-            'clientSecret': self.client_secret,
-            'redirectUri': self.redirect_uri,
-            'grand_type': 'authorization_code'
-            # 'urlAccessToken': self.token_url,
-            # 'urlResourceOwnerDetails': self.resource_owner_url,
+            'client_id': self.client_id,
+            'client_secret': self.client_secret,
+            'redirect_uri': self.redirect_uri,
+            'response_type': 'code',
         }
 
         url = self.authorize_url + "?" + urlencode(payload)
