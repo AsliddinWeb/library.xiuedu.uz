@@ -32,8 +32,7 @@ class oAuth2Client:
             'grant_type': 'authorization_code'
         }
         response = requests.post(self.token_url, data=payload)
-        print(response.status_code)
-        print(response.json())
+        
         return response.json()
 
     def get_user_details(self, access_token):
