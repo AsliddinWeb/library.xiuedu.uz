@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block sidebar %}
+{% include 'sidebar/library_admin.html' %}
+{% endblock sidebar %}
+
+{% block topbar_header %}
+{% include 'topbar_header/library_admin.html' %}
+{% endblock topbar_header %}
+
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Mualliflar</h4>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card" id="customerList">
+                <div class="card-header border-bottom-dashed">
+
+                    <div class="row g-4 align-items-center">
+                        <div class="col-sm">
+                            <div>
+                                <h5 class="card-title mb-0">Mualliflar</h5>
+                            </div>
+                        </div>
+                        <div class="col-sm-auto">
+                            <div class="d-flex flex-wrap align-items-start gap-2">
+                                <button class="btn btn-soft-danger" id="remove-actions" onclick="deleteMultiple()"><i
+                                        class="ri-delete-bin-2-line"></i></button>
+                                <button type="button" class="btn btn-primary add-btn" data-bs-toggle="modal"
+                                        id="create-btn" data-bs-target="#showModal"><i
+                                        class="ri-add-line align-bottom me-1"></i> Muallif qo'shish
+                                </button>
+                                <button type="button" class="btn btn-secondary"><i
+                                        class="ri-file-download-line align-bottom me-1"></i> Excel yukab olish
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body border-bottom-dashed border-bottom">
+                    <form>
+                        <div class="row g-3 align-items-center">
+                            <!-- Search Box -->
+                            <div class="col-lg-9 col-md-9 col-sm-12">
+                                <div class="search-box">
+                                    <input type="text" class="form-control search"
+                                           placeholder="Qidiruv uchun ism yoki familiya kiriting...">
+                                    <i class="ri-search-line search-icon"></i>
+                                </div>
+                            </div>
+
+                            <!-- Filters Button -->
+                            <div class="col-lg-3 col-md-3 col-sm-12">
+                                <div>
+                                    <button type="button" class="btn btn-primary w-100" onclick="SearchData();">
+                                        <i class="ri-equalizer-fill me-2 align-bottom"></i> Filterlash
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!--end row-->
+                    </form>
+                </div>
+                <div class="card-body">
+                    <div>
+                        <div class="table-responsive table-card mb-1">
+                            <table class="table align-middle" id="customerTable">
+                                <thead class="table-light text-muted">
+                                <tr>
+                                    <th scope="col" style="width: 50px;">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="checkAll"
+                                                   value="option">
+                                        </div>
+                                    </th>
+
+                                    <th class="sort" data-sort="customer_name">Customer</th>
+                                    <th class="sort" data-sort="email">Email</th>
+                                    <th class="sort" data-sort="phone">Phone</th>
+                                    <th class="sort" data-sort="date">Joining Date</th>
+                                    <th class="sort" data-sort="status">Status</th>
+                                    <th class="sort" data-sort="action">Action</th>
+                                </tr>
+                                </thead>
+                                <tbody class="list form-check-all">
+                                <tr>
+                                    <th scope="row">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="chk_child"
+                                                   value="option1">
+                                        </div>
+                                    </th>
+                                    <td class="id" style="display:none;"><a href="javascript:void(0);"
+                                                                            class="fw-medium link-primary">#VZ2101</a>
+                                    </td>
+                                    <td class="customer_name">Mary Cousar</td>
+                                    <td class="email">marycousar@velzon.com</td>
+                                    <td class="phone">580-464-4694</td>
+                                    <td class="date">06 Apr, 2021</td>
+                                    <td class="status"><span
+                                            class="badge bg-success-subtle text-success text-uppercase">Active</span>
+                                    </td>
+                                    <td>
+                                        <ul class="list-inline hstack gap-2 mb-0">
+                                            <li class="list-inline-item edit" data-bs-toggle="tooltip"
+                                                data-bs-trigger="hover" data-bs-placement="top" aria-label="Edit"
+                                                data-bs-original-title="Edit">
+                                                <a href="#showModal" data-bs-toggle="modal"
+                                                   class="text-primary d-inline-block edit-item-btn">
+                                                    <i class="ri-pencil-fill fs-16"></i>
+                                                </a>
+                                            </li>
+                                            <li class="list-inline-item" data-bs-toggle="tooltip"
+                                                data-bs-trigger="hover" data-bs-placement="top" aria-label="Remove"
+                                                data-bs-original-title="Remove">
+                                                <a class="text-danger d-inline-block remove-item-btn"
+                                                   data-bs-toggle="modal" href="#deleteRecordModal">
+                                                    <i class="ri-delete-bin-5-fill fs-16"></i>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            <div class="noresult" style="display: none">
+                                <div class="text-center">
+                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                               colors="primary:#121331,secondary:#08a88a"
+                                               style="width:75px;height:75px">
+                                    </lord-icon>
+                                    <h5 class="mt-2">Sorry! No Result Found</h5>
+                                    <p class="text-muted mb-0">We've searched more than 150+ Customers
+                                        We did not find any
+                                        Customers for you search.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <div class="pagination-wrap hstack gap-2">
+                                <a class="page-item pagination-prev disabled" href="#">
+                                    Previous
+                                </a>
+                                <ul class="pagination listjs-pagination mb-0">
+                                    <li class="active"><a class="page" href="#" data-i="1" data-page="8">1</a></li>
+                                </ul>
+                                <a class="page-item pagination-next" href="#">
+                                    Next
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="showModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header bg-light p-3">
+                                    <h5 class="modal-title" id="exampleModalLabel">Muallif qo'shish</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                                            id="close-modal"></button>
+                                </div>
+                                <form class="tablelist-form" method="post" action="{% url 'book_app:author_create' %}" autocomplete="off">
+                                    {% csrf_token %}
+
+                                    <div class="modal-body">
+                    <div class="mb-3">
+                        {{ create_form.full_name.label_tag }}
+                        {{ create_form.full_name }}
+                        {% if create_form.full_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ create_form.full_name.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ create_form.bio.label_tag }}
+                        {{ create_form.bio }}
+                        {% if create_form.bio.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ create_form.bio.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Yopish</button>
+                    <button type="submit" class="btn btn-success">Saqlash</button>
+                </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal -->
+                    <div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="btn-close" id="deleteRecord-close"
+                                            data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mt-2 text-center">
+                                        <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop"
+                                                   colors="primary:#f7b84b,secondary:#f06548"
+                                                   style="width:100px;height:100px"></lord-icon>
+                                        <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                                            <h4>Are you sure ?</h4>
+                                            <p class="text-muted mx-4 mb-0">Are you sure you want to
+                                                remove this record ?</p>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                                        <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close
+                                        </button>
+                                        <button type="button" class="btn w-sm btn-danger " id="delete-record">Yes,
+                                            Delete It!
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--end modal -->
+                </div>
+            </div>
+
+        </div>
+        <!--end col-->
+    </div>
+</div>
+{% endblock content %}

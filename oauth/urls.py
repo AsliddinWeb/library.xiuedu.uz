@@ -1,8 +1,10 @@
 from django.urls import path
-from .views import AuthLoginView, AuthCallbackView
+from .views import AuthLoginView, AuthCallbackView, EmployeAuthLoginView
 
 
 urlpatterns = [
-    path('auth/', AuthLoginView.as_view()),
+    path('student-login/', AuthLoginView.as_view(), name='student_login'),
+    path('employee-login/', EmployeAuthLoginView.as_view()),
+
     path('callback/', AuthCallbackView.as_view()),
 ]

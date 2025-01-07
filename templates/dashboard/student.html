@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block sidebar %}
+{% include 'sidebar/student.html' %}
+{% endblock sidebar %}
+
+{% block topbar_header %}
+{% include 'topbar_header/student.html' %}
+{% endblock topbar_header %}
+
+
+{% block custom_css %}
+<!--Swiper slider css-->
+<link href="{% static 'assets/libs/swiper/swiper-bundle.min.css' %}" rel="stylesheet" type="text/css">
+{% endblock custom_css %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Bosh sahifa</h4>
+
+            </div>
+        </div>
+    </div>
+    <!-- end page title -->
+
+    <div class="row project-wrapper">
+        <div class="col-xl-4">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-sm flex-shrink-0">
+                                                    <span class="avatar-title bg-primary-subtle text-primary rounded-2 fs-2">
+                                                        <i data-feather="briefcase" class="text-primary"></i>
+                                                    </span>
+                        </div>
+                        <div class="flex-grow-1 overflow-hidden ms-3">
+                            <p class="text-uppercase fw-medium text-muted text-truncate mb-3">
+                                Mavjud kitoblar</p>
+                            <div class="d-flex align-items-center mb-3">
+                                <h4 class="fs-4 flex-grow-1 mb-0">
+                                    <span class="counter-value" data-target="{{ all_books.count }}">0</span>
+                                    <span> ta</span>
+                                </h4>
+
+                                <span class="badge bg-success-subtle text-success fs-12"><i
+                                        class="ri-add-line fs-13 align-middle me-1"></i>{{ recent_books.count }} ta</span>
+                            </div>
+                            <p class="text-muted text-truncate mb-0">Oxirgi oyda</p>
+                        </div>
+                    </div>
+                </div><!-- end card body -->
+            </div>
+        </div><!-- end col -->
+
+        <div class="col-xl-4">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-sm flex-shrink-0">
+                                                    <span class="avatar-title bg-warning-subtle text-warning rounded-2 fs-2">
+                                                        <i data-feather="award" class="text-warning"></i>
+                                                    </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <p class="text-uppercase fw-medium text-muted mb-3">Hozir ijaraga berilgan </p>
+                            <div class="d-flex align-items-center mb-3">
+                                <h4 class="fs-4 flex-grow-1 mb-0">
+                                    <span class="counter-value" data-target="{{ rental_books.count }}">0</span>
+                                    <span> ta</span>
+                                </h4>
+                                <span class="badge bg-success-subtle text-success fs-12"><i
+                                        class="ri-add-line fs-13 align-middle me-1"></i>{{ rental_books.count }} ta</span>
+                            </div>
+                            <p class="text-muted mb-0">Oxirgi oyda</p>
+                        </div>
+                    </div>
+                </div><!-- end card body -->
+            </div>
+        </div><!-- end col -->
+
+        <div class="col-xl-4">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-sm flex-shrink-0">
+                                                    <span class="avatar-title bg-info-subtle text-info rounded-2 fs-2">
+                                                        <i data-feather="user" class="text-info"></i>
+                                                    </span>
+                        </div>
+                        <div class="flex-grow-1 overflow-hidden ms-3">
+                            <p class="text-uppercase fw-medium text-muted text-truncate mb-3">
+                                Jami foydalanuvchilar</p>
+                            <div class="d-flex align-items-center mb-3">
+                                <h4 class="fs-4 flex-grow-1 mb-0">
+                                    <span class="counter-value" data-target="{{ all_users.count }}">0</span>
+                                    <span> ta</span>
+                                </h4>
+                                <span class="badge bg-success-subtle text-success fs-12"><i
+                                        class="ri-add-line fs-13 align-middle me-1"></i>{{ all_users.count }} ta</span>
+                            </div>
+                            <p class="text-muted text-truncate mb-0">Oxirgi oyda</p>
+                        </div>
+                    </div>
+                </div><!-- end card body -->
+            </div>
+        </div><!-- end col -->
+    </div><!-- end row -->
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0 text-center">🔎 Kitob qidirish</h4>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="row g-3">
+                            <div class="col-xxl-4 col-sm-12">
+                                <div class="search-box">
+                                    <input type="text" class="form-control search bg-light border-light" id="searchJob"
+                                           autocomplete="off" placeholder="Kitob qidirish...">
+                                    <i class="ri-search-line search-icon"></i>
+                                </div>
+                            </div>
+                            <!--end col-->
+                            <div class="col-xxl-4 col-sm-4">
+                                <!-- Select -->
+                                <div class="input-group">
+                                    <select class="form-select bg-light">
+                                        <option selected>Katalogni tanlang...</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <!--end col-->
+                            <div class="col-xxl-2 col-sm-4">
+                                <!-- Select -->
+                                <div class="input-group">
+                                    <select class="form-select bg-light">
+                                        <option selected>Tilni tanlang...</option>
+
+                                        <option value="uz">O'zbekcha</option>
+
+                                    </select>
+                                </div>
+                            </div>
+                            <!--end col-->
+
+                            <div class="col-xxl-2 col-sm-4">
+                                <button type="button" class="btn btn-primary w-100" onclick="filterData();">
+                                    <i class="ri-equalizer-fill me-1 align-bottom"></i> Filterlash
+                                </button>
+                            </div>
+                            <!--end col-->
+                        </div>
+                        <!--end row-->
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0 text-center">🚀 Ommabop kitoblar</h4>
+                </div><!-- end card header -->
+                <div class="card-body bg-light">
+                    <!-- Swiper -->
+                    <div class="swiper responsive-swiper rounded gallery-light pb-4">
+                        <div class="swiper-wrapper">
+                            {% for book in popular_books %}
+                            <div class="swiper-slide">
+                                <div class="card card-height-100">
+                                    <div class="card-body">
+                                        <div class="d-flex flex-column h-100">
+                                            <div class="d-flex">
+                                                <div class="flex-grow-1">
+                                                    <p class="mb-4 text-success">⭐️ Ommabop</p>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex mb-2">
+                                                <div class="flex-shrink-0 me-3">
+                                                    <div class="avatar-sm">
+                                                        <span class="avatar-title bg-warning-subtle rounded p-2">
+                                                            {% if book.cover_image %}
+                                                                <img src="{{ book.cover_image.url }}"
+                                                                     alt="{{ book.title }}"
+                                                                     class="img-fluid p-1">
+                                                            {% else %}
+                                                                <img src="{% static 'assets/images/new/default_cover.png' %}"
+                                                                     alt="Kitob rasmi"
+                                                                     class="img-fluid p-1">
+                                                            {% endif %}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h5 class="mb-1 fs-14" style="min-height: 4rem;"><a
+                                                            href="{% url 'book_app:student_book_detail' pk=book.id %}"
+                                                            class="text-body">{{ book.title|truncatewords:7 }}</a></h5>
+                                                    <p class="text-muted text-truncate-two-lines mb-3">{{ book.language }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="mt-auto">
+                                                <div class="d-flex mb-2">
+                                                    <div class="flex-grow-1">
+                                                        <div>{{ book.description|truncatewords:5 }}</div>
+                                                    </div>
+                                                    <div class="flex-shrink-0">
+                                                        <div><i class="ri-list-check align-bottom me-1 text-muted"></i>
+                                                            {{ book.page_count }} bet
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <!-- end card body -->
+                                    <div class="card-footer bg-transparent border-top-dashed py-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="text-muted">
+                                                    <i class="bx bx-layer me-1 align-center"></i>Nusxalar soni: {{ book.copy_count }} ta.
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+                                    <!-- end card footer -->
+                                </div>
+                                <!-- end card -->
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="swiper-pagination swiper-pagination-dark"></div>
+                    </div>
+                </div><!-- end card-body -->
+            </div><!-- end card -->
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0 text-center">⚡️ Yangi kitoblar</h4>
+                </div>
+                <div class="card-body bg-light">
+                    <div class="row">
+                        {% for book in recent_books %}
+                        <div class="col-xxl-3 col-sm-6 project-card">
+                            <div class="card card-height-100">
+                                <div class="card-body">
+                                    <div class="d-flex flex-column h-100">
+                                        <div class="d-flex">
+                                            <div class="flex-grow-1">
+                                                <p class="mb-4 text-success">⭐️ Yangi</p>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex mb-2">
+                                            <div class="flex-shrink-0 me-3">
+                                                <div class="avatar-sm">
+                                                        <span class="avatar-title bg-warning-subtle rounded p-2">
+                                                            {% if book.cover_image %}
+                                                                <img src="{{ book.cover_image.url }}"
+                                                                     alt="{{ book.title }}"
+                                                                     class="img-fluid p-1">
+                                                            {% else %}
+                                                                <img src="{% static 'assets/images/new/default_cover.png' %}"
+                                                                     alt="Kitob rasmi"
+                                                                     class="img-fluid p-1">
+                                                            {% endif %}
+                                                        </span>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h5 class="mb-1 fs-14"><a
+                                                        href="{% url 'book_app:student_book_detail' pk=book.id %}"
+                                                        class="text-body">{{ book.title }}</a></h5>
+                                                <p class="text-muted text-truncate-two-lines mb-3">{{ book.language }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="mt-auto">
+                                            <div class="d-flex mb-2">
+                                                <div class="flex-grow-1">
+                                                    <div>{{ book.description|truncatewords:5 }}</div>
+                                                </div>
+                                                <div class="flex-shrink-0">
+                                                    <div><i class="ri-list-check align-bottom me-1 text-muted"></i>
+                                                        {{ book.page_count }} bet
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <!-- end card body -->
+                                <div class="card-footer bg-transparent border-top-dashed py-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="text-muted">
+                                                <i class="ri-calendar-event-fill me-1 align-bottom"></i> {{ book.created_at }}
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                                <!-- end card footer -->
+                            </div>
+                            <!-- end card -->
+                        </div>
+                        <!-- end col -->
+                        {% endfor %}
+
+                        <div class="text-center my-3">
+                            <a href="#" class="btn btn-success bg-gradient waves-effect waves-light">📙 Barcha kitoblar</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+</div>
+<!-- container-fluid -->
+{% endblock content %}
+
+{% block custom_js %}
+<!--Swiper slider js-->
+<script src="{% static 'assets/libs/swiper/swiper-bundle.min.js' %}"></script>
+
+<!-- swiper.init js -->
+<script src="{% static 'assets/js/pages/swiper.init.js' %}"></script>
+{% endblock custom_js %}

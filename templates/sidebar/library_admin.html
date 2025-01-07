@@ -1,0 +1,118 @@
+<ul class="navbar-nav" id="navbar-nav">
+    <li class="menu-title"><span data-key="t-menu">Menyular</span></li>
+
+    <li class="nav-item">
+        <a class="nav-link menu-link" href="/dashboard" role="button" aria-expanded="false">
+            <i class="bx bxs-dashboard"></i> <span data-key="t-dashboards">Bosh sahifa</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link menu-link" href="#sidebarBooks" data-bs-toggle="collapse" role="button" aria-expanded="false"
+           aria-controls="sidebarBooks">
+            <i class="bx bx-layer"></i> <span data-key="t-apps">Kitob qo'shish <span
+                class="text-success">(+)</span></span>
+        </a>
+        <div class="collapse menu-dropdown" id="sidebarBooks">
+            <ul class="nav nav-sm flex-column">
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-success"> Kitob qo'shish </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-warning"> Kitob nusxasini qo'shish </a>
+                </li>
+
+            </ul>
+        </div>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link menu-link" href="#sidebarBooksPanel" data-bs-toggle="collapse" role="button"
+           aria-expanded="false" aria-controls="sidebarBooksPanel">
+            <i class="bx bx-layout"></i> <span data-key="t-apps">Kitoblar boshqaruvi</span>
+        </a>
+        <div class="collapse menu-dropdown" id="sidebarBooksPanel">
+            <ul class="nav nav-sm flex-column">
+
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-warning"> Berilgan kitoblar </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-danger"> Qaytarilmagan kitoblar </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-success"> Qaytarilmagan kitoblar </a>
+                </li>
+
+            </ul>
+        </div>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link menu-link" href="#sidebarBookExchange" data-bs-toggle="collapse" role="button"
+           aria-expanded="false" aria-controls="sidebarBookExchange">
+            <i class="bx bx-briefcase-alt"></i> <span data-key="t-advance-ui">Kitoblar almashinuvi</span>
+        </a>
+        <div class="collapse menu-dropdown" id="sidebarBookExchange">
+            <ul class="nav nav-sm flex-column">
+
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-success">Kitob berish</a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-warning">Kitobni qaytarib olish</a>
+                </li>
+
+            </ul>
+        </div>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link menu-link" href="#sidebarStudents" data-bs-toggle="collapse" role="button"
+           aria-expanded="false" aria-controls="sidebarStudents">
+            <i class="bx bx-sitemap"></i> <span data-key="t-multi-level">Talabalar boshqaruvi</span>
+        </a>
+        <div class="collapse menu-dropdown" id="sidebarStudents">
+            <ul class="nav nav-sm flex-column">
+
+                <li class="nav-item">
+                    <a href="#" class="nav-link"> Talaba qo'shish </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#" class="nav-link"> Barcha talabalar </a>
+                </li>
+
+            </ul>
+        </div>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link menu-link collapsed" href="#sidebarAdditional" data-bs-toggle="collapse" role="button"
+           aria-expanded="false" aria-controls="sidebarAdditional">
+            <i class="bx bx-palette"></i> <span data-key="t-base-ui">Qo'shimcha bo'limlar</span>
+        </a>
+        <div class="collapse menu-dropdown {% if sidebarAdditional %}show{% endif %}" id="sidebarAdditional">
+            <div class="row">
+                <div class="col-lg-4">
+                    <ul class="nav nav-sm flex-column">
+
+                        <li class="nav-item">
+                            <a href="{% url 'book_app:authors_list' %}" class="nav-link {% if sidebarAdditionalAuthors %}active{% endif %}">Mualliflar</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">Kataloglar</a>
+                        </li>
+
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </li>
+
+</ul>

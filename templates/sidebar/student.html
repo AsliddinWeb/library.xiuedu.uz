@@ -1,0 +1,46 @@
+<ul class="navbar-nav" id="navbar-nav">
+    <li class="menu-title"><span data-key="t-menu">Menyular</span></li>
+
+    <li class="nav-item">
+        <a class="nav-link menu-link" href="/dashboard" role="button" aria-expanded="false">
+            <i class="bx bxs-dashboard"></i> <span data-key="t-dashboards">Bosh sahifa</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link menu-link" href="#sidebarCategories" data-bs-toggle="collapse" role="button" aria-expanded="false"
+           aria-controls="sidebarCategories">
+            <i class="bx bx-layer"></i> <span data-key="t-apps">Kategoriyalar ({{ categories.count }})</span>
+        </a>
+        <div class="collapse menu-dropdown" id="sidebarCategories">
+            <ul class="nav nav-sm flex-column">
+                {% for category in categories %}
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">{{ category.name }} ({{ category.book_count }})</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link menu-link" href="#sidebarBooks" data-bs-toggle="collapse" role="button"
+           aria-expanded="false" aria-controls="sidebarBooks">
+            <i class="bx bx-layout"></i> <span data-key="t-apps">Kitoblar boshqaruvi</span>
+        </a>
+        <div class="collapse menu-dropdown" id="sidebarBooks">
+            <ul class="nav nav-sm flex-column">
+
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-success"> O'qiyotgan kitoblarim </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-warning"> Qaytargan kitoblarim </a>
+                </li>
+
+            </ul>
+        </div>
+    </li>
+
+</ul>

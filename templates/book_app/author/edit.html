@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <h4 class="mb-3">Muallifni tahrirlash</h4>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="full_name">Ism Familiya</label>
+                    <input type="text" name="full_name" id="full_name" class="form-control" value="{{ author.full_name }}" required>
+                </div>
+                <div class="form-group mt-3">
+                    <label for="bio">Muallif haqida</label>
+                    <textarea name="bio" id="bio" class="form-control">{{ author.bio }}</textarea>
+                </div>
+                <div class="form-group mt-4">
+                    <button type="submit" class="btn btn-success">Saqlash</button>
+                    <a href="{% url 'book_app:authors_list' %}" class="btn btn-secondary">Bekor qilish</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}

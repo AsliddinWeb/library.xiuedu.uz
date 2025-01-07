@@ -1,0 +1,711 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en" data-layout="horizontal" data-topbar="dark" data-sidebar-size="lg" data-sidebar="light"
+    data-sidebar-image="none" data-preloader="disable">
+
+<head>
+
+    <meta charset="utf-8" />
+    <title>Elektron kutubxona - Xalqaro Innovatsion Universitet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="Elektron kutubxona - Xalqaro Innovatsion Universitet" name="description" />
+    <meta content="CODE-TECH Group" name="author" />
+
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{% static 'assets/images/favicon.ico' %}">
+
+    <!-- Swiper slider css -->
+    <link href="{% static 'assets/libs/swiper/swiper-bundle.min.css' %}" rel="stylesheet" type="text/css" />
+
+    <!-- Layout config Js -->
+    <script src="{% static 'assets/js/layout.js' %}"></script>
+
+    <!-- Bootstrap Css -->
+    <link href="{% static 'assets/css/bootstrap.min.css' %}" rel="stylesheet" type="text/css" />
+
+    <!-- Icons Css -->
+    <link href="{% static 'assets/css/icons.min.css' %}" rel="stylesheet" type="text/css" />
+
+    <!-- App Css -->
+    <link href="{% static 'assets/css/app.min.css' %}" rel="stylesheet" type="text/css" />
+
+    <!-- Custom Css -->
+    <link href="{% static 'assets/css/custom.min.css' %}" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body data-bs-spy="scroll" data-bs-target="#navbar-example">
+
+    <!-- Begin page -->
+    <div class="layout-wrapper landing">
+        <nav class="navbar navbar-expand-lg navbar-landing navbar-light fixed-top" id="navbar">
+            <div class="container">
+                <a class="navbar-brand" href="/">
+                    <img src="{% static 'assets/images/pngs/logo.png' %}" class="card-logo card-logo-dark" alt="logo dark" height="60">
+                    <img src="{% static 'assets/images/pngs/logo.png' %}" class="card-logo card-logo-light" alt="logo light"
+                        height="60">
+                </a>
+                <button class="navbar-toggler py-0 fs-20 text-body" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <i class="mdi mdi-menu"></i>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav mx-auto mt-2 mt-lg-0" id="navbar-example">
+                        <li class="nav-item">
+                            <a class="nav-link fs-14 fw-semibold active" href="#hero">Bosh sahifa</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fs-14 fw-semibold" href="#imkoniyatlar">Imkoniyatlar</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fs-14 fw-semibold" href="#ishJarayoni">Ish jarayoni</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fs-14 fw-semibold" href="#faq">F.A.Q</a>
+                        </li>
+                    </ul>
+
+                    <div class="">
+                        <a href="{% url 'dashboard' %}" class="btn btn-success">Kutubxonaga kirish</a>
+                    </div>
+                </div>
+
+            </div>
+        </nav>
+        <div class="bg-overlay bg-overlay-pattern"></div>
+        <!-- end navbar -->
+
+        <!-- start hero section -->
+        <section class="section nft-hero" id="hero">
+            <div class="bg-overlay"></div>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 col-sm-10">
+                        <div class="text-center">
+                            <h1 class="display-4 fw-semibold mb-4 lh-base text-white">
+                                <span class="text-success">Xalqaro Innovatsion Universitet</span>
+                                <br>Raqamli kutubxonasi!</h1>
+                            <p class="lead text-white-50 lh-base mb-4 pb-2">Universitetimiz online kutubxonasida eng
+                                mashhur kitoblar, ilmiy maqolalar va talabalar uchun zarur bo'lgan boshqa resurslar
+                                mavjud. O'zingiz uchun yangi imkoniyatlarni oching va bilim sari ilk qadamni qo'ying!
+                            </p>
+
+                            <div class="hstack gap-2 justify-content-center">
+                                <a href="{% url 'dashboard' %}" class="btn btn-primary">Kutubxonaga kirish <i
+                                        class="ri-arrow-right-line align-middle ms-1"></i></a>
+                                <a href="" class="btn btn-danger">Imkoniyatlar bilan tanishing <i
+                                        class="ri-arrow-right-line align-middle ms-1"></i></a>
+                            </div>
+                        </div>
+                    </div><!--end col-->
+                </div><!-- end row -->
+            </div><!-- end container -->
+        </section><!-- end hero section -->
+
+        <!-- start wallet -->
+        <section class="section" id="imkoniyatlar">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="text-center mb-5">
+                            <h2 class="mb-3 fw-bold lh-base">Kutubxona Imkoniyatlari</h2>
+                            <p class="text-muted">Eng yaxshi resurslardan foydalanish, shaxsiylashtirish va tezkor
+                                qidiruv imkoniyatlari bilan ta’lim olish tajribangizni yangi bosqichga olib chiqing!</p>
+                        </div>
+                    </div><!-- end col -->
+                </div><!-- end row -->
+
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <div class="card text-center border shadow-none">
+                            <div class="card-body py-5 px-4">
+                                <img src="{% static 'assets/images/pngs/search.png' %}" alt="" height="55" class="mb-3 pb-2">
+                                <h5>Elektron Kitoblarni Oson Toping</h5>
+                                <p class="text-muted pb-1">Foydalanuvchilarga moslangan qidiruv tizimi orqali kerakli
+                                    kitobni soniyalar ichida toping. Janr, muallif yoki mavzuga qarab qidirish
+                                    imkoniyatlari mavjud.</p>
+                                <a href="#!" class="btn btn-soft-info">Qidiruvni Boshlash</a>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                    <div class="col-lg-4">
+                        <div class="card text-center border shadow-none">
+                            <div class="card-body py-5 px-4">
+                                <img src="{% static 'assets/images/pngs/medal.png' %}" alt="" height="55" class="mb-3 pb-2">
+                                <h5>Talabalar Uchun Maxsus Resurslar</h5>
+                                <p class="text-muted pb-1">O'quv dasturlariga mos keluvchi ma'ruzalar, referatlar va
+                                    ilmiy maqolalar arxiviga kirish huquqiga ega bo'ling. Bilimingizni mustahkamlash
+                                    uchun manbalar.</p>
+                                <a href="#!" class="btn btn-info">Resurslarni Ko'rish</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end col -->
+                    <div class="col-lg-4">
+                        <div class="card text-center border shadow-none">
+                            <div class="card-body py-5 px-4">
+                                <img src="{% static 'assets/images/pngs/star.png' %}" alt="" height="55" class="mb-3 pb-2">
+                                <h5>Sevimli Kitoblaringizni Saqlang</h5>
+                                <p class="text-muted pb-1">Sevimli kitoblaringizni shaxsiy kitob javoniga qo'shing va
+                                    har safar kutubxonaga kirishda ularni osongina toping. O'qish tajribangizni yanada
+                                    qulayroq qiling!</p>
+                                <a href="#!" class="btn btn-soft-info">Kitob javoni</a>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                </div><!-- end row -->
+            </div><!-- end container -->
+        </section><!-- end wallet -->
+
+        <!-- start cta -->
+        <section class="py-5 bg-primary position-relative">
+            <div class="bg-overlay bg-overlay-pattern opacity-50"></div>
+            <div class="container">
+                <div class="row align-items-center gy-4">
+                    <div class="col-sm">
+                        <div>
+                            <h4 class="text-white mb-0 fw-semibold">Universitet Kutubxonasi: Bilimga Erishish uchun
+                                Yangi Bosqichda</h4>
+                        </div>
+                    </div>
+                    <!-- end col -->
+                    <div class="col-sm-auto">
+                        <div>
+                            <a href="{% url 'dashboard' %}"
+                                class="btn bg-gradient btn-danger"><i class="ri-play-mini-line align-middle me-1"></i>
+                                Kutubxonaga Kirish</a>
+                        </div>
+                    </div>
+                    <!-- end col -->
+                </div>
+                <!-- end row -->
+            </div>
+            <!-- end container -->
+        </section>
+        <!-- end cta -->
+
+        <!-- start Work Process -->
+        <section class="section bg-light" id="ishJarayoni">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="text-center mb-5">
+                            <h3 class="mb-3 fw-bold">Kutubxona Ish Jarayoni</h3>
+                            <p class="text-muted mb-4">Bizning kutubxona foydalanuvchilarga samarali va qulay xizmat ko‘rsatishni maqsad qilgan.
+                                Quyida bizning xizmat ko‘rsatish jarayonimizning asosiy bosqichlari keltirilgan.</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+
+                <div class="row text-center">
+                    <div class="col-lg-4">
+                        <div class="process-card mt-4">
+                            <div class="process-arrow-img d-none d-lg-block">
+                                <img src="{% static 'assets/images/landing/process-arrow-img.png' %}" alt="" class="img-fluid">
+                            </div>
+                            <div class="avatar-sm icon-effect mx-auto mb-4">
+                                <div class="avatar-title bg-transparent text-success rounded-circle h1">
+                                    <i class="ri-user-follow-fill"></i>
+                                </div>
+                            </div>
+
+                            <h5>Ro‘yxatdan O‘ting</h5>
+                            <p class="text-muted">Foydalanuvchi sifatida ro‘yxatdan o‘tib, tizimga kirish uchun login va parolingizni yarating. Bu sizga barcha kitoblarga kirish imkonini beradi.</p>
+                        </div>
+                    </div>
+                    <!-- end col -->
+                    <div class="col-lg-4">
+                        <div class="process-card mt-4">
+                            <div class="process-arrow-img d-none d-lg-block">
+                                <img src="{% static 'assets/images/landing/process-arrow-img.png' %}" alt="" class="img-fluid">
+                            </div>
+                            <div class="avatar-sm icon-effect mx-auto mb-4">
+                                <div class="avatar-title bg-transparent text-success rounded-circle h1">
+                                    <i class="ri-find-replace-line"></i>
+                                </div>
+                            </div>
+
+                            <h5>Kitobni Qidirish</h5>
+                            <p class="text-muted">Qidiruv maydonidan foydalanib, kerakli kitoblarni osongina toping. Kitobni sevimlilarga qo'shish yoki to'g'ridan-to'g'ri o'qish mumkin.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- end col -->
+                    <div class="col-lg-4">
+                        <div class="process-card mt-4">
+                            <div class="avatar-sm icon-effect mx-auto mb-4">
+                                <div class="avatar-title bg-transparent text-success rounded-circle h1">
+                                    <i class="ri-user-smile-fill"></i>
+                                </div>
+                            </div>
+
+                            <h5>Kitoblardan Foydalanish</h5>
+                            <p class="text-muted">Elektron kutubxonadan kerakli kitoblarni yuklab oling, o‘qing yoki o‘zingiz uchun qulay bo‘lgan shaklda saqlang.</p>
+                        </div>
+                    </div>
+                    <!-- end col -->
+                </div>
+                <!-- end row -->
+            </div>
+            <!-- end container -->
+        </section>
+        <!-- end Work Process -->
+
+        <!-- start features -->
+        <section class="section">
+            <div class="container">
+                <div class="row align-items-center gy-4">
+                    <div class="col-lg-6 order-2 order-lg-1">
+                        <div class="text-muted">
+                            <h5 class="fs-12 text-uppercase text-success">Dizayn</h5>
+                            <h4 class="mb-3">Foydalanuvchilar Uchun Qulay Interfeys</h4>
+                            <p class="mb-4">Bizning onlayn kutubxona foydalanuvchilar ehtiyojlariga mos ravishda ishlab
+                                chiqilgan. Yangi va qulay dizayn yordamida
+                                kerakli kitoblarni osongina toping, sevimlilarga qo'shing va bilim olishni yanada
+                                samarali qiling.</p>
+
+                            <div class="row">
+                                <div class="col-sm-5">
+                                    <div class="vstack gap-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-2">
+                                                <div class="avatar-xs icon-effect">
+                                                    <div
+                                                        class="avatar-title bg-transparent text-success rounded-circle h2">
+                                                        <i class="ri-check-fill"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h5 class="fs-14 mb-0">Tezkor Qidiruv</h5>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-2">
+                                                <div class="avatar-xs icon-effect">
+                                                    <div
+                                                        class="avatar-title bg-transparent text-success rounded-circle h2">
+                                                        <i class="ri-check-fill"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h5 class="fs-14 mb-0">Shaxsiy Javon</h5>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-2">
+                                                <div class="avatar-xs icon-effect">
+                                                    <div
+                                                        class="avatar-title bg-transparent text-success rounded-circle h2">
+                                                        <i class="ri-check-fill"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h5 class="fs-14 mb-0">24/7 Kirish Imkoniyati</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-5">
+                                    <div class="vstack gap-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-2">
+                                                <div class="avatar-xs icon-effect">
+                                                    <div
+                                                        class="avatar-title bg-transparent text-success rounded-circle h2">
+                                                        <i class="ri-check-fill"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h5 class="fs-14 mb-0">Mobil Moslashuvchanlik</h5>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-2">
+                                                <div class="avatar-xs icon-effect">
+                                                    <div
+                                                        class="avatar-title bg-transparent text-success rounded-circle h2">
+                                                        <i class="ri-check-fill"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h5 class="fs-14 mb-0">Eng Mashhur Kitoblar</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <a href="/dashboard" class="btn btn-primary">Imkoniyatlarni Ko'rish <i
+                                        class="ri-arrow-right-line align-middle ms-1"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end col -->
+                    <div class="col-lg-6 col-sm-7 col-10 ms-auto order-1 order-lg-2">
+                        <div>
+                            <img src="assets/images/landing/features/img-2.png" alt="" class="img-fluid">
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+            </div>
+            <!-- end container -->
+        </section>
+        <!-- end features -->
+
+        <!-- start counter -->
+        <section class="py-5 position-relative bg-light">
+            <div class="container">
+                <div class="row text-center gy-4">
+                    <div class="col-lg-3 col-6">
+                        <div>
+                            <h2 class="mb-2"><span class="counter-value" data-target="13000">0</span>+</h2>
+                            <div class="text-muted">Barcha kitoblar</div>
+                        </div>
+                    </div>
+                    <!-- end col -->
+
+                    <div class="col-lg-3 col-6">
+                        <div>
+                            <h2 class="mb-2"><span class="counter-value" data-target="4200">0</span>+</h2>
+                            <div class="text-muted">Foydalanuvchilar</div>
+                        </div>
+                    </div>
+                    <!-- end col -->
+
+                    <div class="col-lg-3 col-6">
+                        <div>
+                            <h2 class="mb-2"><span class="counter-value" data-target="200">0</span>+</h2>
+                            <div class="text-muted">Ilmiy maqolalar</div>
+                        </div>
+                    </div>
+                    <!-- end col -->
+                    <div class="col-lg-3 col-6">
+                        <div>
+                            <h2 class="mb-2"><span class="counter-value" data-target="60">0</span>+</h2>
+                            <div class="text-muted">Kutubxona kompyuterlari</div>
+                        </div>
+                    </div>
+                    <!-- end col -->
+                </div>
+                <!-- end row -->
+            </div>
+            <!-- end container -->
+        </section>
+        <!-- end counter -->
+
+        <!-- start faqs -->
+        <section class="section" id="faq">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="text-center mb-5">
+                            <h3 class="mb-3 fw-bold">Tez-tez So‘raladigan Savollar</h3>
+                            <p class="text-muted mb-4">Agar FAQ bo‘limida o‘z savolingizga javob topa olmasangiz, biz bilan bog‘lanishingiz yoki elektron pochta orqali murojaat qilishingiz mumkin. Sizga tez orada javob beramiz!</p>
+
+                            <div class="">
+                                <button type="button" class="btn btn-primary btn-label rounded-pill"><i
+                                        class="ri-mail-line label-icon align-middle rounded-pill fs-16 me-2"></i>Emaildan yozing </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+
+                <div class="row g-lg-5 g-4">
+                    <div class="col-lg-6">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="flex-shrink-0 me-1">
+                                <i class="ri-question-line fs-24 align-middle text-success me-1"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="mb-0 fw-bold">Umumiy Savollar</h5>
+                            </div>
+                        </div>
+                        <div class="accordion custom-accordionwithicon custom-accordion-border accordion-border-box"
+                            id="genques-accordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="genques-headingOne">
+                                    <button class="accordion-button fw-semibold fs-14" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#genques-collapseOne"
+                                        aria-expanded="true" aria-controls="genques-collapseOne">
+                                        Kutubxonadan qanday foydalanishim mumkin?
+                                    </button>
+                                </h2>
+                                <div id="genques-collapseOne" class="accordion-collapse collapse show"
+                                    aria-labelledby="genques-headingOne" data-bs-parent="#genques-accordion">
+                                    <div class="accordion-body">
+                                        Kutubxonadan foydalanish uchun ro‘yxatdan o‘tishingiz kerak. Login va parol orqali tizimga kirib, kerakli kitoblarni
+                                elektron shaklda yuklab olishingiz yoki to‘g‘ridan-to‘g‘ri o‘qishingiz mumkin.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="genques-headingFour">
+                                    <button class="accordion-button fw-semibold fs-14 collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#genques-collapseFour"
+                                        aria-expanded="false" aria-controls="genques-collapseFour">
+                                        Kutubxonaga qanday ro‘yxatdan o‘tish mumkin?
+                                    </button>
+                                </h2>
+                                <div id="genques-collapseFour" class="accordion-collapse collapse"
+                                    aria-labelledby="genques-headingFour" data-bs-parent="#genques-accordion">
+                                    <div class="accordion-body">
+                                        Kutubxonaga ro‘yxatdan o‘tish uchun universitet HEMIS tizimida foydalanadigan login va parolingizdan foydalanishingiz mumkin. Ro‘yxatdan o‘tish jarayoni juda oddiy va qulay.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="genques-headingTwo">
+                                    <button class="accordion-button fw-semibold fs-14 collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#genques-collapseTwo"
+                                        aria-expanded="false" aria-controls="genques-collapseTwo">
+                                        Kutubxonada qanday kitoblar mavjud?
+                                    </button>
+                                </h2>
+                                <div id="genques-collapseTwo" class="accordion-collapse collapse"
+                                    aria-labelledby="genques-headingTwo" data-bs-parent="#genques-accordion">
+                                    <div class="accordion-body">
+                                        Elektron kutubxonamizda badiiy, ilmiy, o‘quv adabiyotlari va ko‘plab boshqa turdagi kitoblar mavjud. Siz qidiruv orqali o‘zingizga kerakli kitoblarni topishingiz mumkin.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="genques-headingThree">
+                                    <button class="accordion-button fw-semibold fs-14 collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#genques-collapseThree"
+                                        aria-expanded="false" aria-controls="genques-collapseThree">
+                                        Kitoblarni yuklab olish mumkinmi?
+                                    </button>
+                                </h2>
+                                <div id="genques-collapseThree" class="accordion-collapse collapse"
+                                    aria-labelledby="genques-headingThree" data-bs-parent="#genques-accordion">
+                                    <div class="accordion-body">
+                                        Ha, siz kutubxonadagi kitoblarni yuklab olishingiz mumkin. Kitob yuklab olish imkoniyati foydalanuvchilarga yanada qulaylik yaratadi.
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!--end accordion-->
+
+                    </div>
+                    <!-- end col -->
+                    <div class="col-lg-6">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="flex-shrink-0 me-1">
+                                <i class="ri-shield-keyhole-line fs-24 align-middle text-success me-1"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="mb-0 fw-bold">Maxfiylik &amp; Xavfsizlik</h5>
+                            </div>
+                        </div>
+
+                        <div class="accordion custom-accordionwithicon custom-accordion-border accordion-border-box"
+                            id="privacy-accordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="privacy-headingOne">
+                                    <button class="accordion-button fw-semibold fs-14 collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#privacy-collapseOne"
+                                        aria-expanded="false" aria-controls="privacy-collapseOne">
+                                        Mening ma’lumotlarim xavfsizmi?
+                                    </button>
+                                </h2>
+                                <div id="privacy-collapseOne" class="accordion-collapse collapse"
+                                    aria-labelledby="privacy-headingOne" data-bs-parent="#privacy-accordion">
+                                    <div class="accordion-body">
+                                        Ha, sizning ma’lumotlaringiz xavfsiz saqlanadi. Bizning tizim OAuth orqali xavfsiz kirishni ta’minlaydi va maxfiylik qoidalariga amal qilamiz.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="privacy-headingTwo">
+                                    <button class="accordion-button fw-semibold fs-14" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#privacy-collapseTwo"
+                                        aria-expanded="true" aria-controls="privacy-collapseTwo">
+                                        Kutubxonaga kirish uchun parolimni unutdim, nima qilishim kerak?
+                                    </button>
+                                </h2>
+                                <div id="privacy-collapseTwo" class="accordion-collapse collapse show"
+                                    aria-labelledby="privacy-headingTwo" data-bs-parent="#privacy-accordion">
+                                    <div class="accordion-body">
+                                        Agar parolingizni unutgan bo‘lsangiz, HEMIS tizimida parolni tiklash bo‘limidan foydalanishingiz mumkin. Shuningdek, yordam uchun kutubxona administratoriga murojaat qilishingiz mumkin.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="privacy-headingThree">
+                                    <button class="accordion-button fw-semibold fs-14 collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#privacy-collapseThree"
+                                        aria-expanded="false" aria-controls="privacy-collapseThree">
+                                        Mening ma’lumotlarim himoyalanganmi?
+                                    </button>
+                                </h2>
+                                <div id="privacy-collapseThree" class="accordion-collapse collapse"
+                                    aria-labelledby="privacy-headingThree" data-bs-parent="#privacy-accordion">
+                                    <div class="accordion-body">
+                                        Ha, sizning barcha shaxsiy ma’lumotlaringiz maxfiy saqlanadi va uchinchi tomonlarga ulashilmaydi. Biz OAuth tizimi orqali xavfsiz kirishni ta’minlaymiz.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="privacy-headingFour">
+                                    <button class="accordion-button fw-semibold fs-14 collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#privacy-collapseFour"
+                                        aria-expanded="false" aria-controls="privacy-collapseFour">
+                                        Ma’lumotlarimni qanday yangilashim mumkin?
+                                    </button>
+                                </h2>
+                                <div id="privacy-collapseFour" class="accordion-collapse collapse"
+                                    aria-labelledby="privacy-headingFour" data-bs-parent="#privacy-accordion">
+                                    <div class="accordion-body">
+                                        Profilingizdagi shaxsiy ma’lumotlarni o‘zingiz o‘zgartirishingiz mumkin. Buning uchun hisobingizga kirib, "Profil sozlamalari" bo‘limiga tashrif buyuring.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end accordion-->
+                    </div>
+                    <!-- end col -->
+                </div>
+                <!-- end row -->
+            </div>
+            <!-- end container -->
+        </section>
+        <!-- end faqs -->
+
+        <!-- Start footer -->
+        <footer class="custom-footer bg-dark py-5 position-relative">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-4 mt-4">
+                        <div>
+                            <div>
+                                <img src="{% static 'assets/images/pngs/logo.png' %}" alt="logo light" height="60">
+                            </div>
+                            <div class="mt-4">
+                                <p>Universitet Elektron Kutubxonasi</p>
+                                <p>Bizning elektron kutubxona barcha foydalanuvchilar uchun o‘quv materiallarini qulay, tezkor va zamonaviy tarzda taqdim etish uchun yaratilgan.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-7 ms-lg-auto">
+                        <div class="row">
+                            <div class="col-sm-4 mt-4">
+                                <h5 class="text-white mb-0">Sayt Bo‘limlari</h5>
+                                <div class="text-muted mt-3">
+                                    <ul class="list-unstyled ff-secondary footer-list fs-15">
+                                        <li><a href="#">Biz Haqimizda</a></li>
+                                        <li><a href="#">Kitob Katalogi</a></li>
+                                        <li><a href="#">Foydalanish Qoidalari</a></li>
+                                        <li><a href="#">Aloqa</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-sm-4 mt-4">
+                                <h5 class="text-white mb-0">Tezkor Havolalar</h5>
+                                <div class="text-muted mt-3">
+                                    <ul class="list-unstyled ff-secondary footer-list fs-15">
+                                        <li><a href="/dashboard">Kirish</a></li>
+                                        <li><a href="#">Tez-tez So‘raladigan Savollar</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-sm-4 mt-4">
+                                <h5 class="text-white mb-0">Qo‘llab-quvvatlash</h5>
+                                <div class="text-muted mt-3">
+                                    <ul class="list-unstyled ff-secondary footer-list fs-15">
+                                        <li><a href="#">Yordam</a></li>
+                                        <li><a href="#">Biz bilan bog‘laning</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row text-center text-sm-start align-items-center mt-5">
+                    <div class="col-sm-6">
+
+                        <div>
+                            <p class="copy-rights mb-0">
+                                <script> document.write(new Date().getFullYear()) </script> © Elektron kutubxona tizimi
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-sm-end mt-3 mt-sm-0">
+                            <ul class="list-inline mb-0 footer-social-link">
+                                <li class="list-inline-item">
+                                    <a href="javascript: void(0);" class="avatar-xs d-block">
+                                        <div class="avatar-title rounded-circle">
+                                            <i class="ri-instagram-fill"></i>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a href="javascript: void(0);" class="avatar-xs d-block">
+                                        <div class="avatar-title rounded-circle">
+                                            <i class="ri-youtube-fill"></i>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a href="javascript: void(0);" class="avatar-xs d-block">
+                                        <div class="avatar-title rounded-circle">
+                                            <i class="ri-telegram-fill"></i>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a href="javascript: void(0);" class="avatar-xs d-block">
+                                        <div class="avatar-title rounded-circle">
+                                            <i class="ri-google-fill"></i>
+                                        </div>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <!-- end footer -->
+
+        <!--start back-to-top-->
+        <button onclick="topFunction()" class="btn btn-danger btn-icon landing-back-top" id="back-to-top">
+            <i class="ri-arrow-up-line"></i>
+        </button>
+        <!--end back-to-top-->
+
+    </div>
+    <!-- end layout wrapper -->
+
+
+    <!-- JAVASCRIPT -->
+    <script src="{% static 'assets/libs/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'assets/libs/simplebar/simplebar.min.js' %}"></script>
+    <script src="{% static 'assets/libs/node-waves/waves.min.js' %}"></script>
+    <script src="{% static 'assets/libs/feather-icons/feather.min.js' %}"></script>
+    <script src="{% static 'assets/js/pages/plugins/lord-icon-2.1.0.js' %}"></script>
+    <script src="{% static 'assets/js/plugins.js' %}"></script>
+
+    <!-- Swiper slider js -->
+    <script src="{% static 'assets/libs/swiper/swiper-bundle.min.js' %}"></script>
+
+    <script src="{% static 'assets/js/pages/nft-landing.init.js' %}"></script>
+    <script src="{% static 'assets/js/pages/landing.init.js' %}"></script>
+</body>
+</html>

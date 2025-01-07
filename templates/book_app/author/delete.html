@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 offset-md-3 text-center">
+            <h4 class="mb-3">Muallifni o'chirish</h4>
+            <p>Haqiqatan ham "{{ author.full_name }}" ni o'chirishni xohlaysizmi?</p>
+            <form method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Ha, o'chirish</button>
+                <a href="{% url 'book_app:authors_list' %}" class="btn btn-secondary">Bekor qilish</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
