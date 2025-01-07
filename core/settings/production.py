@@ -1,8 +1,8 @@
 from .base import *
 
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['library.xiuedu.uz', 'www.library.xiuedu.uz', '83.222.6.82', 'localhost']
+ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ["https://library.xiuedu.uz", "https://www.library.xiuedu.uz"]
 
 DATABASES = {
@@ -15,8 +15,15 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', ''),
     }
 }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 
 # Security settings
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# SECURE_SSL_REDIRECT = True
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
