@@ -1,5 +1,3 @@
-from email.policy import default
-
 from django.db import models
 
 from user_app.models import StudentProfile
@@ -40,7 +38,7 @@ class Book(models.Model):
     # genres = models.ManyToManyField(Genre, verbose_name="Kataloglar")
     category = models.ForeignKey(Genre, verbose_name="Katalog", on_delete=models.PROTECT)
 
-    published_date = models.DateField(verbose_name="Chop etilgan sana")
+    published_date = models.CharField(max_length=255, verbose_name="Chop etilgan sana", null=True, blank=True, default="2020")
 
     description = models.TextField(verbose_name="Qisqacha tavsif", blank=True, null=True)
 
