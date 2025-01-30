@@ -36,10 +36,10 @@
                 </button>
 
                 <!-- App Search-->
-                <form class="app-search d-none d-md-block">
+                <form class="app-search d-none d-md-block" action="{% url 'book_app:student_book_list' %}">
                     <div class="position-relative">
-                        <input type="text" class="form-control" placeholder="Kitob qidirish..." autocomplete="off"
-                               id="search-options" value="">
+                        <input type="text" name="q" class="form-control" placeholder="Kitob qidirish..." autocomplete="off"
+                               id="search-options" value="{{ query }}">
                         <span class="mdi mdi-magnify search-widget-icon"></span>
                         <span class="mdi mdi-close-circle search-widget-icon search-widget-icon-close d-none"
                               id="search-close-options"></span>

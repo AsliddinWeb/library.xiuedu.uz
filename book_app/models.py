@@ -57,6 +57,7 @@ class Book(models.Model):
     class Meta:
         verbose_name = "Kitob"
         verbose_name_plural = "Kitoblar"
+        ordering = ['-id']
 
     def __str__(self):
         return self.title

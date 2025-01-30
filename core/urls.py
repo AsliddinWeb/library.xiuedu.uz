@@ -36,7 +36,7 @@ urlpatterns = [
     path('', include('dashboard_app.urls')),
 
     # Book
-    path('book/', include('book_app.urls')),
+    path('books/', include('book_app.urls')),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

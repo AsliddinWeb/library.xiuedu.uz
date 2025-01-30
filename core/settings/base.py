@@ -55,6 +55,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                # Book processor
                 'book_app.context_processors.book_processor',
             ],
         },

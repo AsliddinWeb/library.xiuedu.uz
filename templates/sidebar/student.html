@@ -8,19 +8,9 @@
     </li>
 
     <li class="nav-item">
-        <a class="nav-link menu-link" href="#sidebarCategories" data-bs-toggle="collapse" role="button" aria-expanded="false"
-           aria-controls="sidebarCategories">
-            <i class="bx bx-layer"></i> <span data-key="t-apps">Kategoriyalar ({{ categories.count }})</span>
+        <a class="nav-link menu-link" href="{% url 'book_app:student_book_list' %}" role="button" aria-expanded="false">
+            <i class="bx bx-file"></i> <span data-key="t-dashboards">Barcha kitoblar ({{ all_books|length }} ta)</span>
         </a>
-        <div class="collapse menu-dropdown" id="sidebarCategories">
-            <ul class="nav nav-sm flex-column">
-                {% for category in categories %}
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">{{ category.name }} ({{ category.book_count }})</a>
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
     </li>
 
     <li class="nav-item">
@@ -42,5 +32,23 @@
             </ul>
         </div>
     </li>
+
+    <li class="nav-item">
+        <a class="nav-link menu-link" href="#sidebarCategories" data-bs-toggle="collapse" role="button" aria-expanded="false"
+           aria-controls="sidebarCategories">
+            <i class="bx bx-layer"></i> <span data-key="t-apps">Kategoriyalar ({{ categories.count }} ta)</span>
+        </a>
+        <div class="collapse menu-dropdown" id="sidebarCategories">
+            <ul class="nav nav-sm flex-column">
+                {% for category in categories %}
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">{{ category.name }} ({{ category.book_count }})</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </li>
+
+
 
 </ul>

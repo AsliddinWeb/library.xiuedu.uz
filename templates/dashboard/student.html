@@ -113,60 +113,61 @@
     </div><!-- end row -->
 
     <div class="row">
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title mb-0 text-center">🔎 Kitob qidirish</h4>
-                </div>
-                <div class="card-body">
-                    <form>
-                        <div class="row g-3">
-                            <div class="col-xxl-4 col-sm-12">
-                                <div class="search-box">
-                                    <input type="text" class="form-control search bg-light border-light" id="searchJob"
-                                           autocomplete="off" placeholder="Kitob qidirish...">
-                                    <i class="ri-search-line search-icon"></i>
-                                </div>
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0 text-center">🔎 Kitob qidirish</h4>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{% url 'book_app:student_book_list' %}">
+                    <div class="row g-3">
+                        <div class="col-xxl-4 col-sm-12">
+                            <div class="search-box">
+                                <input type="text" name="q" class="form-control search bg-light border-light"
+                                       value="{{ query }}" autocomplete="off" placeholder="Kitob qidirish...">
+                                <i class="ri-search-line search-icon"></i>
                             </div>
-                            <!--end col-->
-                            <div class="col-xxl-4 col-sm-4">
-                                <!-- Select -->
-                                <div class="input-group">
-                                    <select class="form-select bg-light">
-                                        <option selected>Katalogni tanlang...</option>
-                                        {% for category in categories %}
-                                        <option value="{{ category.id }}">{{ category.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <!--end col-->
-                            <div class="col-xxl-2 col-sm-4">
-                                <!-- Select -->
-                                <div class="input-group">
-                                    <select class="form-select bg-light">
-                                        <option selected>Tilni tanlang...</option>
-
-                                        <option value="uz">O'zbekcha</option>
-
-                                    </select>
-                                </div>
-                            </div>
-                            <!--end col-->
-
-                            <div class="col-xxl-2 col-sm-4">
-                                <button type="button" class="btn btn-primary w-100" onclick="filterData();">
-                                    <i class="ri-equalizer-fill me-1 align-bottom"></i> Filterlash
-                                </button>
-                            </div>
-                            <!--end col-->
                         </div>
-                        <!--end row-->
-                    </form>
-                </div>
+                        <!--end col-->
+                        <div class="col-xxl-4 col-sm-4">
+                            <!-- Select -->
+                            <div class="input-group">
+                                <select name="category" class="form-select bg-light">
+                                    <option value="">Katalogni tanlang...</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if category_id == category.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <!--end col-->
+                        <div class="col-xxl-2 col-sm-4">
+                            <!-- Select -->
+                            <div class="input-group">
+                                <select name="language" class="form-select bg-light">
+                                    <option value="">Tilni tanlang...</option>
+                                    <option value="uz" {% if language == "uz" %}selected{% endif %}>O'zbekcha</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!--end col-->
+
+                        <div class="col-xxl-2 col-sm-4">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="ri-equalizer-fill me-1 align-bottom"></i> Filterlash
+                            </button>
+                        </div>
+                        <!--end col-->
+                    </div>
+                    <!--end row-->
+                </form>
             </div>
         </div>
     </div>
+</div>
+
 
     <div class="row">
         <div class="col-lg-12">
@@ -327,7 +328,7 @@
                         {% endfor %}
 
                         <div class="text-center my-3">
-                            <a href="#" class="btn btn-success bg-gradient waves-effect waves-light">📙 Barcha kitoblar</a>
+                            <a href="{% url 'book_app:student_book_list' %}" class="btn btn-success bg-gradient waves-effect waves-light">📙 Barcha kitoblar</a>
                         </div>
                     </div>
                 </div>
