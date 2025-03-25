@@ -32,7 +32,7 @@ class Genre(models.Model):
 
 
 class Book(models.Model):
-    title = models.CharField(max_length=200, verbose_name="Kitob nomi")
+    title = models.CharField(max_length=500, verbose_name="Kitob nomi")
 
     authors = models.ManyToManyField(Author, verbose_name="Mualliflar")
     # genres = models.ManyToManyField(Genre, verbose_name="Kataloglar")
