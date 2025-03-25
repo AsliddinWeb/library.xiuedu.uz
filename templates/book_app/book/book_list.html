@@ -188,12 +188,12 @@
             </li>
         {% else %}
             <li class="page-item disabled">
-                <a href="#" class="page-link">Oldingi</a>
+                <a href="#" class="page-link"><<</a>
             </li>
         {% endif %}
 
         {% for num in page_obj.paginator.page_range %}
-            {% if num <= 3 or num > page_obj.paginator.num_pages|add:"-3" or num|add:2 >= page_obj.number and num|add:-2 <= page_obj.number %}
+            {% if num <= 2 or num > page_obj.paginator.num_pages|add:"-2" or num >= page_obj.number|add:"-1" and num <= page_obj.number|add:"1" %}
                 {% if num == page_obj.number %}
                     <li class="page-item active">
                         <a href="?page={{ num }}" class="page-link">{{ num }}</a>
@@ -203,7 +203,7 @@
                         <a href="?page={{ num }}" class="page-link">{{ num }}</a>
                     </li>
                 {% endif %}
-            {% elif num == 4 or num == page_obj.paginator.num_pages|add:"-4" %}
+            {% elif num == 3 or num == page_obj.paginator.num_pages|add:"-3" %}
                 <li class="page-item disabled"><a href="#" class="page-link">...</a></li>
             {% endif %}
         {% endfor %}
@@ -214,12 +214,13 @@
             </li>
         {% else %}
             <li class="page-item disabled">
-                <a href="#" class="page-link">Keyingi</a>
+                <a href="#" class="page-link">>>/a>
             </li>
         {% endif %}
 
     </ul>
 </div>
+
 
 </div>
 
