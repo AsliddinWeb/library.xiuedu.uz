@@ -7,6 +7,8 @@ from django.utils.html import format_html
 
 # Unfold
 from unfold.admin import ModelAdmin
+from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
+
 from django.contrib.auth.models import Group
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 
@@ -56,6 +58,10 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
             "fields": ("username", "password1", "password2", "user_type", "is_staff", "is_active")
         }),
     )
+
+    form = UserChangeForm
+    add_form = UserCreationForm
+    change_password_form = AdminPasswordChangeForm
 
     def password_change_link(self, obj):
         if obj.id:

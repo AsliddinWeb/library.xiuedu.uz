@@ -16,7 +16,7 @@ from user_app.utils import library_admin_role_required
 def save_books(request):
     if request.method == "POST":
         url = request.POST.get("url")
-        response = requests.get(url)
+        response = requests.get(url, verify=False)
 
         if response.status_code == 200:
             data = response.json()
@@ -60,7 +60,7 @@ def save_books(request):
                 # Handle book cover image
                 image_url = book_data['cover_image']
                 if image_url:
-                    image_response = requests.get(image_url)
+                    image_response = requests.get(image_url, verify=False)
                     if image_response.status_code == 200:
                         img_temp = BytesIO(image_response.content)
                         book_create.cover_image.save(os.path.basename(image_url), File(img_temp))
@@ -68,7 +68,7 @@ def save_books(request):
                 # Handle electronic version
                 book_url = book_data['electronic_version']
                 if book_url:
-                    book_response = requests.get(book_url)
+                    book_response = requests.get(book_url, verify=False)
                     if book_response.status_code == 200:
                         book_temp = BytesIO(book_response.content)
                         book_create.electronic_version.save(os.path.basename(book_url), File(book_temp))
