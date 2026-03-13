@@ -19,6 +19,7 @@ class Author(models.Model):
 class Genre(models.Model):
     name = models.CharField(max_length=100, verbose_name="Katalog nomi")
     icon = models.TextField(verbose_name="Ikonkasi", null=True, blank=True)
+    is_active = models.BooleanField(verbose_name="Aktivmi?", default=True)
 
     class Meta:
         verbose_name = "Katalog"

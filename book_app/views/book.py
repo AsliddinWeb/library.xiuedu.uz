@@ -30,7 +30,7 @@ def student_book_list(request):
     category_id = request.GET.get('category', '')
     language = request.GET.get('language', '')
 
-    books = Book.objects.select_related('category').prefetch_related('authors').all()
+    books = Book.objects.select_related('category').prefetch_related('authors').filter(category__is_active=True)
 
     if query:
         books = books.filter(Q(title__icontains=query) | Q(authors__full_name__icontains=query)).distinct()
@@ -41,7 +41,7 @@ def student_book_list(request):
     # if language:
     #     books = books.filter(language=language)
 
-    categories = Genre.objects.all()
+    categories = Genre.objects.filter(is_active=True)
 
     page_number = request.GET.get('page', 1)
     paginator = Paginator(books, 12)
