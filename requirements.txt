@@ -1,14 +1,12 @@
-asgiref==3.8.1
-certifi==2024.2.2
-charset-normalizer==3.3.2
+# --- Asosiy ---
 Django==5.0.6
-django-cors-headers==4.6.0
-django-unfold==0.43.0
-djangorestframework==3.15.2
-idna==3.7
-pillow==11.0.0
-python-dotenv==1.0.1
-requests==2.31.0
-sqlparse==0.5.0
-typing_extensions==4.11.0
-urllib3==2.2.1
+django-unfold==0.43.0          # admin UI
+django-htmx==1.27.0            # HTMX yordamchi
+pillow==12.2.0                 # rasm (Python 3.14 wheel)
+python-dotenv==1.0.1           # .env
+requests==2.31.0               # HEMIS oAuth so'rovlari
+
+# --- Production ---
+psycopg[binary]==3.3.4         # PostgreSQL drayveri
+gunicorn==26.0.0              # WSGI server
+whitenoise==6.12.0            # statik fayllar

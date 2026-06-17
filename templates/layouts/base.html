@@ -1,0 +1,32 @@
+{% load static django_htmx %}
+<!doctype html>
+<html lang="uz" class="h-full">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}XIU Elektron kutubxona{% endblock %}</title>
+    <meta name="description" content="{% block description %}Xalqaro Innovatsion Universitet elektron kutubxona platformasi{% endblock %}">
+    <link rel="icon" href="{% static 'assets/images/favicon.ico' %}">
+
+    {# Tailwind (standalone CLI build chiqishi) #}
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="flex min-h-full flex-col bg-slate-50 text-slate-800 antialiased"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+
+    {% block header %}{% include "layouts/partials/navbar.html" %}{% endblock %}
+
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block footer %}{% include "layouts/partials/footer.html" %}{% endblock %}
+
+    {# Self-hosted skriptlar (tashqi CDN'siz) #}
+    <script src="{% static 'js/vendor/htmx.min.js' %}"></script>
+    <script src="{% static 'js/vendor/alpine.min.js' %}" defer></script>
+    {% django_htmx_script %}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

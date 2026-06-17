@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+/* Django shablonlarini skanerlash (utility'lar shulardan yig'iladi) */
+@source "../templates/**/*.html";
+@source "../**/templates/**/*.html";
+
+/* ---------------------------------------------------------------------------
+   XIU Library dizayn tokenlari
+   (ranglarni keyin brendga moslab o'zgartirish mumkin)
+--------------------------------------------------------------------------- */
+@theme {
+  /* Asosiy brend rangi (akademik ko'k) */
+  --color-brand-50:  #eef4ff;
+  --color-brand-100: #d9e6ff;
+  --color-brand-200: #bcd2ff;
+  --color-brand-300: #8eb5ff;
+  --color-brand-400: #598dff;
+  --color-brand-500: #3366ff;
+  --color-brand-600: #1f48f5;
+  --color-brand-700: #1736e1;
+  --color-brand-800: #192fb6;
+  --color-brand-900: #1a2d8f;
+  --color-brand-950: #141d57;
+
+  /* Shrift */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Alpine.js x-cloak — yuklanmaguncha yashirin */
+@layer base {
+  [x-cloak] { display: none !important; }
+}
