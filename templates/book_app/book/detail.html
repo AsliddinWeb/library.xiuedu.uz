@@ -1,193 +1,90 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends "layouts/base.html" %}
 
-{% block sidebar %}
-{% include 'sidebar/student.html' %}
-{% endblock sidebar %}
-
-{% block topbar_header %}
-{% include 'topbar_header/student.html' %}
-{% endblock topbar_header %}
-
-
-{% block custom_css %}
-{% endblock custom_css %}
+{% block title %}{{ book.title }} — XIU Kutubxona{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    <a href="{% url 'book_app:student_book_list' %}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-700">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
+        Katalogga qaytish
+    </a>
 
-    <!-- start page title -->
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0">{{ book.title }}</h4>
-
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Bosh sahifa</a></li>
-                        <li class="breadcrumb-item active">{{ book.title }}</li>
-                    </ol>
-                </div>
-
+    <div class="mt-6 grid grid-cols-1 gap-8 md:grid-cols-3">
+        {# Muqova #}
+        <div class="md:col-span-1">
+            <div class="aspect-3/4 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+                {% if book.cover_image %}
+                    <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="h-full w-full object-cover">
+                {% else %}
+                    <div class="flex h-full w-full items-center justify-center text-6xl text-slate-300">📚</div>
+                {% endif %}
             </div>
+        </div>
+
+        {# Ma'lumot #}
+        <div class="md:col-span-2">
+            {% if book.category %}
+                <span class="inline-flex rounded-full bg-brand-100 px-3 py-1 text-xs font-medium text-brand-700">{{ book.category.name }}</span>
+            {% endif %}
+            <h1 class="mt-3 text-3xl font-bold text-slate-900">{{ book.title }}</h1>
+            <p class="mt-2 text-slate-600">
+                {% for author in book.authors.all %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}Muallif noma'lum{% endfor %}
+            </p>
+
+            {% if book_rental %}
+                <div class="mt-4 inline-flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
+                    ✓ Siz bu kitobni ijaraga olgansiz
+                </div>
+            {% endif %}
+
+            {# Amallar #}
+            <div class="mt-6 flex flex-wrap gap-3">
+                {% if book.electronic_version %}
+                    <a href="{{ book.electronic_version.url }}" target="_blank" rel="noopener"
+                       class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700">
+                        📖 Onlayn o'qish
+                    </a>
+                {% endif %}
+                {% if book.audio_version %}
+                    <a href="{{ book.audio_version.url }}" target="_blank" rel="noopener"
+                       class="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">
+                        🎧 Audio tinglash
+                    </a>
+                {% endif %}
+            </div>
+
+            {# Meta #}
+            <dl class="mt-8 grid grid-cols-2 gap-x-6 gap-y-4 text-sm sm:grid-cols-3">
+                <div>
+                    <dt class="text-slate-400">Mavjud nusxalar</dt>
+                    <dd class="mt-0.5 font-semibold text-slate-900">{{ book.copy_count }}</dd>
+                </div>
+                <div>
+                    <dt class="text-slate-400">Til</dt>
+                    <dd class="mt-0.5 font-semibold text-slate-900">{{ book.language|default:"—" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-slate-400">Sahifalar</dt>
+                    <dd class="mt-0.5 font-semibold text-slate-900">{{ book.page_count|default:"—" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-slate-400">Chop etilgan</dt>
+                    <dd class="mt-0.5 font-semibold text-slate-900">{{ book.published_date|default:"—" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-slate-400">ISBN</dt>
+                    <dd class="mt-0.5 font-semibold text-slate-900">{{ book.isbn|default:"—" }}</dd>
+                </div>
+            </dl>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="row gx-lg-5">
-                        <div class="col-xl-4 col-md-8 mx-auto">
-                            <div class="sticky-side-div">
-                                {% if book.cover_image %}
-                                <img src="{{ book.cover_image.url }}" alt="{{ book.title }}"
-                                     class="img-fluid d-block">
-                                {% else %}
-                                <img src="{% static 'assets/images/new/default_cover.png' %}" alt="Kitob rasmi"
-                                     class="img-fluid d-block">
-                                {% endif %}
-
-
-                            </div>
-                        </div>
-                        <!-- end col -->
-
-                        <div class="col-xl-8">
-                            <div class="mt-xl-0 mt-5">
-                                <div class="d-flex">
-                                    <div class="flex-grow-1">
-                                        <h4>{{ book.title }}</h4>
-
-                                        <div class="hstack gap-3 flex-wrap">
-                                            <div class="text-muted">Kategoriya: <span class="text-body fw-medium">{{ book.category.name }}</span>
-                                            </div>
-                                            <div class="vr"></div>
-                                            <div class="text-muted">Saytga yuklangan sana: <span class="text-body fw-medium">{{ book.created_at }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mt-4">
-                                    <div class="col-lg-3 col-sm-6">
-                                        <div class="p-2 border border-dashed rounded">
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar-sm me-2">
-                                                    <div class="avatar-title rounded bg-transparent text-success fs-24">
-                                                        <i class="ri-file-copy-2-fill"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-grow-1">
-                                                    <p class="text-muted mb-1"> Nusxalar soni:</p>
-                                                    <h5 class="mb-0">{{ book.copy_count }} ta</h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- end col -->
-                                </div>
-
-
-                                <div class="mt-4 text-muted border-bottom mb-1">
-                                    <h5 class="fs-13">Kitob haqida:</h5>
-                                    <p>{{ book.description }}</p>
-                                </div>
-
-
-                                <div class="product-content mt-5">
-                                    <h5 class="fs-13 mb-3">Umumiy ma'lumotlar:</h5>
-                                    <table class="table mb-0">
-                                        <tbody>
-                                        <tr>
-                                            <th scope="row" style="width: 200px;">
-                                                Kategoriya
-                                            </th>
-                                            <td>{{ book.category.name }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row">Mualliflar</th>
-                                            <td>
-                                                {% for author in book.authors.all %}
-                                                {{ author.full_name }}{% if not forloop.last %}, {% endif %}
-                                                {% endfor %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row">Chop etilgan sana</th>
-                                            <td>{{ book.published_date }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row">Elektron versiyasi</th>
-                                            <td>
-                                                {% if book.electronic_version %}
-                                                    <a href="{{ book.electronic_version.url }}" class="btn btn-soft-success waves-effect waves-light">Yuklab olish</a>
-                                                {% else %}
-                                                    <span class="text-warning">Mavjud emas</span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row">Audio versiyasi</th>
-                                            <td>
-                                                {% if book.audio_version %}
-                                                    <a href="{{ book.audio_version.url }}" class="btn btn-soft-success waves-effect waves-light">Yuklab olish</a>
-                                                {% else %}
-                                                <span class="text-warning">Mavjud emas</span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row">Sahifalar soni</th>
-                                            <td>{{ book.page_count }}</td>
-                                        </tr>
-
-                                        <tr>
-                                            <th scope="row">Til</th>
-                                            <td>{{ book.language }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row">ISBN</th>
-                                            <td>{{ book.isbn }}</td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <!-- product-content -->
-
-                                <div class="mt-4 text-muted">
-                                    <h5 class="fs-13">Ijara:</h5>
-
-                                    <div>
-                                        {% if book.copy_count > 0 %}
-                                            {% if book_rental %}
-                                                <a href="#" class="btn btn-warning waves-effect waves-light">Qaytarish</a>
-                                            {% else %}
-                                                <a href="#" class="btn btn-success waves-effect waves-light">Ijaraga olish</a>
-                                            {% endif %}
-
-                                        {% else %}
-                                            <p class="text-warning">Hozir hamma nusxalar ijarada...</p>
-                                        {% endif %}
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end col -->
-                    </div>
-                    <!-- end row -->
-                </div>
-                <!-- end card body -->
-            </div>
-            <!-- end card -->
-        </div>
-        <!-- end col -->
+    {# Tavsif #}
+    {% if book.description %}
+    <div class="mt-10">
+        <h2 class="text-lg font-semibold text-slate-900">Tavsif</h2>
+        <p class="mt-3 leading-7 text-slate-600">{{ book.description|linebreaksbr }}</p>
     </div>
-
+    {% endif %}
 </div>
-<!-- container-fluid -->
-{% endblock content %}
-
-{% block custom_js %}
-{% endblock custom_js %}
+{% endblock %}

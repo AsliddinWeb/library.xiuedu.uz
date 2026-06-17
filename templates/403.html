@@ -1,0 +1,17 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Ruxsat yo'q — XIU Kutubxona{% endblock %}
+
+{% block content %}
+<section class="flex min-h-[60vh] items-center justify-center px-4">
+    <div class="text-center">
+        <p class="text-7xl font-bold text-brand-600">403</p>
+        <h1 class="mt-4 text-2xl font-semibold text-slate-900">Bu bo'limga ruxsatingiz yo'q</h1>
+        <p class="mt-2 text-slate-600">Ushbu sahifani ko'rish uchun yetarli huquqqa ega emassiz.</p>
+        <div class="mt-8 flex items-center justify-center gap-4">
+            <a href="/dashboard/" class="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700">Kabinetga qaytish</a>
+            <a href="/" class="rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">Bosh sahifa</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

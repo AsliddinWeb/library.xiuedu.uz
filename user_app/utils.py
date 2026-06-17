@@ -1,28 +1,26 @@
 from functools import wraps
-from django.http import JsonResponse
-from django.core.exceptions import ObjectDoesNotExist
 
-def role_required(role_name):
-    """
-    Dekorator foydalanuvchining current_role ni tekshiradi va belgilangan ro'l bilan solishtiradi.
+from django.shortcuts import redirect, render
+
+from .roles import Roles, effective_role
+
+
+def role_required(*allowed_roles):
+    """Foydalanuvchining amaldagi roli `allowed_roles` ichida bo'lishini talab qiladi.
+
+    - autentifikatsiyadan o'tmagan -> login sahifasiga yo'naltiradi
+    - roli mos kelmasa             -> 403 sahifa
     """
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
-            user = request.user
-            if user.is_authenticated:
-                try:
-                    # Try to access the user's employe_profile and current_role
-                    current_role = user.employe_profile.current_role
+            if not request.user.is_authenticated:
+                return redirect('student_login')
 
-                    if current_role.name == role_name:
-                        return view_func(request, *args, **kwargs)
-                    else:
-                        return JsonResponse({'error': "Bu bo'limga kirishga sizda ruhsat yo'q!"}, status=403)
-                except ObjectDoesNotExist:
-                    return JsonResponse({'error': 'Employee profile mavjud emas!'}, status=404)
-            else:
-                return JsonResponse({'error': 'Avtorizatsiya xatosi!'}, status=401)
+            if effective_role(request.user) in allowed_roles:
+                return view_func(request, *args, **kwargs)
+
+            return render(request, '403.html', status=403)
 
         return _wrapped_view
 
@@ -30,16 +28,17 @@ def role_required(role_name):
 
 
 def student_role_required(view_func):
-    return role_required('Student')(view_func)
+    return role_required(Roles.STUDENT)(view_func)
 
 
 def employee_role_required(view_func):
-    return role_required('Employee')(view_func)
+    return role_required(Roles.EMPLOYEE, Roles.LIBRARIAN, Roles.ADMIN)(view_func)
 
 
 def admin_role_required(view_func):
-    return role_required('Admin')(view_func)
+    return role_required(Roles.ADMIN)(view_func)
 
 
 def library_admin_role_required(view_func):
-    return role_required('LibraryAdmin')(view_func)
+    # Kutubxonachi bo'limlariga LibraryAdmin va Admin kira oladi
+    return role_required(Roles.LIBRARIAN, Roles.ADMIN)(view_func)

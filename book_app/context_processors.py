@@ -1,11 +1,14 @@
 from .models import Genre, Book
 
+
 def book_processor(request):
-    categories = Genre.objects.all()
-    all_books = Book.objects.select_related('category').prefetch_related('authors').all()
+    """Sidebar/nav uchun yengil kontekst.
 
-
+    Diqqat: bu har bir requestda ishlaydi — shuning uchun BARCHA kitob
+    obyektlarini yuklamaymiz. Faqat kataloglar (kichik, lazy) va kitoblar
+    soni (arzon COUNT) beriladi.
+    """
     return {
-        'categories': categories,
-        'all_books': all_books,
+        'categories': Genre.objects.all(),
+        'books_count': Book.objects.count(),
     }

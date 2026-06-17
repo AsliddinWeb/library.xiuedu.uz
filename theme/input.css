@@ -30,3 +30,10 @@
 @layer base {
   [x-cloak] { display: none !important; }
 }
+
+/* HTMX indikatori (so'rov davomida ko'rinadi) */
+@layer components {
+  .htmx-indicator { opacity: 0; transition: opacity 200ms ease-in; }
+  .htmx-request .htmx-indicator,
+  .htmx-request.htmx-indicator { opacity: 1; }
+}

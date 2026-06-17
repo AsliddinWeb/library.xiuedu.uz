@@ -1,22 +1,57 @@
 from datetime import datetime
+import logging
+
 import requests
 from django.core.files.base import ContentFile
 
 from django.shortcuts import redirect
 from django.views import View
 from django.http import JsonResponse
-from django.contrib.auth import login
-from django.db.models import Q
+from django.contrib.auth import login, logout
 
 from oauth.client import oAuth2Client
 from django.conf import settings
 
 from user_app.models import User, StudentProfile, EmployeProfile, Role
 
+logger = logging.getLogger(__name__)
+
+
+def _parse_birth_date(value):
+    """HEMIS'dan kelgan turli formatdagi sanani date'ga aylantiradi.
+    Aniqlab bo'lmasa None qaytaradi (login to'xtamasligi uchun)."""
+    if isinstance(value, bool) or value in (None, ''):
+        return None
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, int):
+        try:
+            return datetime.fromtimestamp(value).date()
+        except (ValueError, OSError, OverflowError):
+            return None
+    if isinstance(value, str):
+        try:
+            return datetime.strptime(value, "%d-%m-%Y").date()
+        except ValueError:
+            logger.warning("Birth date formati noto'g'ri: %r", value)
+            return None
+    return None
+
+
+def _download_profile_image(user, picture_url):
+    """Profil rasmini tashqi URL'dan yuklab oladi. Xatolik login'ni to'xtatmaydi."""
+    if not picture_url:
+        return
+    try:
+        resp = requests.get(picture_url, timeout=10)
+        resp.raise_for_status()
+        user.image.save(f'{user.username}_profile_pic.jpg', ContentFile(resp.content), save=True)
+    except requests.exceptions.RequestException as e:
+        logger.warning("Profil rasmini yuklab bo'lmadi (%s): %s", user.username, e)
+
 
 class AuthLoginView(View):
     def get(self, request):
-        user_type = 'student'
         client = oAuth2Client(
             client_id=settings.CLIENT_ID,
             client_secret=settings.CLIENT_SECRET,
@@ -26,11 +61,18 @@ class AuthLoginView(View):
             resource_owner_url=settings.RESOURCE_OWNER_URL
         )
 
-        authorization_url = client.get_authorization_url()
-
-        response = redirect(authorization_url)
-        response.set_cookie('user_type', user_type, max_age=3600)
+        response = redirect(client.get_authorization_url())
+        response.set_cookie('user_type', 'student', max_age=3600)
         return response
+
+
+class LogoutView(View):
+    def get(self, request):
+        logout(request)
+        return redirect('home')
+
+    post = get
+
 
 class AuthCallbackView(View):
     def get(self, request):
@@ -41,13 +83,13 @@ class AuthCallbackView(View):
             return JsonResponse({'error': 'Code is missing!'}, status=400)
 
         if user_type == "employee":
-            authorize_url = settings.EMPLOYE_AUTHORIZE_URL
             token_url = settings.EMPLOYE_ACCESS_TOKEN_URL
             resource_owner_url = settings.EMPLOYE_RESOURCE_OWNER_URL
+            authorize_url = settings.EMPLOYE_AUTHORIZE_URL
         elif user_type == "student":
-            authorize_url = settings.AUTHORIZE_URL
             token_url = settings.ACCESS_TOKEN_URL
             resource_owner_url = settings.RESOURCE_OWNER_URL
+            authorize_url = settings.AUTHORIZE_URL
         else:
             return JsonResponse({'error': 'Invalid user type in cookie!'}, status=400)
 
@@ -61,42 +103,33 @@ class AuthCallbackView(View):
         )
 
         access_token_response = client.get_access_token(code)
+        access_token = access_token_response.get('access_token')
+        if not access_token:
+            return JsonResponse({'status': False, 'error': 'Failed to obtain access token'}, status=400)
 
-        if 'access_token' in access_token_response:
-            access_token = access_token_response['access_token']
-            user_details = client.get_user_details(access_token)
+        user_details = client.get_user_details(access_token)
 
-            if user_type == "student":
-                user = self.process_student(user_details)
-            else:
-                user = self.process_employee(user_details)
+        if user_type == "student":
+            user = self.process_student(user_details)
+        else:
+            user = self.process_employee(user_details)
 
-            if user:
-                login(request, user)
+        if not user:
+            return JsonResponse({'status': False, 'error': "Foydalanuvchi ma'lumotlarini qayta ishlashda xatolik"}, status=400)
 
-
-                return redirect('dashboard')
-
-        return JsonResponse({'status': False, 'error': 'Failed to obtain access token'}, status=400)
+        login(request, user)
+        return redirect('dashboard')
 
     def process_student(self, user_details):
         student_data = user_details.get('data', {})
+        if not student_data.get('student_id_number'):
+            logger.warning("Student callback: student_id_number yo'q")
+            return None
 
         group = student_data.get('group', {})
         faculty = student_data.get('faculty', {})
 
-        birth_date = student_data.get('birth_date', None)
-        if isinstance(birth_date, int):
-            birth_date = datetime.fromtimestamp(birth_date).date()
-        elif isinstance(birth_date, str):
-            try:
-                birth_date = datetime.strptime(birth_date, "%d-%m-%Y").date()
-            except ValueError:
-                return JsonResponse({'error': 'Invalid birth date format. It must be DD-MM-YYYY.'}, status=400)
-        elif isinstance(birth_date, datetime):
-            birth_date = birth_date.date()
-
-        user, created = User.objects.update_or_create(
+        user, _ = User.objects.update_or_create(
             username=student_data.get('student_id_number'),
             defaults={
                 'first_name': student_data.get('first_name', ''),
@@ -104,8 +137,7 @@ class AuthCallbackView(View):
                 'third_name': student_data.get('third_name', ''),
                 'email': student_data.get('email', ''),
                 'phone': student_data.get('phone', ''),
-                'image': student_data.get('image', ''),
-                'birth_day': birth_date,
+                'birth_day': _parse_birth_date(student_data.get('birth_date')),
                 'gender': student_data.get('gender', {}).get('name', ''),
                 'user_type': User.UserType.STUDENT,
                 'country': student_data.get('country', {}).get('name', ''),
@@ -115,14 +147,7 @@ class AuthCallbackView(View):
             }
         )
 
-        picture_url = student_data.get('image', '')
-        if picture_url:
-            try:
-                img_data = requests.get(picture_url).content
-                user.image.save(f'{user.username}_profile_pic.jpg', ContentFile(img_data), save=True)
-            except requests.exceptions.RequestException as e:
-                return JsonResponse({'error': f'Image download failed: {str(e)}'}, status=400)
-
+        _download_profile_image(user, student_data.get('image', ''))
 
         StudentProfile.objects.update_or_create(
             user=user,
@@ -141,19 +166,15 @@ class AuthCallbackView(View):
 
     def process_employee(self, user_details):
         employe_data = user_details
-        department = employe_data.get('departments', [{}])[0].get('department', {}).get('name', '')
-        position = employe_data.get('departments', [{}])[0].get('staffPosition', {}).get('name', '')
+        if not employe_data.get('employee_id_number'):
+            logger.warning("Employee callback: employee_id_number yo'q")
+            return None
 
-        birth_date = employe_data.get('birth_date', None)
-        if isinstance(birth_date, str):
-            try:
-                birth_date = datetime.strptime(birth_date, "%d-%m-%Y").date()
-            except ValueError:
-                return JsonResponse({'error': 'Invalid birth date format. It must be DD-MM-YYYY.'}, status=400)
-        elif isinstance(birth_date, datetime):
-            birth_date = birth_date.date()
+        departments = employe_data.get('departments') or [{}]
+        department = departments[0].get('department', {}).get('name', '')
+        position = departments[0].get('staffPosition', {}).get('name', '')
 
-        user, created = User.objects.update_or_create(
+        user, _ = User.objects.update_or_create(
             username=employe_data.get('employee_id_number'),
             defaults={
                 'first_name': employe_data.get('firstname', ''),
@@ -161,33 +182,27 @@ class AuthCallbackView(View):
                 'third_name': employe_data.get('patronymic', ''),
                 'email': employe_data.get('email', ''),
                 'phone': employe_data.get('phone', ''),
-                'image': employe_data.get('picture', ''),
-                'birth_day': birth_date,
+                'birth_day': _parse_birth_date(employe_data.get('birth_date')),
                 'user_type': User.UserType.EMPLOYE,
             }
         )
 
-        picture_url = employe_data.get('picture', '')
-        if picture_url:
-            try:
-                img_data = requests.get(picture_url).content
-                user.image.save(f'{user.username}_profile_pic.jpg', ContentFile(img_data), save=True)
-            except requests.exceptions.RequestException as e:
-                return JsonResponse({'error': f'Image download failed: {str(e)}'}, status=400)
+        _download_profile_image(user, employe_data.get('picture', ''))
 
-        employee_role, created = Role.objects.get_or_create(name="Employee")
+        employee_role, _ = Role.objects.get_or_create(name="Employee")
 
-        EmployeProfile.objects.update_or_create(
+        profile, _ = EmployeProfile.objects.update_or_create(
             user=user,
             defaults={
                 'department': department,
                 'position': position,
-                'current_role': employee_role
             }
         )
-
-        employe_profile = EmployeProfile.objects.get(user=user)
-        if not employe_profile.roles.filter(Q(name="Employee")).exists():
-            employe_profile.roles.add(employee_role)
+        # current_role faqat birinchi marta o'rnatiladi (mavjudini bekor qilmaslik uchun)
+        if profile.current_role is None:
+            profile.current_role = employee_role
+            profile.save(update_fields=['current_role'])
+        if not profile.roles.filter(name="Employee").exists():
+            profile.roles.add(employee_role)
 
         return user

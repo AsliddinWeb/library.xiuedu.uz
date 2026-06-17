@@ -90,6 +90,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = "user_app.User"
 
+# Autentifikatsiya yo'naltirishlari
+LOGIN_URL = '/auth/student-login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+
 MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 
 MESSAGE_TAGS = {

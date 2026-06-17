@@ -52,7 +52,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.username
 
     def get_full_name(self):
-        return f"{self.second_name.upper()} {self.first_name.upper()}"
+        parts = [p for p in (self.second_name, self.first_name) if p]
+        full_name = " ".join(p.upper() for p in parts)
+        return full_name or self.username
 
 # Employe Profile Model
 class EmployeProfile(models.Model):
