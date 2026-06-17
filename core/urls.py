@@ -37,6 +37,9 @@ urlpatterns = [
 
     # Book
     path('books/', include('book_app.urls')),
+
+    # Circulation (ijara/navbat)
+    path('circulation/', include('circulation.urls')),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -4,8 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 
-from ..utils import is_book_borrowed_by_student
-
 from ..models import Book, Genre
 
 
@@ -16,15 +14,9 @@ def student_book_detail(request, pk):
         pk=pk,
     )
 
-    book_rental = None
+    from circulation.services import book_action_context
     student_profile = getattr(request.user, 'student_profile', None)
-    if student_profile is not None:
-        book_rental = is_book_borrowed_by_student(student_profile, book)
-
-    context = {
-        'book': book,
-        'book_rental': book_rental,
-    }
+    context = book_action_context(student_profile, book)
     return render(request, "book_app/book/detail.html", context)
 
 

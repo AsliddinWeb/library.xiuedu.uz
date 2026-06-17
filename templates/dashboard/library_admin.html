@@ -50,15 +50,18 @@
         </a>
     </div>
 
-    {# Ijara paneli — tez orada (Bosqich 2) #}
-    <div class="mt-6 flex items-center gap-4 rounded-2xl border border-dashed border-navy-200 bg-navy-50/40 p-6">
-        <div class="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-navy-100 text-navy-500">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
+    {# Ijara boshqaruvi #}
+    <a href="{% url 'circulation:manage' %}" class="group mt-6 flex items-center justify-between gap-4 rounded-2xl border border-navy-100 bg-navy-950 p-6 shadow-soft transition hover:shadow-lift">
+        <div class="flex items-center gap-4">
+            <div class="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-navy-800 text-gold-300">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 11l3 3 8-8M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>
+            </div>
+            <div>
+                <p class="font-serif text-lg font-semibold text-white">Ijara boshqaruvi</p>
+                <p class="text-sm text-navy-300">So'rovlarni tasdiqlash, qaytarish va jarimalar.</p>
+            </div>
         </div>
-        <div>
-            <p class="font-serif text-base font-semibold text-navy-900">Ijara va navbat boshqaruvi</p>
-            <p class="text-sm text-navy-500">So'rovlarni tasdiqlash, qaytarish va navbat boshqaruvi tez orada qo'shiladi.</p>
-        </div>
-    </div>
+        <svg class="h-5 w-5 flex-none text-gold-300 transition group-hover:translate-x-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></svg>
+    </a>
 </div>
 {% endblock %}

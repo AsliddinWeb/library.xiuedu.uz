@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'user_app',
     'dashboard_app',
     'book_app',
+    'circulation',
 ]
 
 MIDDLEWARE = [
@@ -174,6 +175,35 @@ UNFOLD = {
                         "icon": "receipt_long",
                         "link": reverse_lazy("admin:book_app_rental_changelist"),
                         "badge": "core.unfold_badges.active_rentals",
+                    },
+                ],
+            },
+            {
+                "title": _("Ijara"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Ijara so'rovlari"),
+                        "icon": "assignment",
+                        "link": reverse_lazy("admin:circulation_rentalrequest_changelist"),
+                        "badge": "core.unfold_badges.pending_requests",
+                    },
+                    {
+                        "title": _("Navbatlar"),
+                        "icon": "schedule",
+                        "link": reverse_lazy("admin:circulation_reservation_changelist"),
+                        "badge": "core.unfold_badges.waiting_reservations",
+                    },
+                    {
+                        "title": _("Jarimalar"),
+                        "icon": "payments",
+                        "link": reverse_lazy("admin:circulation_fine_changelist"),
+                        "badge": "core.unfold_badges.unpaid_fines",
+                    },
+                    {
+                        "title": _("Sozlamalar"),
+                        "icon": "settings",
+                        "link": reverse_lazy("admin:circulation_librarysettings_changelist"),
                     },
                 ],
             },

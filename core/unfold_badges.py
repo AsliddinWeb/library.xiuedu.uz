@@ -60,3 +60,23 @@ def student_count(request):
 def employee_count(request):
     from user_app.models import EmployeProfile
     return _safe(lambda: EmployeProfile.objects.count())
+
+
+# --- Ijara (circulation) ---
+
+def pending_requests(request):
+    """Kutilayotgan ijara so'rovlari."""
+    from circulation.models import RentalRequest
+    return _safe(lambda: RentalRequest.objects.filter(status=RentalRequest.Status.PENDING).count())
+
+
+def waiting_reservations(request):
+    """Navbatda turgan rezervatsiyalar."""
+    from circulation.models import Reservation
+    return _safe(lambda: Reservation.objects.filter(status=Reservation.Status.WAITING).count())
+
+
+def unpaid_fines(request):
+    """To'lanmagan jarimalar."""
+    from circulation.models import Fine
+    return _safe(lambda: Fine.objects.filter(is_paid=False).count())

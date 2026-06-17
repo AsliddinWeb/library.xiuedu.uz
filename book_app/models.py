@@ -88,7 +88,8 @@ class Rental(models.Model):
     library_admin_checked = models.BooleanField(default=False, verbose_name="Kutubxonachi tasdiqladimi?")
 
     borrowed_date = models.DateField(verbose_name="Olgan sana", blank=True, null=True)
-    return_date = models.DateField(verbose_name="Qaytarish sanasi", blank=True, null=True)
+    due_date = models.DateField(verbose_name="Qaytarish muddati", blank=True, null=True)
+    return_date = models.DateField(verbose_name="Qaytarilgan sana", blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Kitob yaratilgan sana")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Kitob yangilangan sana")
@@ -99,3 +100,12 @@ class Rental(models.Model):
 
     def __str__(self):
         return f"{self.copy.book.title} ({self.student.user.first_name} {self.student.user.third_name})"
+
+    @property
+    def is_active(self):
+        return self.return_date is None
+
+    @property
+    def is_overdue(self):
+        from django.utils.timezone import now
+        return self.return_date is None and self.due_date is not None and self.due_date < now().date()
