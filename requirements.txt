@@ -1,5 +1,5 @@
 # --- Asosiy ---
-Django==5.0.6
+Django==5.2.15                 # 5.2 LTS — Python 3.13/3.14 mosligi uchun
 django-unfold==0.43.0          # admin UI
 django-htmx==1.27.0            # HTMX yordamchi
 pillow==12.2.0                 # rasm (Python 3.14 wheel)
