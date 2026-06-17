@@ -1,7 +1,7 @@
 {% load static %}
 {# Bu blok HTMX orqali almashtiriladi (#book-grid ichi) #}
 {% if page_obj.object_list %}
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+    <div class="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
         {% for book in page_obj %}
             {% include "book_app/book/partials/_book_card.html" %}
         {% endfor %}
@@ -9,34 +9,36 @@
 
     {# Paginatsiya #}
     {% if page_obj.paginator.num_pages > 1 %}
-    <nav class="mt-8 flex items-center justify-center gap-1">
+    <nav class="mt-10 flex items-center justify-center gap-1.5">
         {% if page_obj.has_previous %}
             <button hx-get="{% url 'book_app:student_book_list' %}?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}"
                     hx-target="#book-grid" hx-push-url="true"
-                    class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">‹</button>
+                    class="rounded-lg border border-navy-200 bg-paper px-3.5 py-2 text-sm text-navy-600 transition hover:border-navy-300 hover:bg-white">‹</button>
         {% endif %}
 
         {% for num in page_obj.paginator.page_range %}
             {% if num == page_obj.number %}
-                <span class="rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white">{{ num }}</span>
+                <span class="rounded-lg bg-navy-900 px-4 py-2 text-sm font-semibold text-white">{{ num }}</span>
             {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %}
                 <button hx-get="{% url 'book_app:student_book_list' %}?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}"
                         hx-target="#book-grid" hx-push-url="true"
-                        class="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50">{{ num }}</button>
+                        class="rounded-lg border border-navy-200 bg-paper px-4 py-2 text-sm text-navy-600 transition hover:border-navy-300 hover:bg-white">{{ num }}</button>
             {% endif %}
         {% endfor %}
 
         {% if page_obj.has_next %}
             <button hx-get="{% url 'book_app:student_book_list' %}?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}"
                     hx-target="#book-grid" hx-push-url="true"
-                    class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">›</button>
+                    class="rounded-lg border border-navy-200 bg-paper px-3.5 py-2 text-sm text-navy-600 transition hover:border-navy-300 hover:bg-white">›</button>
         {% endif %}
     </nav>
     {% endif %}
 {% else %}
-    <div class="flex flex-col items-center justify-center py-20 text-center">
-        <div class="text-5xl">🔍</div>
-        <h3 class="mt-4 text-lg font-semibold text-slate-900">Kitob topilmadi</h3>
-        <p class="mt-1 text-sm text-slate-500">Qidiruv yoki filtrlarni o'zgartirib ko'ring.</p>
+    <div class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-navy-200 py-20 text-center">
+        <div class="flex h-14 w-14 items-center justify-center rounded-full bg-navy-50 text-navy-300">
+            <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.3-4.3M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/></svg>
+        </div>
+        <h3 class="mt-4 font-serif text-lg font-semibold text-navy-900">Kitob topilmadi</h3>
+        <p class="mt-1 text-sm text-navy-500">Qidiruv yoki filtrlarni o'zgartirib ko'ring.</p>
     </div>
 {% endif %}

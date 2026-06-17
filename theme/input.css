@@ -4,36 +4,62 @@
 @source "../templates/**/*.html";
 @source "../**/templates/**/*.html";
 
-/* ---------------------------------------------------------------------------
-   XIU Library dizayn tokenlari
-   (ranglarni keyin brendga moslab o'zgartirish mumkin)
---------------------------------------------------------------------------- */
+/* ===========================================================================
+   XIU Library — "Akademik nafis" dizayn tizimi
+   To'q navy + oltin aksent, nafis serif sarlavhalar
+=========================================================================== */
 @theme {
-  /* Asosiy brend rangi (akademik ko'k) */
-  --color-brand-50:  #eef4ff;
-  --color-brand-100: #d9e6ff;
-  --color-brand-200: #bcd2ff;
-  --color-brand-300: #8eb5ff;
-  --color-brand-400: #598dff;
-  --color-brand-500: #3366ff;
-  --color-brand-600: #1f48f5;
-  --color-brand-700: #1736e1;
-  --color-brand-800: #192fb6;
-  --color-brand-900: #1a2d8f;
-  --color-brand-950: #141d57;
+  /* --- Navy (asosiy) --- */
+  --color-navy-50:  #eef2f9;
+  --color-navy-100: #d7e0ef;
+  --color-navy-200: #b0c2dd;
+  --color-navy-300: #819cc4;
+  --color-navy-400: #5474a6;
+  --color-navy-500: #375789;
+  --color-navy-600: #2a4470;
+  --color-navy-700: #20335a;
+  --color-navy-800: #16243f;
+  --color-navy-900: #0e1a30;
+  --color-navy-950: #070f20;
 
-  /* Shrift */
+  /* --- Oltin (aksent) --- */
+  --color-gold-50:  #fbf8ef;
+  --color-gold-100: #f5ecd0;
+  --color-gold-200: #ecd89f;
+  --color-gold-300: #e1c06c;
+  --color-gold-400: #d6a945;
+  --color-gold-500: #c89537;
+  --color-gold-600: #ab742c;
+  --color-gold-700: #895726;
+  --color-gold-800: #714625;
+  --color-gold-900: #613b23;
+
+  /* --- Neytral (issiq) --- */
+  --color-cream: #faf7f0;
+  --color-paper: #fffdf8;
+  --color-ink: #15203a;
+
+  /* --- Shriftlar --- */
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
+
+  /* --- Soyalar (yumshoq, premium) --- */
+  --shadow-soft: 0 1px 2px rgba(16, 26, 48, .04), 0 8px 24px -8px rgba(16, 26, 48, .12);
+  --shadow-lift: 0 2px 4px rgba(16, 26, 48, .06), 0 18px 40px -12px rgba(16, 26, 48, .22);
 }
 
-/* Alpine.js x-cloak — yuklanmaguncha yashirin */
 @layer base {
+  body { font-feature-settings: "ss01", "cv01"; }
+  h1, h2, h3, .font-serif { letter-spacing: -0.01em; }
   [x-cloak] { display: none !important; }
 }
 
-/* HTMX indikatori (so'rov davomida ko'rinadi) */
 @layer components {
+  /* HTMX indikatori */
   .htmx-indicator { opacity: 0; transition: opacity 200ms ease-in; }
   .htmx-request .htmx-indicator,
   .htmx-request.htmx-indicator { opacity: 1; }
+
+  /* Nozik oltin ajratuvchi chiziq */
+  .gold-rule { height: 2px; width: 3rem; background: linear-gradient(90deg, var(--color-gold-400), transparent); }
 }

@@ -6,7 +6,7 @@ from django.core.files.base import ContentFile
 
 from django.shortcuts import redirect
 from django.views import View
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import login, logout
 
 from oauth.client import oAuth2Client
@@ -52,6 +52,12 @@ def _download_profile_image(user, picture_url):
 
 class AuthLoginView(View):
     def get(self, request):
+        if not settings.AUTHORIZE_URL:
+            return HttpResponse(
+                "HEMIS oAuth sozlanmagan (AUTHORIZE_URL yo'q). "
+                "Lokal sinov uchun /admin orqali kiring.",
+                status=503,
+            )
         client = oAuth2Client(
             client_id=settings.CLIENT_ID,
             client_secret=settings.CLIENT_SECRET,

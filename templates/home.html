@@ -1,78 +1,174 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}XIU Elektron kutubxona — Bosh sahifa{% endblock %}
+{% block title %}XIU Elektron kutubxona — Bilim platformasi{% endblock %}
 
 {% block content %}
-{# ---------------------------------------------------------------- Hero #}
-<section class="relative overflow-hidden bg-gradient-to-b from-brand-50 to-slate-50">
-    <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
-        <div class="mx-auto max-w-3xl text-center">
-            <span class="inline-flex items-center rounded-full bg-brand-100 px-3 py-1 text-sm font-medium text-brand-700">
-                Xalqaro Innovatsion Universitet
-            </span>
-            <h1 class="mt-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
-                Elektron kutubxona <span class="text-brand-600">platformasi</span>
+{# ===================================================== Hero (editorial) #}
+<section class="relative">
+    <div class="mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-4 pb-16 pt-12 sm:px-6 lg:grid-cols-12 lg:gap-8 lg:px-8 lg:pb-24 lg:pt-20">
+
+        {# Chap: matn #}
+        <div class="lg:col-span-7">
+            <div class="flex items-center gap-3">
+                <span class="h-px w-8 bg-gold-400"></span>
+                <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">Elektron kutubxona platformasi</span>
+            </div>
+
+            <h1 class="mt-7 font-serif text-5xl font-semibold leading-[1.02] tracking-tight text-navy-950 sm:text-6xl lg:text-7xl">
+                O'qing. Izlang.<br>
+                <span class="italic font-medium text-navy-800">Kashf eting.</span>
             </h1>
-            <p class="mt-6 text-lg leading-8 text-slate-600">
-                Minglab kitoblarni onlayn o'qing va tinglang, jismoniy nusxalarni ijaraga oling —
-                hammasi bitta platformada.
+
+            <p class="mt-7 max-w-xl text-lg leading-8 text-navy-600">
+                Minglab kitob, audio va elektron nashrlar — Xalqaro Innovatsion Universitet
+                kutubxonasi endi bir joyda. Onlayn o'qing, tinglang yoki jismoniy nusxani ijaraga oling.
             </p>
-            <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
-                <a href="/auth/student-login/" class="rounded-lg bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-brand-700">
+
+            <div class="mt-9 flex flex-wrap items-center gap-4">
+                <a href="/auth/student-login/" class="group inline-flex items-center gap-2 rounded-full bg-navy-900 px-7 py-3.5 text-base font-semibold text-white shadow-lift transition hover:bg-navy-800">
                     Tizimga kirish
+                    <svg class="h-4 w-4 text-gold-300 transition group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></svg>
                 </a>
-                <a href="/books/" class="rounded-lg bg-white px-6 py-3 text-base font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50">
-                    Kitoblarni ko'rish
+                <a href="/books/" class="text-base font-semibold text-navy-800 underline decoration-gold-400 decoration-2 underline-offset-[6px] transition hover:text-navy-950 hover:decoration-gold-600">
+                    Katalogni ko'rish
                 </a>
+            </div>
+
+            {# Inline statistika — hairline bilan #}
+            <dl class="mt-12 flex max-w-lg divide-x divide-navy-200/70">
+                <div class="pr-8">
+                    <dt class="text-xs uppercase tracking-wider text-navy-400">Kitoblar</dt>
+                    <dd class="mt-1 font-serif text-2xl font-semibold text-navy-900">{{ books_count|default:"1 200+" }}</dd>
+                </div>
+                <div class="px-8">
+                    <dt class="text-xs uppercase tracking-wider text-navy-400">Kirish</dt>
+                    <dd class="mt-1 font-serif text-2xl font-semibold text-navy-900">24/7</dd>
+                </div>
+                <div class="pl-8">
+                    <dt class="text-xs uppercase tracking-wider text-navy-400">Avtorizatsiya</dt>
+                    <dd class="mt-1 font-serif text-2xl font-semibold text-navy-900">HEMIS</dd>
+                </div>
+            </dl>
+        </div>
+
+        {# O'ng: kitob kompozitsiyasi #}
+        <div class="relative hidden h-[30rem] lg:col-span-5 lg:block">
+            {# orqa karta #}
+            <div class="absolute right-6 top-10 h-80 w-56 rotate-6 rounded-2xl border border-navy-100 bg-gradient-to-br from-navy-700 to-navy-900 shadow-soft"></div>
+            {# o'rta karta #}
+            <div class="absolute right-24 top-4 flex h-88 w-60 -rotate-3 flex-col justify-between rounded-2xl bg-gradient-to-br from-navy-800 to-navy-950 p-6 shadow-lift ring-1 ring-navy-700">
+                <div>
+                    <span class="h-px w-8 bg-gold-400"></span>
+                    <p class="mt-4 text-[11px] uppercase tracking-widest text-gold-400">Adabiyot</p>
+                    <h3 class="mt-2 font-serif text-2xl font-semibold leading-tight text-white">O'tkan kunlar</h3>
+                    <p class="mt-1 text-sm text-navy-300">Abdulla Qodiriy</p>
+                </div>
+                <div class="flex items-center gap-2 text-navy-300">
+                    <svg class="h-4 w-4 text-gold-300" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+                    <span class="text-xs">Onlayn o'qish</span>
+                </div>
+            </div>
+            {# old karta (oltin chekka) #}
+            <div class="absolute left-2 top-24 flex h-72 w-52 rotate-[-7deg] flex-col justify-between rounded-2xl bg-paper p-6 shadow-lift ring-1 ring-navy-100">
+                <div>
+                    <span class="h-px w-8 bg-gold-400"></span>
+                    <p class="mt-4 text-[11px] uppercase tracking-widest text-gold-700">Tarix</p>
+                    <h3 class="mt-2 font-serif text-xl font-semibold leading-tight text-navy-900">Sapiens</h3>
+                    <p class="mt-1 text-sm text-navy-500">Yuval Noah Harari</p>
+                </div>
+                <div class="flex items-center gap-1.5 text-gold-600">
+                    {% for i in "12345" %}<svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8 6.8 19.2l1-5.8-4.3-4.1 5.9-.9z"/></svg>{% endfor %}
+                </div>
+            </div>
+            {# kichik suzuvchi nishon #}
+            <div class="absolute bottom-2 right-4 flex items-center gap-2 rounded-full bg-paper px-4 py-2 shadow-lift ring-1 ring-navy-100">
+                <span class="flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                <span class="text-xs font-medium text-navy-700">3 nusxa mavjud</span>
             </div>
         </div>
     </div>
 </section>
 
-{# ------------------------------------------------------------- Features #}
-<section id="about" class="py-20">
+{# ============================================== Imkoniyatlar (raqamli) #}
+<section id="about" class="border-t border-navy-100 py-20 lg:py-28">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-2xl text-center">
-            <h2 class="text-3xl font-bold tracking-tight text-slate-900">Platforma imkoniyatlari</h2>
-            <p class="mt-4 text-slate-600">Talabalar va o'qituvchilar uchun zamonaviy kutubxona xizmatlari.</p>
-        </div>
+        <div class="grid grid-cols-1 gap-12 lg:grid-cols-12">
+            <div class="lg:col-span-4">
+                <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">Imkoniyatlar</span>
+                <h2 class="mt-4 font-serif text-4xl font-semibold leading-tight tracking-tight text-navy-950">
+                    Bitta platforma,<br>to'liq tajriba
+                </h2>
+                <p class="mt-5 max-w-sm leading-7 text-navy-600">
+                    Talaba va o'qituvchilar uchun zamonaviy kutubxona — qidirishdan o'qishgacha,
+                    ijaradan navbatgacha.
+                </p>
+            </div>
 
-        <div class="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 text-2xl">📖</div>
-                <h3 class="mt-4 text-lg font-semibold text-slate-900">Onlayn o'qish va tinglash</h3>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Kitoblarni brauzerda o'qing va audio versiyalarni tinglang — yuklab olmasdan.</p>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 text-2xl">📚</div>
-                <h3 class="mt-4 text-lg font-semibold text-slate-900">Kitob ijarasi</h3>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Jismoniy kitoblarni so'rab oling, kutubxonachi tasdiqlaydi — qulay va tez.</p>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 text-2xl">⏳</div>
-                <h3 class="mt-4 text-lg font-semibold text-slate-900">Navbat tizimi</h3>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Band kitobga navbatga yoziling va bo'shaganda darhol xabar oling.</p>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 text-2xl">⭐</div>
-                <h3 class="mt-4 text-lg font-semibold text-slate-900">Sharh va sevimlilar</h3>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Kitoblarga baho bering, sharh qoldiring va shaxsiy kutubxonangizni yuriting.</p>
+            <div class="lg:col-span-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2">
+                    {# 01 #}
+                    <div class="border-t border-navy-200 py-7 sm:pr-10">
+                        <div class="flex items-baseline gap-4">
+                            <span class="font-serif text-lg text-gold-500">01</span>
+                            <div>
+                                <h3 class="font-serif text-xl font-semibold text-navy-900">Onlayn o'qish va tinglash</h3>
+                                <p class="mt-2 text-sm leading-6 text-navy-600">Brauzerda o'qing, audio nashrlarni tinglang — yuklab olmasdan, istalgan joydan.</p>
+                            </div>
+                        </div>
+                    </div>
+                    {# 02 #}
+                    <div class="border-t border-navy-200 py-7 sm:border-t sm:pl-10">
+                        <div class="flex items-baseline gap-4">
+                            <span class="font-serif text-lg text-gold-500">02</span>
+                            <div>
+                                <h3 class="font-serif text-xl font-semibold text-navy-900">Kitob ijarasi</h3>
+                                <p class="mt-2 text-sm leading-6 text-navy-600">Jismoniy nusxani so'rab oling — kutubxonachi tasdiqlaydi, siz qulay vaqtda olasiz.</p>
+                            </div>
+                        </div>
+                    </div>
+                    {# 03 #}
+                    <div class="border-t border-navy-200 py-7 sm:pr-10">
+                        <div class="flex items-baseline gap-4">
+                            <span class="font-serif text-lg text-gold-500">03</span>
+                            <div>
+                                <h3 class="font-serif text-xl font-semibold text-navy-900">Navbat tizimi</h3>
+                                <p class="mt-2 text-sm leading-6 text-navy-600">Band kitobga navbatga yoziling — bo'shashi bilan birinchi bo'lib xabar olasiz.</p>
+                            </div>
+                        </div>
+                    </div>
+                    {# 04 #}
+                    <div class="border-t border-navy-200 py-7 sm:pl-10">
+                        <div class="flex items-baseline gap-4">
+                            <span class="font-serif text-lg text-gold-500">04</span>
+                            <div>
+                                <h3 class="font-serif text-xl font-semibold text-navy-900">Sharh va sevimlilar</h3>
+                                <p class="mt-2 text-sm leading-6 text-navy-600">Baho bering, sharh qoldiring va shaxsiy kutubxonangizni yuriting.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-{# ------------------------------------------------------------------ CTA #}
-<section class="pb-20">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="rounded-3xl bg-brand-600 px-8 py-14 text-center shadow-lg">
-            <h2 class="text-3xl font-bold text-white">Hoziroq boshlang</h2>
-            <p class="mx-auto mt-4 max-w-xl text-brand-100">
-                HEMIS hisobingiz orqali tizimga kiring va kutubxonadan to'liq foydalaning.
-            </p>
-            <a href="/auth/student-login/" class="mt-8 inline-block rounded-lg bg-white px-6 py-3 text-base font-semibold text-brand-700 transition hover:bg-brand-50">
-                HEMIS orqali kirish
-            </a>
+{# ============================================================== CTA #}
+<section class="px-4 pb-24 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-navy-950">
+        <div class="grid grid-cols-1 items-center gap-8 px-8 py-16 sm:px-14 lg:grid-cols-2">
+            <div>
+                <span class="h-px w-10 bg-gold-400"></span>
+                <h2 class="mt-5 font-serif text-4xl font-semibold leading-tight text-white">Hoziroq boshlang</h2>
+                <p class="mt-4 max-w-md leading-7 text-navy-300">
+                    HEMIS hisobingiz orqali bir bosishda kiring va universitet kutubxonasidan to'liq foydalaning.
+                </p>
+            </div>
+            <div class="lg:justify-self-end">
+                <a href="/auth/student-login/" class="group inline-flex items-center gap-2 rounded-full bg-gold-400 px-7 py-3.5 text-base font-semibold text-navy-950 transition hover:bg-gold-300">
+                    HEMIS orqali kirish
+                    <svg class="h-4 w-4 transition group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                </a>
+            </div>
         </div>
     </div>
 </section>

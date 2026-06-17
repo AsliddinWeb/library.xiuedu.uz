@@ -1,11 +1,39 @@
-<footer class="border-t border-slate-200 bg-white">
-    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 sm:px-6 md:flex-row lg:px-8">
-        <p class="text-sm text-slate-500">
-            &copy; {% now "Y" %} Xalqaro Innovatsion Universitet — Elektron kutubxona
-        </p>
-        <div class="flex items-center gap-6 text-sm text-slate-500">
-            <a href="/books/" class="hover:text-brand-700">Kitoblar</a>
-            <a href="/#about" class="hover:text-brand-700">Platforma haqida</a>
+{% load static %}
+<footer class="mt-20 bg-navy-950 text-navy-200">
+    <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div class="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
+            <div class="max-w-sm">
+                <div class="flex items-center gap-3">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-navy-900 text-sm font-bold text-gold-300 ring-1 ring-navy-800">XIU</span>
+                    <span class="font-serif text-lg font-semibold text-white">Kutubxona</span>
+                </div>
+                <p class="mt-4 text-sm leading-6 text-navy-300">
+                    Xalqaro Innovatsion Universitetning zamonaviy elektron kutubxona platformasi —
+                    bilim har doim qo'lingiz ostida.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-10 sm:gap-16">
+                <div>
+                    <h4 class="text-xs font-semibold uppercase tracking-widest text-gold-400">Platforma</h4>
+                    <ul class="mt-4 space-y-3 text-sm">
+                        <li><a href="/books/" class="text-navy-300 transition hover:text-white">Kitoblar</a></li>
+                        <li><a href="/#about" class="text-navy-300 transition hover:text-white">Imkoniyatlar</a></li>
+                        <li><a href="/dashboard/" class="text-navy-300 transition hover:text-white">Kabinet</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-xs font-semibold uppercase tracking-widest text-gold-400">Universitet</h4>
+                    <ul class="mt-4 space-y-3 text-sm">
+                        <li><span class="text-navy-300">library.xiuedu.uz</span></li>
+                        <li><span class="text-navy-300">XIU — Toshkent</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12 border-t border-navy-800 pt-6">
+            <p class="text-sm text-navy-400">&copy; {% now "Y" %} Xalqaro Innovatsion Universitet. Barcha huquqlar himoyalangan.</p>
         </div>
     </div>
 </footer>

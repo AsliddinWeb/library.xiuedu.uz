@@ -3,20 +3,22 @@
 {% block title %}{{ book.title }} — XIU Kutubxona{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-    <a href="{% url 'book_app:student_book_list' %}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-700">
+<div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+    <a href="{% url 'book_app:student_book_list' %}" class="inline-flex items-center gap-1.5 text-sm font-medium text-navy-500 transition hover:text-navy-800">
         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
         Katalogga qaytish
     </a>
 
-    <div class="mt-6 grid grid-cols-1 gap-8 md:grid-cols-3">
+    <div class="mt-8 grid grid-cols-1 gap-10 md:grid-cols-3">
         {# Muqova #}
         <div class="md:col-span-1">
-            <div class="aspect-3/4 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+            <div class="aspect-3/4 overflow-hidden rounded-2xl border border-navy-100 bg-navy-50 shadow-lift">
                 {% if book.cover_image %}
                     <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="h-full w-full object-cover">
                 {% else %}
-                    <div class="flex h-full w-full items-center justify-center text-6xl text-slate-300">📚</div>
+                    <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-navy-100 to-navy-50 text-navy-300">
+                        <svg class="h-16 w-16" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v16M8 8v12M12 6v14M16 9l4 11"/></svg>
+                    </div>
                 {% endif %}
             </div>
         </div>
@@ -24,56 +26,59 @@
         {# Ma'lumot #}
         <div class="md:col-span-2">
             {% if book.category %}
-                <span class="inline-flex rounded-full bg-brand-100 px-3 py-1 text-xs font-medium text-brand-700">{{ book.category.name }}</span>
+                <span class="inline-flex rounded-full bg-gold-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gold-700">{{ book.category.name }}</span>
             {% endif %}
-            <h1 class="mt-3 text-3xl font-bold text-slate-900">{{ book.title }}</h1>
-            <p class="mt-2 text-slate-600">
+            <h1 class="mt-4 font-serif text-4xl font-semibold leading-tight text-navy-950">{{ book.title }}</h1>
+            <p class="mt-3 text-navy-600">
                 {% for author in book.authors.all %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}Muallif noma'lum{% endfor %}
             </p>
 
             {% if book_rental %}
-                <div class="mt-4 inline-flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
-                    ✓ Siz bu kitobni ijaraga olgansiz
+                <div class="mt-5 inline-flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700 ring-1 ring-green-100">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></svg>
+                    Siz bu kitobni ijaraga olgansiz
                 </div>
             {% endif %}
 
             {# Amallar #}
-            <div class="mt-6 flex flex-wrap gap-3">
+            <div class="mt-7 flex flex-wrap gap-3">
                 {% if book.electronic_version %}
                     <a href="{{ book.electronic_version.url }}" target="_blank" rel="noopener"
-                       class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700">
-                        📖 Onlayn o'qish
+                       class="inline-flex items-center gap-2 rounded-full bg-navy-900 px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-navy-800">
+                        <svg class="h-4 w-4 text-gold-300" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+                        Onlayn o'qish
                     </a>
                 {% endif %}
                 {% if book.audio_version %}
                     <a href="{{ book.audio_version.url }}" target="_blank" rel="noopener"
-                       class="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">
-                        🎧 Audio tinglash
+                       class="inline-flex items-center gap-2 rounded-full border border-navy-200 bg-paper px-6 py-3 text-sm font-semibold text-navy-800 shadow-soft transition hover:border-navy-300 hover:bg-white">
+                        <svg class="h-4 w-4 text-navy-500" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16v-4a9 9 0 0 1 18 0v4M21 17a2 2 0 0 1-2 2h-1v-6h1a2 2 0 0 1 2 2zM3 17a2 2 0 0 0 2 2h1v-6H5a2 2 0 0 0-2 2z"/></svg>
+                        Audio tinglash
                     </a>
                 {% endif %}
             </div>
 
             {# Meta #}
-            <dl class="mt-8 grid grid-cols-2 gap-x-6 gap-y-4 text-sm sm:grid-cols-3">
+            <dl class="mt-9 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-navy-100 pt-7 text-sm sm:grid-cols-3">
                 <div>
-                    <dt class="text-slate-400">Mavjud nusxalar</dt>
-                    <dd class="mt-0.5 font-semibold text-slate-900">{{ book.copy_count }}</dd>
+                    <dt class="text-xs uppercase tracking-wide text-navy-400">Mavjud nusxalar</dt>
+                    <dd class="mt-1 font-serif text-lg font-semibold text-navy-900">{{ book.copy_count }}</dd>
                 </div>
                 <div>
-                    <dt class="text-slate-400">Til</dt>
-                    <dd class="mt-0.5 font-semibold text-slate-900">{{ book.language|default:"—" }}</dd>
+                    <dt class="text-xs uppercase tracking-wide text-navy-400">Til</dt>
+                    <dd class="mt-1 font-serif text-lg font-semibold text-navy-900">{{ book.language|default:"—" }}</dd>
                 </div>
                 <div>
-                    <dt class="text-slate-400">Sahifalar</dt>
-                    <dd class="mt-0.5 font-semibold text-slate-900">{{ book.page_count|default:"—" }}</dd>
+                    <dt class="text-xs uppercase tracking-wide text-navy-400">Sahifalar</dt>
+                    <dd class="mt-1 font-serif text-lg font-semibold text-navy-900">{{ book.page_count|default:"—" }}</dd>
                 </div>
                 <div>
-                    <dt class="text-slate-400">Chop etilgan</dt>
-                    <dd class="mt-0.5 font-semibold text-slate-900">{{ book.published_date|default:"—" }}</dd>
+                    <dt class="text-xs uppercase tracking-wide text-navy-400">Chop etilgan</dt>
+                    <dd class="mt-1 font-serif text-lg font-semibold text-navy-900">{{ book.published_date|default:"—" }}</dd>
                 </div>
                 <div>
-                    <dt class="text-slate-400">ISBN</dt>
-                    <dd class="mt-0.5 font-semibold text-slate-900">{{ book.isbn|default:"—" }}</dd>
+                    <dt class="text-xs uppercase tracking-wide text-navy-400">ISBN</dt>
+                    <dd class="mt-1 font-serif text-lg font-semibold text-navy-900">{{ book.isbn|default:"—" }}</dd>
                 </div>
             </dl>
         </div>
@@ -81,9 +86,10 @@
 
     {# Tavsif #}
     {% if book.description %}
-    <div class="mt-10">
-        <h2 class="text-lg font-semibold text-slate-900">Tavsif</h2>
-        <p class="mt-3 leading-7 text-slate-600">{{ book.description|linebreaksbr }}</p>
+    <div class="mt-12 max-w-3xl">
+        <div class="gold-rule"></div>
+        <h2 class="mt-4 font-serif text-2xl font-semibold text-navy-900">Tavsif</h2>
+        <p class="mt-4 leading-8 text-navy-600">{{ book.description|linebreaksbr }}</p>
     </div>
     {% endif %}
 </div>

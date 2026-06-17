@@ -1,11 +1,17 @@
 from django.shortcuts import redirect
 from django.views import View
+from django.http import HttpResponse
 from oauth.client import oAuth2Client
 from django.conf import settings
 
 
 class EmployeAuthLoginView(View):
     def get(self, request):
+        if not settings.EMPLOYE_AUTHORIZE_URL:
+            return HttpResponse(
+                "HEMIS oAuth (xodim) sozlanmagan. Lokal sinov uchun /admin orqali kiring.",
+                status=503,
+            )
         client = oAuth2Client(
             client_id=settings.CLIENT_ID,
             client_secret=settings.CLIENT_SECRET,

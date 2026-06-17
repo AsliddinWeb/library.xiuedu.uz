@@ -1,63 +1,69 @@
+from datetime import timedelta
+
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
-from book_app.models import Book, Rental, Genre
-from user_app.models import User
-
-# Student requirements
 from django.db.models import Count
 from django.utils.timezone import now
-from datetime import timedelta
+
+from book_app.models import Book, Rental, Genre
+from user_app.roles import Roles, effective_role
+
 
 def home(request):
     return render(request, "home.html")
 
-@login_required(login_url="/auth/student-login")
+
+@login_required
 def dashboard(request):
-    user = request.user
+    role = effective_role(request.user)
 
-    if user.is_authenticated:
-        if user.is_superuser:
-            return redirect('/admin')
+    if role == Roles.ADMIN:
+        return redirect('/admin/')
+    if role == Roles.STUDENT:
+        return _student_dashboard(request)
+    if role == Roles.LIBRARIAN:
+        return render(request, 'dashboard/library_admin.html')
+    if role == Roles.EMPLOYEE:
+        return render(request, 'dashboard/employee.html')
 
-        if user.user_type == "STUDENT":
-            all_books = Book.objects.all()
+    # Roli aniqlanmagan xodim — standart sifatida xodim paneli
+    return render(request, 'dashboard/employee.html')
 
-            # Popular books
-            popular_books = (
-                Book.objects.annotate(rental_count=Count('copy__rental'))
-                .order_by('-rental_count')[:15]
-            )
 
-            # Recent books
-            one_month_ago = now() - timedelta(days=30)
-            recent_books = Book.objects.filter(created_at__gte=one_month_ago).order_by('-created_at')[:12]
+def _student_dashboard(request):
+    base_qs = Book.objects.select_related('category').prefetch_related('authors')
 
-            rental_books = Rental.objects.all()
-            all_users = User.objects.all()
+    popular_books = (
+        base_qs.filter(category__is_active=True)
+        .annotate(rental_count=Count('copy__rental'))
+        .order_by('-rental_count', '-id')[:6]
+    )
 
-            ctx = {
-                'all_books': all_books,
-                'popular_books': popular_books,
-                'recent_books': recent_books,
+    one_month_ago = now() - timedelta(days=30)
+    recent_books = (
+        base_qs.filter(category__is_active=True, created_at__gte=one_month_ago)
+        .order_by('-created_at')[:6]
+    )
+    # Agar oxirgi oyda yangi kitob bo'lmasa — eng so'nggilarini ko'rsatamiz
+    if not recent_books:
+        recent_books = base_qs.filter(category__is_active=True).order_by('-created_at')[:6]
 
-                'rental_books': rental_books,
-                'all_users': all_users,
-            }
-            return render(request, "dashboard/student.html", ctx)
-        else:
-            if user.employe_profile.current_role.name == 'Admin':
-                return redirect('/admin')
+    # Talabaning joriy (qaytarilmagan) ijaralari
+    active_rentals = []
+    student_profile = getattr(request.user, 'student_profile', None)
+    if student_profile is not None:
+        active_rentals = (
+            Rental.objects
+            .filter(student=student_profile, return_date__isnull=True)
+            .select_related('copy__book')
+        )
 
-            elif user.employe_profile.current_role.name == 'LibraryAdmin':
-
-                return render(request, 'dashboard/library_admin.html')
-
-            elif user.employe_profile.current_role.name == 'Employee':
-
-                return render(request, 'dashboard/employee.html')
-            else:
-                return JsonResponse({'error': 'No valid role assigned.'}, status=403)
-    else:
-        return redirect('student_login')
+    ctx = {
+        'popular_books': popular_books,
+        'recent_books': recent_books,
+        'active_rentals': active_rentals,
+        'active_rentals_count': len(active_rentals),
+        'genres': Genre.objects.filter(is_active=True)[:8],
+    }
+    return render(request, "dashboard/student.html", ctx)
