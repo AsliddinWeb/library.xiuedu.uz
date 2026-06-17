@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'dashboard_app',
     'book_app',
     'circulation',
+    'reading',
 ]
 
 MIDDLEWARE = [

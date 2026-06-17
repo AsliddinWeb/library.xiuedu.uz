@@ -40,6 +40,9 @@ urlpatterns = [
 
     # Circulation (ijara/navbat)
     path('circulation/', include('circulation.urls')),
+
+    # Reading (onlayn o'qish/tinglash)
+    path('reading/', include('reading.urls')),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

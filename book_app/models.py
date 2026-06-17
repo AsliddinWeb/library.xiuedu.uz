@@ -52,6 +52,8 @@ class Book(models.Model):
     language = models.CharField(max_length=50, verbose_name="Til", default="O'zbekcha")
     isbn = models.CharField(max_length=13, verbose_name="ISBN", blank=True, null=True)
 
+    view_count = models.PositiveIntegerField(default=0, verbose_name="Ko'rishlar soni")
+
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Kitob yaratilgan sana")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Kitob yangilangan sana")
 

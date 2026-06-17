@@ -1,0 +1,64 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+
+{% block title %}{{ book.title }} — Tinglash{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
+    <a href="{% url 'book_app:student_book_detail' book.pk %}" class="inline-flex items-center gap-1.5 text-sm font-medium text-navy-500 transition hover:text-navy-800">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
+        Kitobga qaytish
+    </a>
+
+    <div class="mt-8 overflow-hidden rounded-3xl border border-navy-100 bg-paper shadow-lift">
+        <div class="flex flex-col items-center gap-6 bg-gradient-to-b from-navy-900 to-navy-950 px-8 py-12 text-center">
+            <div class="h-40 w-32 overflow-hidden rounded-xl shadow-2xl ring-1 ring-navy-700">
+                {% if book.cover_image %}
+                    <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="h-full w-full object-cover">
+                {% else %}
+                    <div class="flex h-full w-full items-center justify-center bg-navy-800 text-gold-300">
+                        <svg class="h-12 w-12" fill="none" stroke="currentColor" stroke-width="1.3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16v-4a9 9 0 0 1 18 0v4M21 17a2 2 0 0 1-2 2h-1v-6h1a2 2 0 0 1 2 2zM3 17a2 2 0 0 0 2 2h1v-6H5a2 2 0 0 0-2 2z"/></svg>
+                    </div>
+                {% endif %}
+            </div>
+            <div>
+                <h1 class="font-serif text-2xl font-semibold text-white">{{ book.title }}</h1>
+                <p class="mt-1 text-sm text-navy-300">
+                    {% for author in book.authors.all %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}Audiokitob{% endfor %}
+                </p>
+            </div>
+        </div>
+
+        <div class="px-8 py-8">
+            <audio id="player" class="w-full" controls controlsList="nodownload noplaybackrate" preload="metadata">
+                <source src="{% url 'reading:stream_audio' book.pk %}">
+                Brauzeringiz audio ijroni qo'llab-quvvatlamaydi.
+            </audio>
+            <p class="mt-4 text-center text-xs text-navy-400">Oxirgi tinglagan joyingizdan davom etadi.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const audio = document.getElementById('player');
+    const startSec = {{ start_sec|default:0 }};
+    const progressUrl = "{% url 'reading:save_progress' book.pk %}";
+    const csrf = "{{ csrf_token }}";
+
+    audio.addEventListener('loadedmetadata', () => {
+        if (startSec > 0 && startSec < audio.duration) audio.currentTime = startSec;
+    });
+
+    let last = 0;
+    audio.addEventListener('timeupdate', () => {
+        const t = audio.currentTime;
+        if (Math.abs(t - last) < 5) return;  // har ~5 soniyada saqlaymiz
+        last = t;
+        const percent = audio.duration ? Math.round((t / audio.duration) * 100) : 0;
+        const body = new URLSearchParams({ mode: 'LISTEN', position: Math.floor(t), percent });
+        fetch(progressUrl, { method: 'POST', headers: { 'X-CSRFToken': csrf }, body });
+    });
+})();
+</script>
+{% endblock %}
