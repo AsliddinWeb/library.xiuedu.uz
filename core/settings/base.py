@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'book_app',
     'circulation',
     'reading',
+    'engagement',
 ]
 
 MIDDLEWARE = [
@@ -205,6 +206,23 @@ UNFOLD = {
                         "title": _("Sozlamalar"),
                         "icon": "settings",
                         "link": reverse_lazy("admin:circulation_librarysettings_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Faollik"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Sharhlar"),
+                        "icon": "rate_review",
+                        "link": reverse_lazy("admin:engagement_review_changelist"),
+                        "badge": "core.unfold_badges.pending_reviews",
+                    },
+                    {
+                        "title": _("Sevimlilar"),
+                        "icon": "favorite",
+                        "link": reverse_lazy("admin:engagement_favorite_changelist"),
                     },
                 ],
             },

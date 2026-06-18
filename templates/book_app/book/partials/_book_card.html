@@ -21,5 +21,12 @@
         <p class="mt-1.5 line-clamp-1 text-xs text-navy-500">
             {% for author in book.authors.all %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}Muallif noma'lum{% endfor %}
         </p>
+        {% if book.rating_count %}
+        <div class="mt-2 flex items-center gap-1 text-xs text-navy-500">
+            <svg class="h-3.5 w-3.5 text-gold-400" fill="currentColor" viewBox="0 0 24 24"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8 6.8 19.2l1-5.8-4.3-4.1 5.9-.9z"/></svg>
+            <span class="font-semibold text-navy-700">{{ book.avg_rating }}</span>
+            <span>({{ book.rating_count }})</span>
+        </div>
+        {% endif %}
     </div>
 </a>

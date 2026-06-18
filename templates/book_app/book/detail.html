@@ -38,6 +38,13 @@
                 {% include "book_app/book/partials/_book_actions.html" %}
             </div>
 
+            {# Sevimlilar #}
+            {% if request.user.is_authenticated %}
+            <div class="mt-4">
+                {% include "engagement/partials/_favorite_button.html" %}
+            </div>
+            {% endif %}
+
             {# Meta #}
             <dl class="mt-9 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-navy-100 pt-7 text-sm sm:grid-cols-3">
                 <div>
@@ -72,5 +79,10 @@
         <p class="mt-4 leading-8 text-navy-600">{{ book.description|linebreaksbr }}</p>
     </div>
     {% endif %}
+
+    {# Sharhlar va baholar #}
+    <div class="mt-14 max-w-3xl">
+        {% include "engagement/partials/_reviews.html" %}
+    </div>
 </div>
 {% endblock %}

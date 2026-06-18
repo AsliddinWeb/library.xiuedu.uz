@@ -80,3 +80,11 @@ def unpaid_fines(request):
     """To'lanmagan jarimalar."""
     from circulation.models import Fine
     return _safe(lambda: Fine.objects.filter(is_paid=False).count())
+
+
+# --- Faollik (engagement) ---
+
+def pending_reviews(request):
+    """Moderatsiya kutayotgan sharhlar."""
+    from engagement.models import Review
+    return _safe(lambda: Review.objects.filter(is_approved=False).count())

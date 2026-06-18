@@ -43,6 +43,9 @@ urlpatterns = [
 
     # Reading (onlayn o'qish/tinglash)
     path('reading/', include('reading.urls')),
+
+    # Engagement (sharh/reyting/sevimli)
+    path('engagement/', include('engagement.urls')),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

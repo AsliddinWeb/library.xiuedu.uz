@@ -15,8 +15,10 @@ def student_book_detail(request, pk):
     )
 
     from circulation.services import book_action_context
+    from engagement.services import engagement_context
     student_profile = getattr(request.user, 'student_profile', None)
     context = book_action_context(student_profile, book)
+    context.update(engagement_context(request.user, book))
     return render(request, "book_app/book/detail.html", context)
 
 
