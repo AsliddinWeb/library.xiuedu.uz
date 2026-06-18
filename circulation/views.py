@@ -10,7 +10,12 @@ from .models import Fine, RentalRequest, Reservation
 
 
 def _student(request):
-    return getattr(request.user, 'student_profile', None)
+    """Faqat user_type STUDENT bo'lsa profilni qaytaradi (rolga asoslangan)."""
+    from user_app.models import User
+    user = request.user
+    if user.is_authenticated and user.user_type == User.UserType.STUDENT:
+        return getattr(user, 'student_profile', None)
+    return None
 
 
 def _render_actions(request, book, message=None, ok=True):

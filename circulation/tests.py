@@ -6,10 +6,24 @@ from django.test import TestCase
 from django.utils.timezone import now
 
 from book_app.models import Book, Copy, Genre, Rental
-from user_app.models import User
+from user_app.models import Role, StudentProfile, User
+from user_app.roles import Roles
 
 from . import services
 from .models import Fine, LibrarySettings, Reservation
+
+
+class LibrarianAccessTests(TestCase):
+    """Xodim (qoldiq student profil bo'lsa ham) talaba sahifalariga kira olmaydi."""
+
+    def test_employee_with_stray_profile_forbidden(self):
+        lib = User.objects.create_user(username='lib', password='x', user_type='EMPLOYE')
+        # qoldiq student profil (eski create_user ssenariysi)
+        StudentProfile.objects.create(user=lib)
+        lib.employe_profile.current_role = Role.objects.get(name=Roles.LIBRARIAN)
+        lib.employe_profile.save()
+        self.client.login(username='lib', password='x')
+        self.assertEqual(self.client.get('/circulation/my-rentals/').status_code, 403)
 
 
 class RentalFlowTests(TestCase):
