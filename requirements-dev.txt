@@ -1,0 +1,4 @@
+-r requirements.txt
+
+# Dev vositalari
+ruff==0.15.17

@@ -12,9 +12,9 @@ from django.core.management.base import BaseCommand
 from django.utils.timezone import now
 
 from book_app.models import Rental
-from circulation.models import Reservation, Fine, LibrarySettings
-from notifications.services import notify
+from circulation.models import Fine, LibrarySettings, Reservation
 from notifications.models import Notification
+from notifications.services import notify
 
 
 class Command(BaseCommand):

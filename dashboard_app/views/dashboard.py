@@ -1,12 +1,11 @@
 from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-
 from django.db.models import Count
+from django.shortcuts import redirect, render
 from django.utils.timezone import now
 
-from book_app.models import Book, Rental, Genre
+from book_app.models import Book, Genre, Rental
 from user_app.roles import Roles, effective_role
 
 

@@ -1,13 +1,13 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_POST
 
 from book_app.models import Book
 from reading.models import ReadingHistory
 from user_app.utils import library_admin_role_required
-from . import services
-from .models import Review, Favorite
 
+from . import services
+from .models import Favorite, Review
 
 # ----------------------------------------------------------- partial render
 

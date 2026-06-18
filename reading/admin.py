@@ -2,7 +2,7 @@ from django.contrib import admin
 from unfold.admin import ModelAdmin
 from unfold.decorators import display
 
-from .models import ReadingProgress, ReadingHistory
+from .models import ReadingHistory, ReadingProgress
 
 
 @admin.register(ReadingProgress)

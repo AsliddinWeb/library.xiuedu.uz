@@ -3,10 +3,11 @@ Base settings for core project.
 """
 import os
 from pathlib import Path
-from dotenv import load_dotenv
+
 from django.contrib.messages import constants as message_constants
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
+from dotenv import load_dotenv
 
 # loading env
 load_dotenv()
@@ -100,6 +101,25 @@ AUTH_USER_MODEL = "user_app.User"
 # Autentifikatsiya yo'naltirishlari
 LOGIN_URL = '/auth/student-login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
+
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {'format': '[{asctime}] {levelname} {name}: {message}', 'style': '{'},
+    },
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'verbose'},
+    },
+    'root': {'handlers': ['console'], 'level': 'INFO'},
+    'loggers': {
+        'django.request': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        # Loyiha modullari
+        'oauth': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'circulation': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+    },
+}
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 

@@ -39,6 +39,11 @@ SECURE_HSTS_PRELOAD = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
+# Raqamli kitoblar (ebook/audio) himoyasi — nginx internal location orqali
+# beriladi. nginx: location /protected-media/ { internal; alias /.../media/; }
+USE_X_ACCEL_REDIRECT = True
+X_ACCEL_LOCATION = '/protected-media'
+
 # Statik fayllar (collectstatic chiqishi — whitenoise xizmat qiladi)
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 

@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import AuthLoginView, AuthCallbackView, EmployeAuthLoginView, LogoutView
 
+from .views import AuthCallbackView, AuthLoginView, EmployeAuthLoginView, LogoutView
 
 urlpatterns = [
     path('student-login/', AuthLoginView.as_view(), name='student_login'),

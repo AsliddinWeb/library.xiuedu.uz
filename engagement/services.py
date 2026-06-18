@@ -1,7 +1,7 @@
 """Engagement (sharh/reyting/sevimli) biznes mantig'i."""
 from django.db.models import Avg, Count
 
-from .models import Review, Favorite
+from .models import Favorite, Review
 
 
 def recompute_rating(book):
@@ -64,8 +64,8 @@ def approve_review(review):
         review.save(update_fields=['is_approved'])
         recompute_rating(review.book)
 
-        from notifications.services import notify
         from notifications.models import Notification
+        from notifications.services import notify
         notify(review.user, "Sharhingiz tasdiqlandi",
                f"«{review.book.title}» kitobiga qoldirgan sharhingiz e'lon qilindi.",
                type=Notification.Type.REVIEW_APPROVED, link=f'/books/{review.book_id}/')

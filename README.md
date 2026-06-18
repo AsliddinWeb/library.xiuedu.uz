@@ -1,66 +1,85 @@
-# HEMIS Universitet Django bilan oAuth Integratsiyasi
+# XIU Elektron Kutubxona — library.xiuedu.uz
 
-Ushbu repozitoriya HEMIS Universitet tizimi bilan oAuth autentifikatsiyasini integratsiya qilish uchun Django kodini o'z ichiga oladi. Bu integratsiya bilan foydalanuvchilar HEMIS Universitet hisoblarini oAuth2 standartida boshqa tizimlarda ro'yxatdan o'tkazish yoki autentifikatsiyani amalga oshirishi mumkin.
+Xalqaro Innovatsion Universitet (XIU) uchun **elektron kutubxona platformasi**.
+Talabalar va xodimlar HEMIS oAuth2 orqali kiradi, kitoblarni onlayn o'qiydi/tinglaydi,
+jismoniy nusxalarni ijaraga oladi, sharh/baho qoldiradi va sevimlilarini yuritadi.
 
-## Getting Started
+## Imkoniyatlar
 
-### Prerequisites
+- 🔐 **HEMIS oAuth2** autentifikatsiya (talaba va xodim)
+- 📚 **Katalog** — qidiruv, kategoriya filtri (HTMX, sahifa qayta yuklanmasdan)
+- 📖 **Onlayn o'qish** (PDF.js reader) va **tinglash** (audio player) — himoyalangan, yuklab bo'lmaydi
+- 🔄 **Gibrid ijara** — so'rov → kutubxonachi tasdig'i → qaytarish → jarima; band kitobga **navbat**
+- ⭐ **Sharh/reyting** (moderatsiya bilan) + **sevimlilar** + "Mening kutubxonam"
+- 🔔 **In-app bildirishnomalar** (so'rov, muddat, navbat, jarima, sharh)
+- 📊 **Analitika** dashboard (kutubxonachi uchun)
+- ⚙️ **Unfold** asosidagi admin panel (brend ranglar, counterlar, status badge'lar)
 
-Quyidagilarni o'rnatilganiga ishonching:
+## Texnologiyalar
 
-- Python
-- Django
-- requests
-- python-dotenv
-- requests
+Django 5.2 (LTS) · PostgreSQL (prod) / SQLite (dev) · Tailwind CSS (standalone CLI) ·
+HTMX + Alpine.js · PDF.js · django-unfold · WhiteNoise · gunicorn
 
-### Installation
+## Loyiha tuzilishi
 
-1. Repozitoriyani klonlang:
+| App | Vazifasi |
+|-----|----------|
+| `oauth` | HEMIS oAuth2 oqimi |
+| `user_app` | User, profillar (talaba/xodim), rollar |
+| `book_app` | Author, Genre (katalog), Book, Copy, Rental |
+| `circulation` | RentalRequest, Reservation, Fine, LibrarySettings |
+| `reading` | Himoyalangan stream, reader/player, o'qish jarayoni/tarixi |
+| `engagement` | Review, Favorite |
+| `notifications` | In-app bildirishnomalar |
+| `dashboard_app` | Rol-based dashboard + analitika |
 
-   ```bash
-   git clone https://github.com/djumanov/oAuth2-by-hemis.git
-   ```
+## Rollar
 
-2. Kerakli kutubxonalarni o'rnatish:
+`Student` · `Employee` · `LibraryAdmin` (kutubxonachi) · `Admin` —
+ruxsat `user_app.roles.effective_role()` orqali aniqlanadi.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-### Sozlash
-
-1. HEMIS Universitet tizimida oAuth mijozlarini yaratish:
-
-   - HEMIS Universitetning ma'muriy panelida **Tizim / oAuth klientlar** bo'limiga kirin.
-   - Mijoz nomini va ruxsat etilgan qayta yo'naltirish manzillarini (bir nechta manzil, vergul orqali ajratilgan) ko'rsatgan yangi mijoz yarating.
-   - Mijozni saqlang va **Klient ID** va **Klient maxfiy kodi**ni olishingiz mumkin.
-
-2. `.env` faylini mijoz ma'lumotlari bilan yangilang:
-
-   ```bash
-    CLIENT_ID=CLIENT_ID # hemis client id :int
-    CLIENT_SECRET=CLIENT_SECRET # secret key in hemis client :str
-    REDIRECT_URI=REDIRECT_URI # to get access code in your project :str
-    AUTHORIZE_URL=https://{university_hemis_url}/oauth/authorize
-    ACCESS_TOKEN_URL=https://{university_hemis_url}/oauth/access-token
-    RESOURCE_OWNER_URL=https://{university_hemis_url}/oauth/api/user?fields=id,uuid,employee_id_number,type,roles,name,login,email,picture,firstname,surname,patronymic,birth_date,university_id,phone
-   ```
-
-3. `REDIRECT_URI` ni o'zingizning ilovangizning qayta yo'naltirish manziliga moslashtiring.
-
-### Foydalanish
-
-Django serverini ishga tushiring:
+## O'rnatish (lokal)
 
 ```bash
+# 1. Virtual muhit (Python 3.12+ tavsiya; 3.14 uchun Django 5.2 shart)
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+
+# 2. .env yarating (.env.sample asosida) — SECRET_KEY, HEMIS oAuth, DB
+
+# 3. Migratsiya (default rollar avtomatik seed qilinadi)
+python manage.py migrate
+python manage.py createsuperuser
+
+# 4. Tailwind CSS (standalone CLI — Node shart emas)
+#    Binar: https://github.com/tailwindlabs/tailwindcss/releases  -> bin/tailwindcss
+./bin/css-build.sh        # bir martalik build
+./bin/css-watch.sh        # dev paytida kuzatuv
+
+# 5. Ishga tushirish
 python manage.py runserver
 ```
 
-Brauzeringizda taqdim etilgan URL'ga kirib, oAuth jarayonini boshlang.
+## Cron (davriy vazifa)
 
-## Eslatmalar
+Jarima hisoblash, muddat-yaqin ogohlantirish va navbat muddatini tekshirish —
+kuniga bir marta:
 
-- HEMIS Universitet oAuth mijozlari sozlamalariga mos keladigan qayta yo'naltirish manzillarni ta'minlang.
-- Ushbu integratsiya hozirda faqat HEMIS Universitet xodimlarining hisoblarini qo'llab-quvvatlaydi. Talabalar uchun, manzillarni moslashtiring.
-- Qo'shimcha foydalanuvchi ma'lumotlari, `RESOURCE_OWNER_URL` parametrlarini o'zgartirib olish orqali olinadi.
+```cron
+0 1 * * *  /path/to/venv/bin/python /path/to/manage.py circulation_tick
+```
+
+## Testlar va linter
+
+```bash
+python manage.py test          # 31 ta test (rol, ijara, stream, engagement, ...)
+ruff check .                    # linter (pip install -r requirements-dev.txt)
+```
+
+## Production deploy
+
+To'liq yo'riqnoma: [`DEPLOY.md`](DEPLOY.md)
+(gunicorn + nginx + WhiteNoise + raqamli kitoblar uchun `X-Accel-Redirect` himoyasi).
+
+Asosiy: `DJANGO_ENV=production`, `SECRET_KEY` majburiy, `collectstatic`,
+`python manage.py check --deploy`.

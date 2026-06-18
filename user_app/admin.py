@@ -1,17 +1,16 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
-from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
-
 from unfold.admin import ModelAdmin, StackedInline
 from unfold.decorators import display
-from unfold.forms import (AdminPasswordChangeForm,
-                          UserChangeForm as BaseUserChangeForm,
-                          UserCreationForm as BaseUserCreationForm)
+from unfold.forms import AdminPasswordChangeForm
+from unfold.forms import UserChangeForm as BaseUserChangeForm
+from unfold.forms import UserCreationForm as BaseUserCreationForm
 from unfold.widgets import UnfoldAdminSelectWidget
 
-from .models import User, EmployeProfile, StudentProfile, Role
+from .models import EmployeProfile, Role, StudentProfile, User
 
 
 def _role_field():

@@ -2,9 +2,9 @@ from django.db.models import Count
 from django.shortcuts import render
 
 from book_app.models import Book, Copy, Rental
-from circulation.models import RentalRequest, Fine
+from circulation.models import Fine, RentalRequest
 from reading.models import ReadingHistory
-from user_app.models import User, StudentProfile
+from user_app.models import StudentProfile, User
 from user_app.utils import library_admin_role_required
 
 

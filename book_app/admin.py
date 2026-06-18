@@ -1,10 +1,9 @@
 from django.contrib import admin
 from django.utils.html import format_html
-
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 
-from .models import Author, Genre, Book, Copy, Rental
+from .models import Author, Book, Copy, Genre, Rental
 
 
 @admin.register(Author)

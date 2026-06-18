@@ -1,11 +1,12 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_POST
 
 from book_app.models import Book, Rental
 from user_app.utils import library_admin_role_required
+
 from . import services
-from .models import RentalRequest, Reservation, Fine
+from .models import Fine, RentalRequest, Reservation
 
 
 def _student(request):

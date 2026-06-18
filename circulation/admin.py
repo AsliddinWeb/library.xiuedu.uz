@@ -3,7 +3,7 @@ from unfold.admin import ModelAdmin
 from unfold.decorators import display
 
 from . import services
-from .models import LibrarySettings, RentalRequest, Reservation, Fine
+from .models import Fine, LibrarySettings, RentalRequest, Reservation
 
 
 @admin.register(LibrarySettings)

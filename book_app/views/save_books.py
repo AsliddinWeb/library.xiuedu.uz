@@ -1,14 +1,14 @@
-import requests
-
-from django.core.files import File
-from io import BytesIO
 import os
+from io import BytesIO
 
+import requests
+from django.core.files import File
 from django.http import JsonResponse
 from django.shortcuts import render
 
-from ..models import Book, Author, Genre
 from user_app.utils import library_admin_role_required
+
+from ..models import Author, Book, Genre
 
 
 @library_admin_role_required

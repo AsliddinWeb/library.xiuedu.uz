@@ -7,8 +7,8 @@ from django.db import transaction
 from django.utils.timezone import now
 
 from book_app.models import Copy, Rental
-from .models import RentalRequest, Reservation, Fine, LibrarySettings
 
+from .models import LibrarySettings, RentalRequest, Reservation
 
 # --- So'rovlar (queries) ---
 
@@ -140,8 +140,8 @@ def approve_request(req, librarian=None):
     req.decided_by = librarian
     req.save(update_fields=['status', 'rental', 'decided_at', 'decided_by'])
 
-    from notifications.services import notify
     from notifications.models import Notification
+    from notifications.services import notify
     notify(req.student.user, "So'rovingiz tasdiqlandi",
            f"«{req.book.title}» — kutubxonadan olishingiz mumkin. Qaytarish: {rental.due_date}.",
            type=Notification.Type.REQUEST_APPROVED, link='/circulation/my-rentals/')
@@ -157,8 +157,8 @@ def reject_request(req, librarian=None, note=""):
     req.decided_by = librarian
     req.save(update_fields=['status', 'note', 'decided_at', 'decided_by'])
 
-    from notifications.services import notify
     from notifications.models import Notification
+    from notifications.services import notify
     notify(req.student.user, "So'rovingiz rad etildi",
            f"«{req.book.title}» so'rovi rad etildi." + (f" Sabab: {note}" if note else ""),
            type=Notification.Type.REQUEST_REJECTED, link=f'/books/{req.book_id}/')
@@ -190,8 +190,8 @@ def return_rental(rental):
         nxt.hold_until = now() + timedelta(days=settings.reservation_hold_days)
         nxt.save(update_fields=['status', 'hold_until'])
 
-        from notifications.services import notify
         from notifications.models import Notification
+        from notifications.services import notify
         notify(nxt.student.user, "Navbatdagi kitob bo'shadi",
                f"«{copy.book.title}» bo'shadi — {settings.reservation_hold_days} kun ichida ijaraga so'rang.",
                type=Notification.Type.RESERVATION_AVAILABLE, link=f'/books/{copy.book_id}/')

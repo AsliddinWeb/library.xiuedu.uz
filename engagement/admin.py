@@ -3,7 +3,7 @@ from unfold.admin import ModelAdmin
 from unfold.decorators import display
 
 from . import services
-from .models import Review, Favorite
+from .models import Favorite, Review
 
 
 @admin.register(Review)

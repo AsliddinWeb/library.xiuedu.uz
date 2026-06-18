@@ -1,5 +1,6 @@
 from .models import Copy, Rental
 
+
 def add_copies(book, quantity):
     """
     Kitob uchun yangi nusxalar qo'shish va `inventory_number`ni kitobga nisbatan unik qilish.

@@ -1,15 +1,16 @@
 import mimetypes
 import re
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import F
-from django.http import (FileResponse, Http404, StreamingHttpResponse,
-                         JsonResponse)
-from django.shortcuts import render, get_object_or_404
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse, StreamingHttpResponse
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_POST
 
 from book_app.models import Book
-from .models import ReadingProgress, ReadingHistory
+
+from .models import ReadingHistory, ReadingProgress
 
 RANGE_RE = re.compile(r'bytes=(\d+)-(\d*)')
 
@@ -27,9 +28,22 @@ def _file_iterator(f, length, chunk=8192):
 
 
 def _serve_protected(request, file_field):
-    """Faylni inline (yuklab olmasdan) va Range bilan uzatadi."""
+    """Faylni inline (yuklab olmasdan) va Range bilan uzatadi.
+
+    Production'da (USE_X_ACCEL_REDIRECT) faylni nginx internal location orqali
+    beradi — Django jarayoni band bo'lmaydi, fayl URL'i ham himoyalanadi.
+    """
     if not file_field:
         raise Http404("Fayl mavjud emas.")
+
+    # Production: nginx X-Accel-Redirect orqali (internal location)
+    if getattr(settings, 'USE_X_ACCEL_REDIRECT', False):
+        resp = HttpResponse(status=200)
+        resp['X-Accel-Redirect'] = f"{settings.X_ACCEL_LOCATION}/{file_field.name}"
+        resp['Content-Disposition'] = 'inline'
+        del resp['Content-Type']  # nginx aniqlaydi
+        return resp
+
     try:
         size = file_field.size
         f = file_field.open('rb')

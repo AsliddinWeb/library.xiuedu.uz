@@ -1,18 +1,16 @@
-from datetime import datetime
 import logging
+from datetime import datetime
 
 import requests
+from django.conf import settings
+from django.contrib.auth import login, logout
 from django.core.files.base import ContentFile
-
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.views import View
-from django.http import JsonResponse, HttpResponse
-from django.contrib.auth import login, logout
 
 from oauth.client import oAuth2Client
-from django.conf import settings
-
-from user_app.models import User, StudentProfile, EmployeProfile, Role
+from user_app.models import EmployeProfile, Role, StudentProfile, User
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,4 @@
-from .models import Genre, Book
+from .models import Book, Genre
 
 
 def book_processor(request):

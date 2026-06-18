@@ -1,5 +1,6 @@
-import requests
 from urllib.parse import urlencode
+
+import requests
 
 
 class oAuth2Client:
@@ -32,7 +33,7 @@ class oAuth2Client:
             'grant_type': 'authorization_code'
         }
         response = requests.post(self.token_url, data=payload)
-        
+
         return response.json()
 
     def get_user_details(self, access_token):

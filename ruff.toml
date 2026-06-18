@@ -1,0 +1,12 @@
+line-length = 120
+target-version = "py312"
+extend-exclude = ["*/migrations/*", "venv", "staticfiles"]
+
+[lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]  # qator uzunligi
+
+[lint.per-file-ignores]
+"core/settings/*" = ["F403", "F405"]  # base.py * import
+"*/views/__init__.py" = ["F401", "F403"]  # view'larni jamlash
+"manage.py" = ["E402"]

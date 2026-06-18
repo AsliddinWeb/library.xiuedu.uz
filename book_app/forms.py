@@ -1,5 +1,7 @@
 from django import forms
-from .models import Author, Genre, Book, Copy, Rental
+
+from .models import Author, Book, Copy, Genre, Rental
+
 
 class AuthorForm(forms.ModelForm):
     class Meta:
