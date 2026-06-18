@@ -22,12 +22,33 @@ def dashboard(request):
     if role == Roles.STUDENT:
         return _student_dashboard(request)
     if role == Roles.LIBRARIAN:
-        return render(request, 'dashboard/library_admin.html')
+        return _librarian_dashboard(request)
     if role == Roles.EMPLOYEE:
         return render(request, 'dashboard/employee.html')
 
     # Roli aniqlanmagan xodim — standart sifatida xodim paneli
     return render(request, 'dashboard/employee.html')
+
+
+def _librarian_dashboard(request):
+    from circulation.models import Fine, RentalRequest, Reservation
+    from engagement.models import Review
+
+    pending = RentalRequest.objects.filter(status=RentalRequest.Status.PENDING)
+    stats = {
+        'pending_requests': pending.count(),
+        'active_rentals': Rental.objects.filter(return_date__isnull=True).count(),
+        'reservations': Reservation.objects.filter(status=Reservation.Status.WAITING).count(),
+        'unpaid_fines': Fine.objects.filter(is_paid=False).count(),
+        'pending_reviews': Review.objects.filter(is_approved=False).count(),
+        'books': Book.objects.count(),
+    }
+    recent_requests = pending.select_related('book', 'student__user')[:6]
+    overdue = (Rental.objects
+               .filter(return_date__isnull=True, due_date__lt=now().date())
+               .select_related('copy__book', 'student__user')[:6])
+    ctx = {'stats': stats, 'recent_requests': recent_requests, 'overdue': overdue}
+    return render(request, 'dashboard/library_admin.html', ctx)
 
 
 def _student_dashboard(request):

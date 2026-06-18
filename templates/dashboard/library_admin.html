@@ -1,91 +1,99 @@
 {% extends "layouts/base.html" %}
 
 {% block title %}Kutubxonachi paneli — XIU Kutubxona{% endblock %}
+{% block footer %}{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-    <div class="border-b border-navy-100 pb-8">
-        <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">Kutubxonachi paneli</span>
-        <h1 class="mt-3 font-serif text-4xl font-semibold tracking-tight text-navy-950">
-            Salom, {{ request.user.first_name|default:request.user.username }}
-        </h1>
-        <p class="mt-2 text-navy-600">Kutubxona resurslarini boshqaring.</p>
-    </div>
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div class="lg:grid lg:grid-cols-12 lg:gap-8">
 
-    <div class="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {# Mualliflar #}
-        <a href="{% url 'book_app:authors_list' %}" class="group rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft transition hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift">
-            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-navy-900 text-gold-300">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
-            <h3 class="mt-5 font-serif text-xl font-semibold text-navy-900">Mualliflar</h3>
-            <p class="mt-2 text-sm leading-6 text-navy-600">Mualliflarni qo'shing, tahrirlang yoki o'chiring.</p>
-            <span class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-navy-700 transition group-hover:gap-2">Boshqarish
-                <svg class="h-4 w-4 text-gold-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></svg>
-            </span>
-        </a>
+        {# Sidebar #}
+        <aside class="lg:col-span-3">
+            {% include "dashboard/partials/_librarian_sidebar.html" with active='home' %}
+        </aside>
 
-        {# Kitob import #}
-        <a href="{% url 'book_app:save_books' %}" class="group rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft transition hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift">
-            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-navy-900 text-gold-300">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-            </div>
-            <h3 class="mt-5 font-serif text-xl font-semibold text-navy-900">Kitob import</h3>
-            <p class="mt-2 text-sm leading-6 text-navy-600">Tashqi manbadan kitoblarni ommaviy yuklang.</p>
-            <span class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-navy-700 transition group-hover:gap-2">Import qilish
-                <svg class="h-4 w-4 text-gold-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></svg>
-            </span>
-        </a>
-
-        {# Kitoblar (admin) #}
-        <a href="/admin/book_app/book/" class="group rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft transition hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift">
-            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-navy-900 text-gold-300">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v16M8 8v12M12 6v14M16 9l4 11"/></svg>
-            </div>
-            <h3 class="mt-5 font-serif text-xl font-semibold text-navy-900">Kitoblar</h3>
-            <p class="mt-2 text-sm leading-6 text-navy-600">Kitob va nusxalarni boshqarish (admin panel).</p>
-            <span class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-navy-700 transition group-hover:gap-2">Ochish
-                <svg class="h-4 w-4 text-gold-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></svg>
-            </span>
-        </a>
-
-        {# Sharh moderatsiyasi #}
-        <a href="{% url 'engagement:moderate' %}" class="group rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft transition hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift">
-            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-navy-900 text-gold-300">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            </div>
-            <h3 class="mt-5 font-serif text-xl font-semibold text-navy-900">Sharh moderatsiyasi</h3>
-            <p class="mt-2 text-sm leading-6 text-navy-600">Talabalar sharhlarini tasdiqlang yoki rad eting.</p>
-            <span class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-navy-700 transition group-hover:gap-2">Ochish
-                <svg class="h-4 w-4 text-gold-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></svg>
-            </span>
-        </a>
-
-        {# Analitika #}
-        <a href="{% url 'analytics' %}" class="group rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft transition hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift">
-            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-navy-900 text-gold-300">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 15l3-3 3 3 5-6"/></svg>
-            </div>
-            <h3 class="mt-5 font-serif text-xl font-semibold text-navy-900">Analitika</h3>
-            <p class="mt-2 text-sm leading-6 text-navy-600">Eng ko'p o'qilgan, faol talabalar, statistika.</p>
-            <span class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-navy-700 transition group-hover:gap-2">Ochish
-                <svg class="h-4 w-4 text-gold-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></svg>
-            </span>
-        </a>
-    </div>
-
-    {# Ijara boshqaruvi #}
-    <a href="{% url 'circulation:manage' %}" class="group mt-6 flex items-center justify-between gap-4 rounded-2xl border border-navy-100 bg-navy-950 p-6 shadow-soft transition hover:shadow-lift">
-        <div class="flex items-center gap-4">
-            <div class="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-navy-800 text-gold-300">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 11l3 3 8-8M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>
-            </div>
+        {# Main #}
+        <main class="mt-8 lg:col-span-9 lg:mt-0">
             <div>
-                <p class="font-serif text-lg font-semibold text-white">Ijara boshqaruvi</p>
-                <p class="text-sm text-navy-300">So'rovlarni tasdiqlash, qaytarish va jarimalar.</p>
+                <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">Boshqaruv paneli</span>
+                <h1 class="mt-2 font-serif text-3xl font-semibold tracking-tight text-navy-950">
+                    Salom, {{ request.user.first_name|default:request.user.username }}
+                </h1>
             </div>
-        </div>
-        <svg class="h-5 w-5 flex-none text-gold-300 transition group-hover:translate-x-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></svg>
-    </a>
+
+            {# KPI kartalar #}
+            <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                <a href="{% url 'circulation:manage' %}" class="rounded-2xl border border-navy-100 bg-paper p-5 shadow-soft transition hover:border-gold-200 hover:shadow-lift">
+                    <p class="font-serif text-3xl font-semibold {% if stats.pending_requests %}text-gold-600{% else %}text-navy-900{% endif %}">{{ stats.pending_requests }}</p>
+                    <p class="mt-1 text-sm text-navy-500">Kutilayotgan so'rovlar</p>
+                </a>
+                <a href="{% url 'circulation:manage' %}" class="rounded-2xl border border-navy-100 bg-paper p-5 shadow-soft transition hover:border-gold-200 hover:shadow-lift">
+                    <p class="font-serif text-3xl font-semibold text-navy-900">{{ stats.active_rentals }}</p>
+                    <p class="mt-1 text-sm text-navy-500">Faol ijaralar</p>
+                </a>
+                <a href="/admin/circulation/reservation/" class="rounded-2xl border border-navy-100 bg-paper p-5 shadow-soft transition hover:border-gold-200 hover:shadow-lift">
+                    <p class="font-serif text-3xl font-semibold text-navy-900">{{ stats.reservations }}</p>
+                    <p class="mt-1 text-sm text-navy-500">Navbatlar</p>
+                </a>
+                <a href="{% url 'circulation:manage' %}" class="rounded-2xl border border-navy-100 bg-paper p-5 shadow-soft transition hover:border-gold-200 hover:shadow-lift">
+                    <p class="font-serif text-3xl font-semibold {% if stats.unpaid_fines %}text-red-600{% else %}text-navy-900{% endif %}">{{ stats.unpaid_fines }}</p>
+                    <p class="mt-1 text-sm text-navy-500">To'lanmagan jarima</p>
+                </a>
+                <a href="{% url 'engagement:moderate' %}" class="rounded-2xl border border-navy-100 bg-paper p-5 shadow-soft transition hover:border-gold-200 hover:shadow-lift">
+                    <p class="font-serif text-3xl font-semibold {% if stats.pending_reviews %}text-gold-600{% else %}text-navy-900{% endif %}">{{ stats.pending_reviews }}</p>
+                    <p class="mt-1 text-sm text-navy-500">Kutilayotgan sharhlar</p>
+                </a>
+                <a href="/admin/book_app/book/" class="rounded-2xl border border-navy-100 bg-paper p-5 shadow-soft transition hover:border-gold-200 hover:shadow-lift">
+                    <p class="font-serif text-3xl font-semibold text-navy-900">{{ stats.books }}</p>
+                    <p class="mt-1 text-sm text-navy-500">Jami kitoblar</p>
+                </a>
+            </div>
+
+            {# Panellar #}
+            <div class="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+                {# Kutilayotgan so'rovlar #}
+                <section class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+                    <div class="flex items-center justify-between">
+                        <h2 class="font-serif text-lg font-semibold text-navy-900">Kutilayotgan so'rovlar</h2>
+                        <a href="{% url 'circulation:manage' %}" class="text-xs font-medium text-navy-500 hover:text-navy-800">Barchasi →</a>
+                    </div>
+                    <div class="mt-4 space-y-2">
+                        {% for req in recent_requests %}
+                        <div class="flex items-center justify-between gap-3 rounded-xl border border-navy-50 px-4 py-3">
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-medium text-navy-900">{{ req.book.title }}</p>
+                                <p class="text-xs text-navy-500">{{ req.student.user.get_full_name }}</p>
+                            </div>
+                            <a href="{% url 'circulation:manage' %}" class="flex-none rounded-full bg-navy-900 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-navy-800">Ko'rish</a>
+                        </div>
+                        {% empty %}
+                        <p class="rounded-xl border border-dashed border-navy-200 px-4 py-8 text-center text-sm text-navy-400">Yangi so'rov yo'q.</p>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                {# Muddati o'tgan ijaralar #}
+                <section class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+                    <div class="flex items-center justify-between">
+                        <h2 class="font-serif text-lg font-semibold text-navy-900">Muddati o'tgan ijaralar</h2>
+                        <a href="{% url 'circulation:manage' %}" class="text-xs font-medium text-navy-500 hover:text-navy-800">Barchasi →</a>
+                    </div>
+                    <div class="mt-4 space-y-2">
+                        {% for rental in overdue %}
+                        <div class="flex items-center justify-between gap-3 rounded-xl border border-red-100 bg-red-50/40 px-4 py-3">
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-medium text-navy-900">{{ rental.copy.book.title }}</p>
+                                <p class="text-xs text-navy-500">{{ rental.student.user.get_full_name }} · muddat {{ rental.due_date }}</p>
+                            </div>
+                            <span class="flex-none rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-600">Kechikkan</span>
+                        </div>
+                        {% empty %}
+                        <p class="rounded-xl border border-dashed border-navy-200 px-4 py-8 text-center text-sm text-navy-400">Kechikkan ijara yo'q.</p>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
 </div>
 {% endblock %}

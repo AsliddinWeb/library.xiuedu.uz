@@ -1,0 +1,47 @@
+{% load static %}
+{# active: dashboard sahifasida 'home' #}
+<nav class="space-y-1 rounded-2xl border border-navy-100 bg-navy-950 p-3 text-sm lg:sticky lg:top-24">
+    <p class="px-3 pb-2 pt-2 text-[11px] font-semibold uppercase tracking-widest text-gold-400">Kutubxonachi</p>
+
+    <a href="/dashboard/" class="flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium {% if active == 'home' %}bg-navy-800 text-white{% else %}text-navy-300 hover:bg-navy-900 hover:text-white{% endif %}">
+        <svg class="h-5 w-5 text-gold-300" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>
+        Boshqaruv
+    </a>
+    <a href="{% url 'circulation:manage' %}" class="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 font-medium {% if active == 'manage' %}bg-navy-800 text-white{% else %}text-navy-300 hover:bg-navy-900 hover:text-white{% endif %}">
+        <span class="flex items-center gap-3">
+            <svg class="h-5 w-5 text-gold-300" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 11l3 3 8-8M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>
+            Ijara boshqaruvi
+        </span>
+        {% if stats.pending_requests %}<span class="rounded-full bg-gold-400 px-2 py-0.5 text-[10px] font-bold text-navy-950">{{ stats.pending_requests }}</span>{% endif %}
+    </a>
+    <a href="{% url 'engagement:moderate' %}" class="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 font-medium {% if active == 'moderate' %}bg-navy-800 text-white{% else %}text-navy-300 hover:bg-navy-900 hover:text-white{% endif %}">
+        <span class="flex items-center gap-3">
+            <svg class="h-5 w-5 text-gold-300" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Sharh moderatsiyasi
+        </span>
+        {% if stats.pending_reviews %}<span class="rounded-full bg-gold-400 px-2 py-0.5 text-[10px] font-bold text-navy-950">{{ stats.pending_reviews }}</span>{% endif %}
+    </a>
+    <a href="{% url 'analytics' %}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium {% if active == 'analytics' %}bg-navy-800 text-white{% else %}text-navy-300 hover:bg-navy-900 hover:text-white{% endif %}">
+        <svg class="h-5 w-5 text-gold-300" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 15l3-3 3 3 5-6"/></svg>
+        Analitika
+    </a>
+
+    <div class="my-2 border-t border-navy-800"></div>
+
+    <a href="{% url 'book_app:authors_list' %}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium text-navy-300 hover:bg-navy-900 hover:text-white">
+        <svg class="h-5 w-5 text-navy-400" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>
+        Mualliflar
+    </a>
+    <a href="{% url 'book_app:save_books' %}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium text-navy-300 hover:bg-navy-900 hover:text-white">
+        <svg class="h-5 w-5 text-navy-400" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        Kitob import
+    </a>
+    <a href="/admin/book_app/book/" class="flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium text-navy-300 hover:bg-navy-900 hover:text-white">
+        <svg class="h-5 w-5 text-navy-400" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v16M8 8v12M12 6v14M16 9l4 11"/></svg>
+        Kitoblar (admin)
+    </a>
+    <a href="/books/" class="flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium text-navy-300 hover:bg-navy-900 hover:text-white">
+        <svg class="h-5 w-5 text-navy-400" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.3-4.3M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/></svg>
+        Katalog
+    </a>
+</nav>

@@ -52,6 +52,7 @@ def book_action_context(student, book):
     reservation = student_reservation(student, book) if student else None
     return {
         'book': book,
+        'is_student': student is not None,
         'avail': available_copies(book),
         'active_rental': student_active_rental(student, book) if student else None,
         'pending_request': student_pending_request(student, book) if student else None,
