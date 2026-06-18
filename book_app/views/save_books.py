@@ -84,4 +84,4 @@ def save_books(request):
         else:
             return JsonResponse({"error": f"Xatolik yuz berdi: {response.status_code}"}, status=400)
 
-    return render(request, 'custom/save_books.html')
+    return render(request, 'custom/save_books.html', {'active': 'import'})

@@ -74,6 +74,8 @@ TEMPLATES = [
                 'book_app.context_processors.book_processor',
                 # Bildirishnomalar (o'qilmaganlar soni)
                 'notifications.context_processors.notifications',
+                # Kutubxonachi sidebar statistikasi
+                'dashboard_app.context_processors.librarian',
             ],
         },
     },

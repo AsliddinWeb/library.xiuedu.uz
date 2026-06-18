@@ -1,22 +1,15 @@
-{% extends "layouts/base.html" %}
+{% extends "layouts/librarian.html" %}
 
 {% block title %}Sharh moderatsiyasi — XIU Kutubxona{% endblock %}
 
-{% block content %}
-<div class="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
-    <a href="/dashboard/" class="inline-flex items-center gap-1.5 text-sm font-medium text-navy-500 transition hover:text-navy-800">
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
-        Panelga qaytish
-    </a>
+{% block librarian_content %}
+<div class="border-b border-navy-100 pb-6">
+    <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">Kutubxonachi</span>
+    <h1 class="mt-2 font-serif text-3xl font-semibold tracking-tight text-navy-950">Sharh moderatsiyasi</h1>
+    <p class="mt-2 text-navy-600">Talabalar sharhlarini tasdiqlang yoki rad eting.</p>
+</div>
 
-    <div class="mt-6 border-b border-navy-100 pb-8">
-        <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">Kutubxonachi</span>
-        <h1 class="mt-3 font-serif text-4xl font-semibold tracking-tight text-navy-950">Sharh moderatsiyasi</h1>
-        <p class="mt-2 text-navy-600">Talabalar sharhlarini tasdiqlang yoki rad eting.</p>
-    </div>
-
-    <div class="mt-10">
-        {% include "engagement/partials/_moderation_panel.html" %}
-    </div>
+<div class="mt-8">
+    {% include "engagement/partials/_moderation_panel.html" %}
 </div>
 {% endblock %}

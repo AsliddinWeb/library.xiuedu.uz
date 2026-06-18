@@ -71,7 +71,8 @@ def _render_moderation(request, message=None):
 @library_admin_role_required
 def moderate(request):
     pending = Review.objects.filter(is_approved=False).select_related('user', 'book')
-    return render(request, 'engagement/moderate.html', {'pending_reviews': pending})
+    return render(request, 'engagement/moderate.html',
+                  {'pending_reviews': pending, 'active': 'moderate'})
 
 
 @require_POST

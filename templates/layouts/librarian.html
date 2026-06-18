@@ -1,0 +1,20 @@
+{% extends "layouts/base.html" %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+
+        {# Sidebar (barcha kutubxonachi sahifalarida) #}
+        <aside class="lg:col-span-3">
+            {% include "dashboard/partials/_librarian_sidebar.html" %}
+        </aside>
+
+        {# Sahifa kontenti #}
+        <main class="mt-8 lg:col-span-9 lg:mt-0">
+            {% block librarian_content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}

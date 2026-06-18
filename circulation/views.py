@@ -128,7 +128,9 @@ def _render_panel(request, message=None, ok=True):
 
 @library_admin_role_required
 def manage(request):
-    return render(request, 'circulation/manage.html', _manage_context())
+    ctx = _manage_context()
+    ctx['active'] = 'manage'
+    return render(request, 'circulation/manage.html', ctx)
 
 
 @require_POST

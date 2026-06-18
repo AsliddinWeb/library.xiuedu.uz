@@ -16,14 +16,10 @@ def authors_list(request):
     success_message = request.GET.get('successMessage', '')
 
     ctx = {
-        # Menu active
-        'sidebarAdditional': True,
-        'sidebarAdditionalAuthors': True,
-
-        # Main
+        'active': 'authors',
         'authors': authors,
         'create_form': create_form,
-        'successMessage': success_message,  # successMessage ni contextga qo'shish
+        'successMessage': success_message,
     }
 
     return render(request, 'book_app/author/list.html', ctx)
@@ -59,7 +55,7 @@ def author_edit(request, author_id):
         messages.success(request, "Muallif muvaffaqiyatli tahrirlandi.")
         return redirect('book_app:authors_list')
 
-    return render(request, 'book_app/author/edit.html', {'author': author})
+    return render(request, 'book_app/author/edit.html', {'author': author, 'active': 'authors'})
 
 
 @library_admin_role_required
@@ -71,4 +67,4 @@ def author_delete(request, author_id):
         messages.success(request, "Muallif muvaffaqiyatli o'chirildi.")
         return redirect('book_app:authors_list')
 
-    return render(request, 'book_app/author/delete.html', {'author': author})
+    return render(request, 'book_app/author/delete.html', {'author': author, 'active': 'authors'})

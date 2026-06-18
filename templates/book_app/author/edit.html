@@ -1,9 +1,9 @@
-{% extends "layouts/base.html" %}
+{% extends "layouts/librarian.html" %}
 
 {% block title %}Muallifni tahrirlash — XIU Kutubxona{% endblock %}
 
-{% block content %}
-<div class="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
+{% block librarian_content %}
+<div class="max-w-2xl">
     <a href="{% url 'book_app:authors_list' %}" class="inline-flex items-center gap-1.5 text-sm font-medium text-navy-500 transition hover:text-navy-800">
         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
         Mualliflar ro'yxati

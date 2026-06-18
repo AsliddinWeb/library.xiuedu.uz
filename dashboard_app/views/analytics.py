@@ -42,6 +42,7 @@ def analytics(request):
     ]
 
     ctx = {
+        'active': 'analytics',
         'stats_cards': stats_cards,
         'most_viewed': most_viewed,
         'most_viewed_max': most_viewed[0].view_count if most_viewed else 0,

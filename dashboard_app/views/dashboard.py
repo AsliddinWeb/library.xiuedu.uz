@@ -47,7 +47,8 @@ def _librarian_dashboard(request):
     overdue = (Rental.objects
                .filter(return_date__isnull=True, due_date__lt=now().date())
                .select_related('copy__book', 'student__user')[:6])
-    ctx = {'stats': stats, 'recent_requests': recent_requests, 'overdue': overdue}
+    ctx = {'active': 'home', 'stats': stats,
+           'recent_requests': recent_requests, 'overdue': overdue}
     return render(request, 'dashboard/library_admin.html', ctx)
 
 
