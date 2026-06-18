@@ -64,6 +64,12 @@ def approve_review(review):
         review.save(update_fields=['is_approved'])
         recompute_rating(review.book)
 
+        from notifications.services import notify
+        from notifications.models import Notification
+        notify(review.user, "Sharhingiz tasdiqlandi",
+               f"«{review.book.title}» kitobiga qoldirgan sharhingiz e'lon qilindi.",
+               type=Notification.Type.REVIEW_APPROVED, link=f'/books/{review.book_id}/')
+
 
 def reject_review(review):
     book = review.book

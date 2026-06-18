@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'circulation',
     'reading',
     'engagement',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -70,6 +71,8 @@ TEMPLATES = [
 
                 # Book processor
                 'book_app.context_processors.book_processor',
+                # Bildirishnomalar (o'qilmaganlar soni)
+                'notifications.context_processors.notifications',
             ],
         },
     },
@@ -252,6 +255,11 @@ UNFOLD = {
                         "title": _("O'qish tarixi"),
                         "icon": "history",
                         "link": reverse_lazy("admin:reading_readinghistory_changelist"),
+                    },
+                    {
+                        "title": _("Bildirishnomalar"),
+                        "icon": "notifications",
+                        "link": reverse_lazy("admin:notifications_notification_changelist"),
                     },
                 ],
             },

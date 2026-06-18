@@ -13,6 +13,8 @@ from django.utils.timezone import now
 
 from book_app.models import Rental
 from circulation.models import Reservation, Fine, LibrarySettings
+from notifications.services import notify
+from notifications.models import Notification
 
 
 class Command(BaseCommand):
@@ -22,11 +24,21 @@ class Command(BaseCommand):
         settings = LibrarySettings.load()
         today = now().date()
 
+        # 0) Muddat yaqin (ertaga qaytarish) — bir kun oldin ogohlantirish
+        soon_count = 0
+        tomorrow = today + timedelta(days=1)
+        for rental in (Rental.objects.filter(return_date__isnull=True, due_date=tomorrow)
+                       .select_related('student__user', 'copy__book')):
+            notify(rental.student.user, "Qaytarish muddati yaqin",
+                   f"«{rental.copy.book.title}» kitobini ertaga ({rental.due_date}) qaytaring.",
+                   type=Notification.Type.DUE_SOON, link='/circulation/my-rentals/')
+            soon_count += 1
+
         # 1) Muddati o'tgan ijaralar -> jarima
         fines_touched = 0
         overdue = (Rental.objects
                    .filter(return_date__isnull=True, due_date__lt=today)
-                   .select_related('student'))
+                   .select_related('student__user', 'copy__book'))
         for rental in overdue:
             days = (today - rental.due_date).days
             amount = days * settings.fine_per_day
@@ -38,6 +50,11 @@ class Command(BaseCommand):
                 fine.days_overdue = days
                 fine.amount = amount
                 fine.save(update_fields=['days_overdue', 'amount'])
+            if created:
+                notify(rental.student.user, "Qaytarish muddati o'tdi",
+                       f"«{rental.copy.book.title}» muddati o'tgan." +
+                       (f" Jarima: {amount} so'm." if amount else ""),
+                       type=Notification.Type.OVERDUE, link='/circulation/my-rentals/')
             fines_touched += 1
 
         # 2) Navbat ushlash muddati o'tganlar -> EXPIRED, keyingisini ko'taramiz
@@ -61,5 +78,6 @@ class Command(BaseCommand):
                 nxt.save(update_fields=['status', 'hold_until'])
 
         self.stdout.write(self.style.SUCCESS(
-            f"Tayyor: {fines_touched} ta jarima, {expired_count} ta navbat muddati o'tdi."
+            f"Tayyor: {soon_count} ta muddat-yaqin, {fines_touched} ta jarima, "
+            f"{expired_count} ta navbat muddati o'tdi."
         ))

@@ -1,0 +1,26 @@
+{% load static %}
+<div class="flex items-center justify-between border-b border-navy-100 px-4 py-3">
+    <p class="text-sm font-semibold text-navy-900">Bildirishnomalar</p>
+    {% if unread %}
+    <button hx-post="{% url 'notifications:read_all' %}" hx-target="#notif-panel" hx-swap="innerHTML"
+            class="text-xs font-medium text-navy-500 transition hover:text-navy-800">Hammasini o'qish</button>
+    {% endif %}
+</div>
+
+<div class="max-h-96 overflow-y-auto">
+    {% for n in items %}
+    <a href="{% url 'notifications:read' n.pk %}"
+       class="flex gap-3 border-b border-navy-50 px-4 py-3 transition last:border-0 hover:bg-navy-50/60 {% if not n.is_read %}bg-gold-50/40{% endif %}">
+        <span class="mt-1.5 h-2 w-2 flex-none rounded-full {% if n.is_read %}bg-transparent{% else %}bg-gold-400{% endif %}"></span>
+        <div class="min-w-0">
+            <p class="text-sm font-medium text-navy-900">{{ n.title }}</p>
+            {% if n.message %}<p class="mt-0.5 line-clamp-2 text-xs text-navy-500">{{ n.message }}</p>{% endif %}
+            <p class="mt-1 text-[11px] text-navy-400">{{ n.created_at|timesince }} oldin</p>
+        </div>
+    </a>
+    {% empty %}
+    <div class="px-4 py-10 text-center text-sm text-navy-400">Bildirishnoma yo'q</div>
+    {% endfor %}
+</div>
+
+<a href="{% url 'notifications:list' %}" class="block border-t border-navy-100 px-4 py-2.5 text-center text-xs font-medium text-navy-600 transition hover:bg-navy-50">Barchasini ko'rish</a>
