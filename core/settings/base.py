@@ -18,6 +18,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key')
 INSTALLED_APPS = [
     # Unfold admin
     'unfold',
+    'unfold.contrib.filters',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -128,6 +129,24 @@ UNFOLD = {
     "SITE_SUBHEADER": "Elektron kutubxona boshqaruvi",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
+    "SHOW_BACK_BUTTON": True,
+
+    # Brend ranglari (saytdagi navy bilan mos)
+    "COLORS": {
+        "primary": {
+            "50": "238 242 249",
+            "100": "215 224 239",
+            "200": "176 194 221",
+            "300": "129 156 196",
+            "400": "84 116 166",
+            "500": "55 87 137",
+            "600": "42 68 112",
+            "700": "32 51 90",
+            "800": "22 36 63",
+            "900": "14 26 48",
+            "950": "7 15 32",
+        },
+    },
 
     "SIDEBAR": {
         "show_search": True,
@@ -223,6 +242,16 @@ UNFOLD = {
                         "title": _("Sevimlilar"),
                         "icon": "favorite",
                         "link": reverse_lazy("admin:engagement_favorite_changelist"),
+                    },
+                    {
+                        "title": _("O'qish jarayoni"),
+                        "icon": "auto_stories",
+                        "link": reverse_lazy("admin:reading_readingprogress_changelist"),
+                    },
+                    {
+                        "title": _("O'qish tarixi"),
+                        "icon": "history",
+                        "link": reverse_lazy("admin:reading_readinghistory_changelist"),
                     },
                 ],
             },
