@@ -9,16 +9,23 @@ from unfold.decorators import display
 from unfold.forms import (AdminPasswordChangeForm,
                           UserChangeForm as BaseUserChangeForm,
                           UserCreationForm as BaseUserCreationForm)
+from unfold.widgets import UnfoldAdminSelectWidget
 
 from .models import User, EmployeProfile, StudentProfile, Role
+
+
+def _role_field():
+    return forms.ModelChoiceField(
+        queryset=Role.objects.all(), required=False, label="Rol (xodimlar uchun)",
+        help_text="Xodim turidagi foydalanuvchiga rol biriktiradi (Employee/LibraryAdmin/Admin).",
+        widget=UnfoldAdminSelectWidget(),
+    )
 
 
 # --- Rol tanlashli formalar (xodim rolini bir qadamda biriktirish) ---
 
 class UserCreationForm(BaseUserCreationForm):
-    assigned_role = forms.ModelChoiceField(
-        queryset=Role.objects.all(), required=False, label="Rol (xodimlar uchun)",
-        help_text="Xodim turidagi foydalanuvchiga rol biriktiradi (Employee/LibraryAdmin/Admin).")
+    assigned_role = _role_field()
 
     class Meta(BaseUserCreationForm.Meta):
         model = User
@@ -26,9 +33,7 @@ class UserCreationForm(BaseUserCreationForm):
 
 
 class UserChangeForm(BaseUserChangeForm):
-    assigned_role = forms.ModelChoiceField(
-        queryset=Role.objects.all(), required=False, label="Rol (xodimlar uchun)",
-        help_text="Xodim turidagi foydalanuvchiga rol biriktiradi (Employee/LibraryAdmin/Admin).")
+    assigned_role = _role_field()
 
     class Meta(BaseUserChangeForm.Meta):
         model = User
