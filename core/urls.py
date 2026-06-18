@@ -48,6 +48,9 @@ urlpatterns = [
 
     # Bildirishnomalar
     path('notifications/', include('notifications.urls')),
+
+    # Kutubxonachi admin paneli
+    path('panel/', include('panel.urls')),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

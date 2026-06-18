@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'reading',
     'engagement',
     'notifications',
+    'panel',
 ]
 
 MIDDLEWARE = [

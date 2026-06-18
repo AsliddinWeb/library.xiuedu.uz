@@ -1,0 +1,60 @@
+{% load static %}
+{# Logo #}
+<div class="flex h-16 items-center gap-3 border-b border-navy-800/60 px-5">
+    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-navy-800 text-sm font-bold text-gold-300 ring-1 ring-navy-700">XIU</span>
+    <div class="leading-none">
+        <p class="font-serif text-base font-semibold text-white">Kutubxona</p>
+        <p class="mt-0.5 text-[10px] font-medium uppercase tracking-widest text-gold-500">Boshqaruv paneli</p>
+    </div>
+</div>
+
+<nav class="space-y-6 px-3 py-5 text-sm">
+    {# Asosiy #}
+    <div class="space-y-1">
+        {% include "panel/partials/_nav_item.html" with key='dashboard' url='panel:dashboard' label='Boshqaruv' icon='dashboard' %}
+    </div>
+
+    {# Katalog #}
+    <div>
+        <p class="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-navy-500">Katalog</p>
+        <div class="space-y-1">
+            {% include "panel/partials/_nav_item.html" with key='books' url='panel:books' label='Kitoblar' icon='book' %}
+            {% include "panel/partials/_nav_item.html" with key='genres' url='panel:genres' label='Kataloglar' icon='category' %}
+            {% include "panel/partials/_nav_item.html" with key='authors' url='panel:authors' label='Mualliflar' icon='users' %}
+            {% include "panel/partials/_nav_item.html" with key='import' url='panel:import_books' label='Import' icon='upload' %}
+        </div>
+    </div>
+
+    {# Sirkulyatsiya #}
+    <div>
+        <p class="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-navy-500">Sirkulyatsiya</p>
+        <div class="space-y-1">
+            {% include "panel/partials/_nav_item.html" with key='requests' url='panel:requests' label="So'rovlar" icon='inbox' badge=lib_stats.pending_requests %}
+            {% include "panel/partials/_nav_item.html" with key='rentals' url='panel:rentals' label='Ijaralar' icon='swap' badge=lib_stats.active_rentals %}
+            {% include "panel/partials/_nav_item.html" with key='reservations' url='panel:reservations' label='Navbatlar' icon='clock' badge=lib_stats.reservations %}
+            {% include "panel/partials/_nav_item.html" with key='fines' url='panel:fines' label='Jarimalar' icon='cash' badge=lib_stats.unpaid_fines %}
+        </div>
+    </div>
+
+    {# Tizim #}
+    <div>
+        <p class="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-navy-500">Tizim</p>
+        <div class="space-y-1">
+            {% include "panel/partials/_nav_item.html" with key='reviews' url='panel:reviews' label='Sharhlar' icon='star' badge=lib_stats.pending_reviews %}
+            {% include "panel/partials/_nav_item.html" with key='members' url='panel:members' label='Talabalar' icon='id' %}
+            {% include "panel/partials/_nav_item.html" with key='analytics' url='panel:analytics' label='Analitika' icon='chart' %}
+            {% include "panel/partials/_nav_item.html" with key='settings' url='panel:settings' label='Sozlamalar' icon='cog' %}
+        </div>
+    </div>
+</nav>
+
+<div class="mt-auto space-y-1 border-t border-navy-800/60 px-3 py-4 text-sm">
+    <a href="/" class="flex items-center gap-3 rounded-lg px-3 py-2 text-navy-300 transition hover:bg-navy-900 hover:text-white">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V10"/></svg>
+        Saytga qaytish
+    </a>
+    <a href="/auth/logout/" class="flex items-center gap-3 rounded-lg px-3 py-2 text-red-300 transition hover:bg-red-500/10 hover:text-red-200">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Chiqish
+    </a>
+</div>

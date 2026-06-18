@@ -1,0 +1,42 @@
+{% load static django_htmx %}
+<!doctype html>
+<html lang="uz" class="h-full">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Kutubxonachi paneli — XIU{% endblock %}</title>
+    <link rel="icon" href="{% static 'favicon.ico' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full bg-cream font-sans text-ink antialiased"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+      x-data="{ sidebar: false }">
+
+    <div class="flex h-full">
+        {# ---------------- Sidebar (desktop sticky / mobil drawer) ---------------- #}
+        <div x-show="sidebar" x-cloak @click="sidebar=false" class="fixed inset-0 z-30 bg-navy-950/50 lg:hidden"></div>
+        <aside :class="sidebar ? 'translate-x-0' : '-translate-x-full'"
+               class="fixed inset-y-0 left-0 z-40 flex w-64 transform flex-col overflow-y-auto bg-navy-950 transition-transform duration-200 lg:static lg:translate-x-0">
+            {% include "panel/partials/_sidebar.html" %}
+        </aside>
+
+        {# ---------------- Main column ---------------- #}
+        <div class="flex min-w-0 flex-1 flex-col">
+            {% include "panel/partials/_topbar.html" %}
+            <main class="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
+                {% block panel_content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script src="{% static 'js/vendor/htmx.min.js' %}"></script>
+    <script src="{% static 'js/vendor/alpine.min.js' %}" defer></script>
+    <script src="{% static 'js/vendor/chart.umd.min.js' %}"></script>
+    {% django_htmx_script %}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

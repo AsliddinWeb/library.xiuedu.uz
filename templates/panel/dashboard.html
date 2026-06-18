@@ -1,0 +1,162 @@
+{% extends "panel/base.html" %}
+
+{% block title %}Boshqaruv paneli — Kutubxonachi{% endblock %}
+
+{% block panel_content %}
+{# ---------------- KPI kartalar ---------------- #}
+<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <a href="{% url 'panel:requests' %}" class="rounded-2xl border border-navy-100 bg-paper p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-navy-500">Kutilayotgan so'rovlar</p>
+                <p class="mt-1 font-serif text-3xl font-semibold {% if stats.pending_requests %}text-gold-600{% else %}text-navy-900{% endif %}">{{ stats.pending_requests }}</p>
+            </div>
+            <span class="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-gold-50 text-gold-600">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+            </span>
+        </div>
+    </a>
+    <a href="{% url 'panel:rentals' %}" class="rounded-2xl border border-navy-100 bg-paper p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-navy-500">Faol ijaralar</p>
+                <p class="mt-1 font-serif text-3xl font-semibold text-navy-900">{{ stats.active_rentals }}</p>
+            </div>
+            <span class="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-navy-50 text-navy-600">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4"/></svg>
+            </span>
+        </div>
+    </a>
+    <a href="{% url 'panel:rentals' %}" class="rounded-2xl border border-navy-100 bg-paper p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-navy-500">Kechikkanlar</p>
+                <p class="mt-1 font-serif text-3xl font-semibold {% if stats.overdue %}text-red-600{% else %}text-navy-900{% endif %}">{{ stats.overdue }}</p>
+            </div>
+            <span class="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-red-50 text-red-500">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+            </span>
+        </div>
+    </a>
+    <a href="{% url 'panel:fines' %}" class="rounded-2xl border border-navy-100 bg-paper p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-navy-500">To'lanmagan jarima</p>
+                <p class="mt-1 font-serif text-3xl font-semibold {% if stats.unpaid_fines %}text-red-600{% else %}text-navy-900{% endif %}">{{ stats.unpaid_fines }}</p>
+            </div>
+            <span class="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-navy-50 text-navy-600">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>
+            </span>
+        </div>
+    </a>
+</div>
+
+{# ---------------- Grafiklar ---------------- #}
+<div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft lg:col-span-2">
+        <div class="flex items-center justify-between">
+            <h2 class="font-serif text-lg font-semibold text-navy-900">Ijaralar dinamikasi</h2>
+            <span class="text-xs text-navy-400">oxirgi 14 kun</span>
+        </div>
+        <div class="mt-4 h-64"><canvas id="rentalsChart"></canvas></div>
+    </div>
+    <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+        <h2 class="font-serif text-lg font-semibold text-navy-900">Kataloglar bo'yicha</h2>
+        <div class="mt-4 h-64"><canvas id="catsChart"></canvas></div>
+    </div>
+</div>
+
+{# ---------------- Ikkilamchi statistika ---------------- #}
+<div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft">
+        <p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.reservations }}</p>
+        <p class="text-xs text-navy-500">Navbatlar</p>
+    </div>
+    <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft">
+        <p class="font-serif text-2xl font-semibold {% if stats.pending_reviews %}text-gold-600{% else %}text-navy-900{% endif %}">{{ stats.pending_reviews }}</p>
+        <p class="text-xs text-navy-500">Kutilayotgan sharhlar</p>
+    </div>
+    <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft">
+        <p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.books }}</p>
+        <p class="text-xs text-navy-500">Kitoblar</p>
+    </div>
+    <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft">
+        <p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.students }}</p>
+        <p class="text-xs text-navy-500">Talabalar</p>
+    </div>
+</div>
+
+{# ---------------- Jadvallar ---------------- #}
+<div class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+    <section class="rounded-2xl border border-navy-100 bg-paper shadow-soft">
+        <div class="flex items-center justify-between border-b border-navy-100 px-6 py-4">
+            <h2 class="font-serif text-lg font-semibold text-navy-900">Kutilayotgan so'rovlar</h2>
+            <a href="{% url 'panel:requests' %}" class="text-xs font-medium text-navy-500 hover:text-navy-800">Barchasi →</a>
+        </div>
+        <div class="divide-y divide-navy-50">
+            {% for req in recent_requests %}
+            <div class="flex items-center justify-between gap-3 px-6 py-3">
+                <div class="min-w-0">
+                    <p class="truncate text-sm font-medium text-navy-900">{{ req.book.title }}</p>
+                    <p class="text-xs text-navy-500">{{ req.student.user.get_full_name }} · {{ req.created_at|timesince }} oldin</p>
+                </div>
+                <a href="{% url 'panel:requests' %}" class="flex-none rounded-full bg-navy-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-navy-800">Ko'rish</a>
+            </div>
+            {% empty %}
+            <p class="px-6 py-10 text-center text-sm text-navy-400">Yangi so'rov yo'q.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="rounded-2xl border border-navy-100 bg-paper shadow-soft">
+        <div class="flex items-center justify-between border-b border-navy-100 px-6 py-4">
+            <h2 class="font-serif text-lg font-semibold text-navy-900">Kechikkan ijaralar</h2>
+            <a href="{% url 'panel:rentals' %}" class="text-xs font-medium text-navy-500 hover:text-navy-800">Barchasi →</a>
+        </div>
+        <div class="divide-y divide-navy-50">
+            {% for rental in overdue %}
+            <div class="flex items-center justify-between gap-3 px-6 py-3">
+                <div class="min-w-0">
+                    <p class="truncate text-sm font-medium text-navy-900">{{ rental.copy.book.title }}</p>
+                    <p class="text-xs text-navy-500">{{ rental.student.user.get_full_name }} · muddat {{ rental.due_date }}</p>
+                </div>
+                <span class="flex-none rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-600">Kechikkan</span>
+            </div>
+            {% empty %}
+            <p class="px-6 py-10 text-center text-sm text-navy-400">Kechikkan ijara yo'q.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const navy = '#20335a', gold = '#c69a3a';
+    const rc = {{ rentals_chart|safe }};
+    new Chart(document.getElementById('rentalsChart'), {
+        type: 'line',
+        data: { labels: rc.labels, datasets: [{
+            data: rc.data, borderColor: gold, backgroundColor: 'rgba(198,154,58,.12)',
+            fill: true, tension: .35, pointRadius: 2, pointBackgroundColor: gold, borderWidth: 2,
+        }]},
+        options: { responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#eef2f9' } },
+                      x: { grid: { display: false } } } }
+    });
+    const cc = {{ cats_chart|safe }};
+    new Chart(document.getElementById('catsChart'), {
+        type: 'doughnut',
+        data: { labels: cc.labels, datasets: [{
+            data: cc.data,
+            backgroundColor: ['#0e1a30', '#20335a', '#375789', '#819cc4', '#d6a945', '#ecd89f'],
+            borderWidth: 0,
+        }]},
+        options: { responsive: true, maintainAspectRatio: false, cutout: '62%',
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
+    });
+})();
+</script>
+{% endblock %}
