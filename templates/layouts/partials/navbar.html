@@ -49,8 +49,10 @@
                             <p class="truncate text-xs text-navy-400">{{ request.user.username }}</p>
                         </div>
                         <a href="/dashboard/" class="block px-4 py-2 text-sm text-navy-700 transition hover:bg-navy-50">Kabinet</a>
+                        {% if request.user.user_type == 'STUDENT' %}
                         <a href="/circulation/my-rentals/" class="block px-4 py-2 text-sm text-navy-700 transition hover:bg-navy-50">Mening ijaralarim</a>
                         <a href="/engagement/my-library/" class="block px-4 py-2 text-sm text-navy-700 transition hover:bg-navy-50">Mening kutubxonam</a>
+                        {% endif %}
                         <a href="/books/" class="block px-4 py-2 text-sm text-navy-700 transition hover:bg-navy-50">Katalog</a>
                         <a href="/auth/logout/" class="mt-1 block border-t border-navy-100 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50">Chiqish</a>
                     </div>
