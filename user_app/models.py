@@ -9,6 +9,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         STUDENT = 'STUDENT', _('Talaba')
         EMPLOYE = 'EMPLOYE', _('Xodim')
 
+    class Gender(models.TextChoices):
+        MALE = 'Erkak', _('Erkak')
+        FEMALE = 'Ayol', _('Ayol')
+
     user_type = models.CharField(
         max_length=10,
         choices=UserType.choices,
@@ -26,18 +30,22 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     image = models.ImageField(upload_to="user_images/", null=True, blank=True, verbose_name="Rasm")
     birth_day = models.DateField(null=True, blank=True, verbose_name="Tug'ilgan sana")
-    gender = models.CharField(max_length=10, choices=[("Erkak", "Erkak"), ("Ayol", "Ayol")], null=True, blank=True, verbose_name="Jinsi")
-
-    # passport_number = models.CharField(max_length=50, null=True, blank=True, verbose_name="Passport raqami")
-    # jshshir = models.CharField(max_length=50, null=True, blank=True, verbose_name="JSHSHIR")
+    gender = models.CharField(max_length=10, choices=Gender.choices, null=True, blank=True, verbose_name="Jinsi")
 
     country = models.CharField(max_length=100, null=True, blank=True, verbose_name="Davlat")
     province = models.CharField(max_length=100, null=True, blank=True, verbose_name="Viloyat")
     district = models.CharField(max_length=100, null=True, blank=True, verbose_name="Tuman")
     address = models.TextField(null=True, blank=True, verbose_name="Manzil")
 
+    # HEMIS identifikatorlari
+    hemis_uuid = models.CharField(max_length=64, null=True, blank=True, db_index=True, verbose_name="HEMIS UUID")
+    university_id = models.CharField(max_length=50, null=True, blank=True, verbose_name="Universitet ID")
+
     is_active = models.BooleanField(default=True, verbose_name="Faol")
-    is_staff = models.BooleanField(default=False, verbose_name="Hodim")
+    is_staff = models.BooleanField(default=False, verbose_name="Admin panelga kirish")
+
+    created_at = models.DateTimeField(auto_now_add=True, null=True, verbose_name="Yaratilgan sana")
+    updated_at = models.DateTimeField(auto_now=True, null=True, verbose_name="Yangilangan sana")
 
     objects = UserManager()
 
@@ -66,6 +74,9 @@ class EmployeProfile(models.Model):
     roles = models.ManyToManyField('Role', blank=True, related_name="employe_profiles", verbose_name="Xodim rollari")
     current_role = models.ForeignKey('Role', on_delete=models.SET_NULL, blank=True, null=True, related_name="current_employes", verbose_name="Hozirgi rol")
 
+    created_at = models.DateTimeField(auto_now_add=True, null=True, verbose_name="Yaratilgan sana")
+    updated_at = models.DateTimeField(auto_now=True, null=True, verbose_name="Yangilangan sana")
+
     class Meta:
         verbose_name = "Hodim"
         verbose_name_plural = "Hodimlar"
@@ -78,14 +89,17 @@ class EmployeProfile(models.Model):
 class StudentProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student_profile", verbose_name="Foydalanuvchi")
 
-    faculty = models.CharField(max_length=100, null=True, blank=True, verbose_name="Fakultet")
-    group = models.CharField(max_length=100, null=True, blank=True, verbose_name="Guruh")
+    faculty = models.CharField(max_length=100, null=True, blank=True, db_index=True, verbose_name="Fakultet")
+    group = models.CharField(max_length=100, null=True, blank=True, db_index=True, verbose_name="Guruh")
     level = models.CharField(max_length=100, null=True, blank=True, verbose_name="Bosqich")
     semester = models.CharField(max_length=100, null=True, blank=True, verbose_name="Semestr")
 
     education_form = models.CharField(max_length=100, null=True, blank=True, verbose_name="Ta'lim shakli")
     education_type = models.CharField(max_length=100, null=True, blank=True, verbose_name="Ta'lim turi")
     payment_form = models.CharField(max_length=100, null=True, blank=True, verbose_name="To'lov shakli")
+
+    created_at = models.DateTimeField(auto_now_add=True, null=True, verbose_name="Yaratilgan sana")
+    updated_at = models.DateTimeField(auto_now=True, null=True, verbose_name="Yangilangan sana")
 
     class Meta:
         verbose_name = "Talaba"
@@ -97,10 +111,12 @@ class StudentProfile(models.Model):
 # Role Model
 class Role(models.Model):
     name = models.CharField(max_length=50, unique=True, verbose_name="Rol nomi")
+    description = models.CharField(max_length=255, null=True, blank=True, verbose_name="Izoh")
 
     class Meta:
         verbose_name = "Rol"
         verbose_name_plural = "Rollar"
+        ordering = ['name']
 
     def __str__(self):
         return self.name

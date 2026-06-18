@@ -35,19 +35,19 @@ def _student_dashboard(request):
     base_qs = Book.objects.select_related('category').prefetch_related('authors')
 
     popular_books = (
-        base_qs.filter(category__is_active=True)
+        base_qs.filter(is_active=True, category__is_active=True)
         .annotate(rental_count=Count('copy__rental'))
         .order_by('-rental_count', '-id')[:6]
     )
 
     one_month_ago = now() - timedelta(days=30)
     recent_books = (
-        base_qs.filter(category__is_active=True, created_at__gte=one_month_ago)
+        base_qs.filter(is_active=True, category__is_active=True, created_at__gte=one_month_ago)
         .order_by('-created_at')[:6]
     )
     # Agar oxirgi oyda yangi kitob bo'lmasa — eng so'nggilarini ko'rsatamiz
     if not recent_books:
-        recent_books = base_qs.filter(category__is_active=True).order_by('-created_at')[:6]
+        recent_books = base_qs.filter(is_active=True, category__is_active=True).order_by('-created_at')[:6]
 
     # Talabaning joriy (qaytarilmagan) ijaralari
     active_rentals = []

@@ -16,7 +16,7 @@ class GenreForm(forms.ModelForm):
         model = Genre
         fields = ['name']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Janr nomi'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Katalog nomi'}),
         }
 
 
@@ -24,14 +24,15 @@ class BookForm(forms.ModelForm):
     class Meta:
         model = Book
         fields = [
-            'title', 'authors', 'category', 'published_date', 'description', 'audio_version',
-            'electronic_version', 'page_count', 'cover_image', 'language', 'isbn'
+            'title', 'authors', 'category', 'published_year', 'description', 'audio_version',
+            'electronic_version', 'page_count', 'cover_image', 'language', 'isbn',
+            'reading_mode', 'download_allowed', 'is_active'
         ]
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Kitob nomi'}),
             'authors': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
-            'published_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'published_year': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Yil (masalan 2021)'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Qisqacha tavsif', 'rows': 4}),
             'audio_version': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'electronic_version': forms.ClearableFileInput(attrs={'class': 'form-control'}),

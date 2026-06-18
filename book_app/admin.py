@@ -14,23 +14,27 @@ class AuthorAdmin(ModelAdmin):
 
 @admin.register(Genre)
 class GenreAdmin(ModelAdmin):
-    list_display = ("name",)
+    list_display = ("name", "order", "is_active", "book_count")
+    list_editable = ("order", "is_active")
     search_fields = ("name",)
-    list_filter = ()
+    list_filter = ("is_active",)
 
 
 @admin.register(Book)
 class BookAdmin(ModelAdmin):
     list_display = (
         "title",
-        "published_date",
-        "page_count",
-        "language",
-        "isbn",
+        "category",
+        "published_year",
+        "reading_mode",
+        "is_active",
+        "view_count",
     )
     search_fields = ("title", "isbn")
-    list_filter = ("language", "published_date")
+    list_filter = ("reading_mode", "is_active", "language", "category")
     filter_horizontal = ("authors", )
+    prepopulated_fields = {"slug": ("title",)}
+    readonly_fields = ("view_count", "avg_rating", "rating_count", "published_date")
 
 
 @admin.register(Copy)

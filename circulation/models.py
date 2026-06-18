@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 
@@ -47,7 +48,7 @@ class RentalRequest(models.Model):
         related_name='rental_requests', verbose_name="Kitob")
     status = models.CharField(
         max_length=10, choices=Status.choices, default=Status.PENDING,
-        verbose_name="Holati")
+        db_index=True, verbose_name="Holati")
 
     rental = models.ForeignKey(
         'book_app.Rental', on_delete=models.SET_NULL, null=True, blank=True,
@@ -64,6 +65,11 @@ class RentalRequest(models.Model):
         verbose_name = "Ijara so'rovi"
         verbose_name_plural = "Ijara so'rovlari"
         ordering = ['-created_at']
+        constraints = [
+            # Bir talaba bir kitobga faqat bitta ochiq (PENDING) so'rov yubora oladi
+            models.UniqueConstraint(fields=['student', 'book'], condition=Q(status='PENDING'),
+                                    name='uniq_pending_request_per_student_book'),
+        ]
 
     def __str__(self):
         return f"{self.book.title} — {self.student.user.username} ({self.get_status_display()})"
@@ -86,7 +92,7 @@ class Reservation(models.Model):
         related_name='reservations', verbose_name="Kitob")
     status = models.CharField(
         max_length=10, choices=Status.choices, default=Status.WAITING,
-        verbose_name="Holati")
+        db_index=True, verbose_name="Holati")
 
     hold_until = models.DateTimeField(
         null=True, blank=True, verbose_name="Ushlab turish muddati")
@@ -96,6 +102,9 @@ class Reservation(models.Model):
         verbose_name = "Navbat"
         verbose_name_plural = "Navbatlar"
         ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['book', 'status']),
+        ]
 
     def __str__(self):
         return f"{self.book.title} — {self.student.user.username} ({self.get_status_display()})"

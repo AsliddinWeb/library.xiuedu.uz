@@ -1,16 +1,20 @@
 from django.db import models
+from django.db.models import Q
 
 from user_app.models import StudentProfile
 
 
 class Author(models.Model):
-    full_name = models.CharField(max_length=200, verbose_name="Ism Familiya")
+    full_name = models.CharField(max_length=200, db_index=True, verbose_name="Ism Familiya")
 
     bio = models.TextField(verbose_name="Qisqacha tavsif", blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True, null=True, verbose_name="Yaratilgan sana")
 
     class Meta:
         verbose_name = "Muallif"
         verbose_name_plural = "Mualliflar"
+        ordering = ['full_name']
 
     def __str__(self):
         return self.full_name
@@ -19,11 +23,13 @@ class Author(models.Model):
 class Genre(models.Model):
     name = models.CharField(max_length=100, verbose_name="Katalog nomi")
     icon = models.TextField(verbose_name="Ikonkasi", null=True, blank=True)
+    order = models.PositiveIntegerField(default=0, verbose_name="Tartib")
     is_active = models.BooleanField(verbose_name="Aktivmi?", default=True)
 
     class Meta:
         verbose_name = "Katalog"
         verbose_name_plural = "Kataloglar"
+        ordering = ['order', 'name']
 
     def __str__(self):
         return self.name
@@ -33,13 +39,20 @@ class Genre(models.Model):
 
 
 class Book(models.Model):
+    class ReadingMode(models.TextChoices):
+        PHYSICAL = 'PHYSICAL', "Jismoniy"
+        DIGITAL = 'DIGITAL', "Raqamli"
+        BOTH = 'BOTH', "Ikkalasi"
+
     title = models.CharField(max_length=500, verbose_name="Kitob nomi")
+    slug = models.SlugField(max_length=300, unique=True, null=True, blank=True, verbose_name="Slug")
 
     authors = models.ManyToManyField(Author, verbose_name="Mualliflar")
-    # genres = models.ManyToManyField(Genre, verbose_name="Kataloglar")
     category = models.ForeignKey(Genre, verbose_name="Katalog", on_delete=models.PROTECT)
 
-    published_date = models.CharField(max_length=255, verbose_name="Chop etilgan sana", null=True, blank=True, default="2020")
+    published_year = models.PositiveIntegerField(verbose_name="Chop etilgan yili", null=True, blank=True)
+    # Eski matnli maydon (deprecated — published_year ishlatiladi)
+    published_date = models.CharField(max_length=255, verbose_name="Chop etilgan sana (eski)", null=True, blank=True)
 
     description = models.TextField(verbose_name="Qisqacha tavsif", blank=True, null=True)
 
@@ -52,9 +65,16 @@ class Book(models.Model):
     language = models.CharField(max_length=50, verbose_name="Til", default="O'zbekcha")
     isbn = models.CharField(max_length=13, verbose_name="ISBN", blank=True, null=True)
 
-    view_count = models.PositiveIntegerField(default=0, verbose_name="Ko'rishlar soni")
+    reading_mode = models.CharField(max_length=10, choices=ReadingMode.choices,
+                                    default=ReadingMode.PHYSICAL, verbose_name="Foydalanish turi")
+    download_allowed = models.BooleanField(default=False, verbose_name="Yuklab olishga ruxsat")
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name="Aktivmi?")
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Kitob yaratilgan sana")
+    view_count = models.PositiveIntegerField(default=0, db_index=True, verbose_name="Ko'rishlar soni")
+    avg_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0, verbose_name="O'rtacha reyting")
+    rating_count = models.PositiveIntegerField(default=0, verbose_name="Baholar soni")
+
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="Kitob yaratilgan sana")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Kitob yangilangan sana")
 
     class Meta:
@@ -73,11 +93,15 @@ class Book(models.Model):
 class Copy(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE, verbose_name="Kitob")
     inventory_number = models.CharField(max_length=50, verbose_name="Inventar raqami")
-    is_available = models.BooleanField(default=True, verbose_name="Mavjudmi")
+    is_available = models.BooleanField(default=True, db_index=True, verbose_name="Mavjudmi")
 
     class Meta:
         verbose_name = "Nusxa"
         verbose_name_plural = "Nusxalar"
+        constraints = [
+            models.UniqueConstraint(fields=['book', 'inventory_number'],
+                                    name='uniq_inventory_per_book'),
+        ]
 
     def __str__(self):
         return f"{self.book.title} - {self.inventory_number}"
@@ -90,8 +114,8 @@ class Rental(models.Model):
     library_admin_checked = models.BooleanField(default=False, verbose_name="Kutubxonachi tasdiqladimi?")
 
     borrowed_date = models.DateField(verbose_name="Olgan sana", blank=True, null=True)
-    due_date = models.DateField(verbose_name="Qaytarish muddati", blank=True, null=True)
-    return_date = models.DateField(verbose_name="Qaytarilgan sana", blank=True, null=True)
+    due_date = models.DateField(verbose_name="Qaytarish muddati", blank=True, null=True, db_index=True)
+    return_date = models.DateField(verbose_name="Qaytarilgan sana", blank=True, null=True, db_index=True)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Kitob yaratilgan sana")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Kitob yangilangan sana")
@@ -99,6 +123,11 @@ class Rental(models.Model):
     class Meta:
         verbose_name = "Ijara"
         verbose_name_plural = "Ijaralar"
+        constraints = [
+            # Bitta nusxa bir vaqtda faqat bitta faol (qaytarilmagan) ijarada
+            models.UniqueConstraint(fields=['copy'], condition=Q(return_date__isnull=True),
+                                    name='uniq_active_rental_per_copy'),
+        ]
 
     def __str__(self):
         return f"{self.copy.book.title} ({self.student.user.first_name} {self.student.user.third_name})"

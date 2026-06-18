@@ -35,6 +35,9 @@ class ReadingHistory(models.Model):
         verbose_name = "O'qish tarixi"
         verbose_name_plural = "O'qish tarixi"
         ordering = ['-opened_at']
+        indexes = [
+            models.Index(fields=['book', 'opened_at']),
+        ]
 
     def __str__(self):
         return f"{self.user.username} — {self.book.title}"

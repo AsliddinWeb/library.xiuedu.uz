@@ -146,6 +146,8 @@ class AuthCallbackView(View):
                 'birth_day': _parse_birth_date(student_data.get('birth_date')),
                 'gender': student_data.get('gender', {}).get('name', ''),
                 'user_type': User.UserType.STUDENT,
+                'hemis_uuid': student_data.get('uuid') or None,
+                'university_id': str(student_data.get('university_id') or '') or None,
                 'country': student_data.get('country', {}).get('name', ''),
                 'province': student_data.get('province', {}).get('name', ''),
                 'district': student_data.get('district', {}).get('name', ''),
@@ -190,6 +192,8 @@ class AuthCallbackView(View):
                 'phone': employe_data.get('phone', ''),
                 'birth_day': _parse_birth_date(employe_data.get('birth_date')),
                 'user_type': User.UserType.EMPLOYE,
+                'hemis_uuid': employe_data.get('uuid') or None,
+                'university_id': str(employe_data.get('university_id') or '') or None,
             }
         )
 

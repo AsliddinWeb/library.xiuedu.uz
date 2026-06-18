@@ -29,7 +29,7 @@ def student_book_list(request):
         Book.objects
         .select_related('category')
         .prefetch_related('authors')
-        .filter(category__is_active=True)
+        .filter(is_active=True, category__is_active=True)
     )
 
     if query:

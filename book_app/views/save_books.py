@@ -1,5 +1,4 @@
 import requests
-import random
 
 from django.core.files import File
 from io import BytesIO
@@ -24,14 +23,17 @@ def save_books(request):
 
             for book in books:
 
+                year_raw = str(book.get('year') or '')
+                published_year = int(year_raw) if year_raw.isdigit() else None
+
                 book_data = {
                     'title': book.get('title', '.'),
                     'author': book.get('author', {}).get('name', '.'),
                     'category': book.get('category', {}).get('title', 'Boshqa'),
-                    'published_date': str(book.get('year')),  # Use the parse_date function
+                    'published_year': published_year,
                     'description': book.get('description', '.'),
                     'electronic_version': book.get('source', '.'),
-                    'page_count': random.randint(200, 400),
+                    'page_count': book.get('page_count') or None,
                     'cover_image': book.get('photo', ''),
                     'language': "O'zbekcha",
                     'isbn': "",
@@ -40,15 +42,16 @@ def save_books(request):
                 author, created = Author.objects.get_or_create(full_name=book_data['author'])
                 category, created = Genre.objects.get_or_create(name=book_data['category'])
 
-                # Create the book instance
+                # Create the book instance (manbada elektron versiya bor — raqamli)
                 book_create = Book(
                     title=book_data['title'],
-                    published_date=book_data['published_date'],
+                    published_year=book_data['published_year'],
                     description=book_data['description'],
                     page_count=book_data['page_count'],
                     language=book_data['language'],
                     isbn=book_data['isbn'],
-                    category=category,  # Assign the category directly here
+                    category=category,
+                    reading_mode=Book.ReadingMode.DIGITAL,
                 )
 
                 # Save the book instance to generate a primary key (ID)
