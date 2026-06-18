@@ -1,0 +1,110 @@
+{% extends "panel/base.html" %}
+
+{% block title %}{{ page_title }} — Kutubxonachi paneli{% endblock %}
+
+{% block panel_content %}
+<div class="mb-5 flex items-center gap-3">
+    <a href="{% if book %}{% url 'panel:book_detail' book.pk %}{% else %}{% url 'panel:books' %}{% endif %}" class="rounded-lg p-2 text-navy-500 hover:bg-navy-50">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <h2 class="font-serif text-2xl font-semibold text-navy-900">{{ page_title }}</h2>
+</div>
+
+{% if form.errors %}
+<div class="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-100">Formada xatolik bor — maydonlarni tekshiring.</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    {% csrf_token %}
+
+    {# Chap: asosiy #}
+    <div class="space-y-6 lg:col-span-2">
+        <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+            <h3 class="font-serif text-base font-semibold text-navy-900">Asosiy ma'lumotlar</h3>
+            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Kitob nomi</label>
+                    {{ form.title }}
+                    {% for e in form.title.errors %}<p class="mt-1 text-xs text-red-600">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Katalog</label>
+                    {{ form.category }}
+                    {% for e in form.category.errors %}<p class="mt-1 text-xs text-red-600">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Chop etilgan yili</label>
+                    {{ form.published_year }}
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-navy-800">ISBN</label>
+                    {{ form.isbn }}
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Til</label>
+                    {{ form.language }}
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Sahifalar soni</label>
+                    {{ form.page_count }}
+                </div>
+            </div>
+            <div class="mt-4">
+                <label class="mb-1.5 block text-sm font-medium text-navy-800">Tavsif</label>
+                {{ form.description }}
+            </div>
+        </div>
+
+        <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+            <h3 class="font-serif text-base font-semibold text-navy-900">Mualliflar</h3>
+            <div class="mt-3 max-h-52 space-y-1.5 overflow-y-auto rounded-lg border border-navy-100 bg-cream/30 p-3">
+                {% for cb in form.authors %}
+                <label class="flex items-center gap-2.5 text-sm text-navy-700">
+                    {{ cb.tag }} <span>{{ cb.choice_label }}</span>
+                </label>
+                {% empty %}<p class="text-sm text-navy-400">Muallif yo'q — avval qo'shing.</p>{% endfor %}
+            </div>
+            {% for e in form.authors.errors %}<p class="mt-1 text-xs text-red-600">{{ e }}</p>{% endfor %}
+        </div>
+    </div>
+
+    {# O'ng: fayllar + sozlamalar #}
+    <div class="space-y-6">
+        <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+            <h3 class="font-serif text-base font-semibold text-navy-900">Fayllar</h3>
+            <div class="mt-4 space-y-4">
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Muqova rasmi</label>
+                    {% if book.cover_image %}<img src="{{ book.cover_image.url }}" class="mb-2 h-28 rounded-lg">{% endif %}
+                    {{ form.cover_image }}
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Elektron versiya (PDF)</label>
+                    {{ form.electronic_version }}
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Audio versiya</label>
+                    {{ form.audio_version }}
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+            <h3 class="font-serif text-base font-semibold text-navy-900">Sozlamalar</h3>
+            <div class="mt-4 space-y-4">
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Foydalanish turi</label>
+                    {{ form.reading_mode }}
+                </div>
+                <label class="flex items-center gap-2.5 text-sm text-navy-700">{{ form.download_allowed }} Yuklab olishga ruxsat</label>
+                <label class="flex items-center gap-2.5 text-sm text-navy-700">{{ form.is_active }} Aktiv (saytda ko'rinadi)</label>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="flex-1 rounded-lg bg-navy-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800">Saqlash</button>
+            <a href="{% if book %}{% url 'panel:book_detail' book.pk %}{% else %}{% url 'panel:books' %}{% endif %}" class="rounded-lg border border-navy-200 px-6 py-2.5 text-sm font-semibold text-navy-700 transition hover:bg-navy-50">Bekor</a>
+        </div>
+    </div>
+</form>
+{% endblock %}

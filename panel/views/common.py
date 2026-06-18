@@ -32,23 +32,15 @@ def dashboard(request):
         'students': StudentProfile.objects.count(),
     }
 
-    # Chart: oxirgi 14 kun ijaralari
     days = [today - timedelta(days=i) for i in range(13, -1, -1)]
     counts = {d: 0 for d in days}
     for d in Rental.objects.filter(borrowed_date__gte=days[0]).values_list('borrowed_date', flat=True):
         if d in counts:
             counts[d] += 1
-    rentals_chart = {
-        'labels': [d.strftime('%d.%m') for d in days],
-        'data': [counts[d] for d in days],
-    }
+    rentals_chart = {'labels': [d.strftime('%d.%m') for d in days], 'data': [counts[d] for d in days]}
 
-    # Chart: kategoriya taqsimoti
-    cats = (Genre.objects.annotate(c=Count('book')).filter(c__gt=0).order_by('-c')[:6])
-    cats_chart = {
-        'labels': [g.name for g in cats],
-        'data': [g.c for g in cats],
-    }
+    cats = Genre.objects.annotate(c=Count('book')).filter(c__gt=0).order_by('-c')[:6]
+    cats_chart = {'labels': [g.name for g in cats], 'data': [g.c for g in cats]}
 
     ctx = {
         'active': 'dashboard',
@@ -64,5 +56,4 @@ def dashboard(request):
 
 @library_admin_role_required
 def coming_soon(request, active='', title='Bo\'lim'):
-    """Hali qurilmagan bo'limlar uchun vaqtincha sahifa (PART C-F da to'ldiriladi)."""
     return render(request, 'panel/coming_soon.html', {'active': active, 'page_title': title})

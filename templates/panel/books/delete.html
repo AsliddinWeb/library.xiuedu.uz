@@ -1,0 +1,22 @@
+{% extends "panel/base.html" %}
+
+{% block title %}Kitobni o'chirish — Kutubxonachi paneli{% endblock %}
+
+{% block panel_content %}
+<div class="mx-auto max-w-lg">
+    <div class="rounded-2xl border border-navy-100 bg-paper p-8 text-center shadow-soft">
+        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-500">
+            <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+        </div>
+        <h2 class="mt-5 font-serif text-2xl font-semibold text-navy-900">Kitobni o'chirish</h2>
+        <p class="mt-2 text-navy-600">
+            <span class="font-semibold text-navy-900">«{{ book.title }}»</span> va uning barcha nusxalari, ijaralari, sharhlari o'chiriladi. Bu amalni qaytarib bo'lmaydi.
+        </p>
+        <form method="post" class="mt-7 flex items-center justify-center gap-3">
+            {% csrf_token %}
+            <button type="submit" class="rounded-lg bg-red-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700">Ha, o'chirish</button>
+            <a href="{% url 'panel:book_detail' book.pk %}" class="rounded-lg border border-navy-200 px-6 py-2.5 text-sm font-semibold text-navy-700 transition hover:bg-navy-50">Bekor</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

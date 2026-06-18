@@ -10,8 +10,16 @@ cs = views.coming_soon
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
 
-    # Katalog
-    path('books/', cs, {'active': 'books', 'title': 'Kitoblar'}, name='books'),
+    # Katalog — Kitoblar (to'liq CRUD)
+    path('books/', views.book_list, name='books'),
+    path('books/new/', views.book_create, name='book_create'),
+    path('books/<int:pk>/', views.book_detail, name='book_detail'),
+    path('books/<int:pk>/edit/', views.book_edit, name='book_edit'),
+    path('books/<int:pk>/delete/', views.book_delete, name='book_delete'),
+    path('books/<int:pk>/copies/add/', views.copy_add, name='copy_add'),
+    path('copies/<int:pk>/toggle/', views.copy_toggle, name='copy_toggle'),
+    path('copies/<int:pk>/delete/', views.copy_delete, name='copy_delete'),
+
     path('genres/', cs, {'active': 'genres', 'title': 'Kataloglar'}, name='genres'),
     path('authors/', cs, {'active': 'authors', 'title': 'Mualliflar'}, name='authors'),
     path('import/', cs, {'active': 'import', 'title': 'Import'}, name='import_books'),

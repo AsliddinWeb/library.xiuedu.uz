@@ -1,0 +1,36 @@
+{% load static %}
+<div id="copies">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="font-serif text-base font-semibold text-navy-900">Nusxalar
+            <span class="ml-1 text-sm font-normal text-navy-400">({{ book.copy_set.count }})</span>
+        </h3>
+        <form hx-post="{% url 'panel:copy_add' book.pk %}" hx-target="#copies" hx-swap="outerHTML" class="flex items-center gap-2">
+            <input type="number" name="quantity" value="1" min="1" max="50"
+                   class="w-20 rounded-lg border border-navy-200 bg-cream/40 px-3 py-1.5 text-sm focus:border-gold-400 focus:ring-2 focus:ring-gold-200 focus:outline-none">
+            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-navy-900 px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-navy-800">
+                <svg class="h-4 w-4 text-gold-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
+                Qo'shish
+            </button>
+        </form>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {% for copy in book.copy_set.all %}
+        <div class="flex items-center justify-between gap-2 rounded-lg border border-navy-100 px-3 py-2 text-sm">
+            <span class="font-medium text-navy-800">{{ copy.inventory_number }}</span>
+            <div class="flex items-center gap-1">
+                <button hx-post="{% url 'panel:copy_toggle' copy.pk %}" hx-target="#copies" hx-swap="outerHTML"
+                        class="rounded-full px-2.5 py-0.5 text-xs font-medium transition {% if copy.is_available %}bg-emerald-50 text-emerald-700 hover:bg-emerald-100{% else %}bg-red-50 text-red-600 hover:bg-red-100{% endif %}">
+                    {% if copy.is_available %}Mavjud{% else %}Band{% endif %}
+                </button>
+                <button hx-post="{% url 'panel:copy_delete' copy.pk %}" hx-target="#copies" hx-swap="outerHTML"
+                        class="rounded-lg p-1 text-red-400 transition hover:bg-red-50 hover:text-red-600" title="O'chirish">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <p class="col-span-2 rounded-lg border border-dashed border-navy-200 px-4 py-6 text-center text-sm text-navy-400">Nusxa yo'q. Yuqoridan qo'shing.</p>
+        {% endfor %}
+    </div>
+</div>
