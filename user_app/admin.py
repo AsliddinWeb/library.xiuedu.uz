@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
@@ -5,9 +6,39 @@ from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 
 from unfold.admin import ModelAdmin, StackedInline
 from unfold.decorators import display
-from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
+from unfold.forms import (AdminPasswordChangeForm,
+                          UserChangeForm as BaseUserChangeForm,
+                          UserCreationForm as BaseUserCreationForm)
 
 from .models import User, EmployeProfile, StudentProfile, Role
+
+
+# --- Rol tanlashli formalar (xodim rolini bir qadamda biriktirish) ---
+
+class UserCreationForm(BaseUserCreationForm):
+    assigned_role = forms.ModelChoiceField(
+        queryset=Role.objects.all(), required=False, label="Rol (xodimlar uchun)",
+        help_text="Xodim turidagi foydalanuvchiga rol biriktiradi (Employee/LibraryAdmin/Admin).")
+
+    class Meta(BaseUserCreationForm.Meta):
+        model = User
+        fields = ("username", "user_type", "first_name", "second_name", "third_name", "email", "phone")
+
+
+class UserChangeForm(BaseUserChangeForm):
+    assigned_role = forms.ModelChoiceField(
+        queryset=Role.objects.all(), required=False, label="Rol (xodimlar uchun)",
+        help_text="Xodim turidagi foydalanuvchiga rol biriktiradi (Employee/LibraryAdmin/Admin).")
+
+    class Meta(BaseUserChangeForm.Meta):
+        model = User
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        inst = getattr(self, 'instance', None)
+        profile = getattr(inst, 'employe_profile', None) if inst and inst.pk else None
+        if profile and profile.current_role_id:
+            self.fields['assigned_role'].initial = profile.current_role_id
 
 # Group'ni unfold ko'rinishida qayta ro'yxatdan o'tkazamiz
 admin.site.unregister(Group)
@@ -50,7 +81,7 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
     readonly_fields = ("last_login", "created_at", "updated_at")
 
     fieldsets = (
-        ("Asosiy", {"fields": ("username", "password", "user_type")}),
+        ("Asosiy", {"fields": ("username", "password", "user_type", "assigned_role")}),
         ("Shaxsiy ma'lumotlar", {
             "fields": ("first_name", "second_name", "third_name", "email", "phone",
                        "birth_day", "gender", "image"),
@@ -75,9 +106,17 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
     filter_horizontal = ("groups", "user_permissions")
 
     add_fieldsets = (
-        (None, {
+        ("Hisob", {
             "classes": ("wide",),
-            "fields": ("username", "password1", "password2", "user_type", "is_staff", "is_active"),
+            "fields": ("username", "password1", "password2"),
+        }),
+        ("Turi va rol", {
+            "classes": ("wide",),
+            "fields": ("user_type", "assigned_role", "is_active", "is_staff"),
+        }),
+        ("Shaxsiy ma'lumotlar", {
+            "classes": ("wide",),
+            "fields": ("first_name", "second_name", "third_name", "email", "phone"),
         }),
     )
 
@@ -90,6 +129,16 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
             return []
         inline = StudentProfileInline if obj.user_type == User.UserType.STUDENT else EmployeProfileInline
         return [inline(self.model, self.admin_site)]
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        role = form.cleaned_data.get('assigned_role')
+        if obj.user_type == User.UserType.EMPLOYE:
+            profile, _ = EmployeProfile.objects.get_or_create(user=obj)
+            if role:
+                profile.current_role = role
+                profile.save(update_fields=['current_role'])
+                profile.roles.add(role)
 
     @display(description="F.I.Sh")
     def full_name_display(self, obj):
