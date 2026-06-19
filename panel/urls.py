@@ -36,10 +36,15 @@ urlpatterns = [
     path('import/', cs, {'active': 'import', 'title': 'Import'}, name='import_books'),
 
     # Sirkulyatsiya
-    path('requests/', cs, {'active': 'requests', 'title': "Ijara so'rovlari"}, name='requests'),
-    path('rentals/', cs, {'active': 'rentals', 'title': 'Ijaralar'}, name='rentals'),
-    path('reservations/', cs, {'active': 'reservations', 'title': 'Navbatlar'}, name='reservations'),
-    path('fines/', cs, {'active': 'fines', 'title': 'Jarimalar'}, name='fines'),
+    path('requests/', views.requests_view, name='requests'),
+    path('requests/<int:pk>/approve/', views.request_approve, name='request_approve'),
+    path('requests/<int:pk>/reject/', views.request_reject, name='request_reject'),
+    path('rentals/', views.rentals_view, name='rentals'),
+    path('rentals/<int:pk>/return/', views.rental_return, name='rental_return'),
+    path('reservations/', views.reservations_view, name='reservations'),
+    path('reservations/<int:pk>/cancel/', views.reservation_cancel, name='reservation_cancel'),
+    path('fines/', views.fines_view, name='fines'),
+    path('fines/<int:pk>/paid/', views.fine_mark_paid, name='fine_mark_paid'),
 
     # Tizim
     path('reviews/', cs, {'active': 'reviews', 'title': 'Sharhlar'}, name='reviews'),

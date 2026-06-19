@@ -1,0 +1,33 @@
+{% load static %}
+<div class="overflow-hidden rounded-xl border border-navy-100 bg-paper shadow-soft">
+    <table class="w-full text-left text-sm">
+        <thead class="border-b border-navy-100 bg-navy-50/50 text-xs uppercase tracking-wide text-navy-500">
+            <tr>
+                <th class="px-4 py-3 font-semibold">Kitob</th>
+                <th class="px-4 py-3 font-semibold">Talaba</th>
+                <th class="px-4 py-3 font-semibold">Sana</th>
+                <th class="px-4 py-3 font-semibold">Holat</th>
+                <th class="px-4 py-3 text-right font-semibold">Amal</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-navy-50">
+            {% for res in reservations %}
+            <tr class="transition hover:bg-navy-50/40">
+                <td class="px-4 py-3 font-medium text-navy-900">{{ res.book.title }}</td>
+                <td class="px-4 py-3 text-navy-600">{{ res.student.user.get_full_name }}</td>
+                <td class="px-4 py-3 text-navy-500">{{ res.created_at|date:"d.m.Y" }}</td>
+                <td class="px-4 py-3">
+                    {% if res.status == 'AVAILABLE' %}<span class="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Bo'shadi</span>
+                    {% else %}<span class="rounded-full bg-navy-50 px-2.5 py-0.5 text-xs font-medium text-navy-600">Navbatda</span>{% endif %}
+                </td>
+                <td class="px-4 py-3 text-right">
+                    <button hx-post="{% url 'panel:reservation_cancel' res.pk %}" hx-target="#res-table" hx-swap="innerHTML" hx-include="[name='q']"
+                            class="rounded-lg border border-navy-200 px-3.5 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50">Bekor</button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="px-4 py-16 text-center text-sm text-navy-400">Navbat yo'q.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
