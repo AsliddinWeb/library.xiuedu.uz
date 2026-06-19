@@ -3,6 +3,8 @@ from django.utils.text import slugify
 
 from book_app.models import Author, Book, Genre
 
+__all__ = ['PanelBookForm', 'PanelGenreForm', 'PanelAuthorForm']
+
 INPUT = ("w-full rounded-lg border border-navy-200 bg-paper px-3.5 py-2.5 text-sm text-navy-900 "
          "transition placeholder:text-navy-400 focus:border-gold-400 focus:ring-2 "
          "focus:ring-gold-200 focus:outline-none")
@@ -50,3 +52,24 @@ class PanelBookForm(forms.ModelForm):
                 book.slug = f"{slugify(book.title)[:280] or 'kitob'}-{book.pk}"
                 book.save(update_fields=['slug'])
         return book
+
+
+class PanelGenreForm(forms.ModelForm):
+    class Meta:
+        model = Genre
+        fields = ['name', 'icon', 'order', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': INPUT, 'placeholder': 'Katalog nomi'}),
+            'icon': forms.Textarea(attrs={'class': INPUT, 'rows': 2, 'placeholder': 'Ikonka (SVG yoki emoji) — ixtiyoriy'}),
+            'order': forms.NumberInput(attrs={'class': INPUT, 'placeholder': '0'}),
+        }
+
+
+class PanelAuthorForm(forms.ModelForm):
+    class Meta:
+        model = Author
+        fields = ['full_name', 'bio']
+        widgets = {
+            'full_name': forms.TextInput(attrs={'class': INPUT, 'placeholder': 'Ism Familiya'}),
+            'bio': forms.Textarea(attrs={'class': INPUT, 'rows': 4, 'placeholder': 'Qisqacha tavsif'}),
+        }

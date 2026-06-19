@@ -1,0 +1,40 @@
+{% extends "panel/base.html" %}
+
+{% block title %}{{ page_title }} — Kutubxonachi paneli{% endblock %}
+
+{% block panel_content %}
+<div class="mx-auto max-w-xl">
+    <div class="mb-5 flex items-center gap-3">
+        <a href="{% url 'panel:genres' %}" class="rounded-lg p-2 text-navy-500 hover:bg-navy-50">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
+        </a>
+        <h2 class="font-serif text-2xl font-semibold text-navy-900">{{ page_title }}</h2>
+    </div>
+
+    <form method="post" class="space-y-5 rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+        {% csrf_token %}
+        <div>
+            <label class="mb-1.5 block text-sm font-medium text-navy-800">Katalog nomi</label>
+            {{ form.name }}
+            {% for e in form.name.errors %}<p class="mt-1 text-xs text-red-600">{{ e }}</p>{% endfor %}
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="mb-1.5 block text-sm font-medium text-navy-800">Tartib</label>
+                {{ form.order }}
+            </div>
+            <div class="flex items-end">
+                <label class="flex items-center gap-2.5 pb-2.5 text-sm text-navy-700">{{ form.is_active }} Aktiv</label>
+            </div>
+        </div>
+        <div>
+            <label class="mb-1.5 block text-sm font-medium text-navy-800">Ikonka <span class="text-navy-400">(ixtiyoriy)</span></label>
+            {{ form.icon }}
+        </div>
+        <div class="flex gap-3 pt-2">
+            <button type="submit" class="rounded-lg bg-navy-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800">Saqlash</button>
+            <a href="{% url 'panel:genres' %}" class="rounded-lg border border-navy-200 px-6 py-2.5 text-sm font-semibold text-navy-700 transition hover:bg-navy-50">Bekor</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
