@@ -1,0 +1,41 @@
+{% extends "panel/base.html" %}
+{% block title %}Sozlamalar — Kutubxonachi paneli{% endblock %}
+
+{% block panel_content %}
+<div class="mx-auto max-w-xl">
+    <div class="mb-5">
+        <h2 class="font-serif text-2xl font-semibold text-navy-900">Sozlamalar</h2>
+        <p class="mt-1 text-sm text-navy-500">Ijara va jarima qoidalari</p>
+    </div>
+
+    {% for message in messages %}
+    <div class="mb-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 ring-1 ring-emerald-100">{{ message }}</div>
+    {% endfor %}
+
+    <form method="post" class="space-y-5 rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+        {% csrf_token %}
+        <div>
+            <label class="mb-1.5 block text-sm font-medium text-navy-800">Ijara muddati (kun)</label>
+            {{ form.rental_days }}
+            <p class="mt-1 text-xs text-navy-400">Tasdiqlangan ijara necha kunga beriladi.</p>
+        </div>
+        <div>
+            <label class="mb-1.5 block text-sm font-medium text-navy-800">Navbat ushlash (kun)</label>
+            {{ form.reservation_hold_days }}
+            <p class="mt-1 text-xs text-navy-400">Kitob bo'shaganda navbatdagiga necha kun ushlanadi.</p>
+        </div>
+        <div>
+            <label class="mb-1.5 block text-sm font-medium text-navy-800">Kuniga jarima (so'm)</label>
+            {{ form.fine_per_day }}
+            <p class="mt-1 text-xs text-navy-400">Kechikkan har bir kun uchun jarima.</p>
+        </div>
+        <div>
+            <label class="mb-1.5 block text-sm font-medium text-navy-800">Maksimal bir vaqtdagi ijara</label>
+            {{ form.max_active_rentals }}
+        </div>
+        <div class="pt-2">
+            <button type="submit" class="rounded-lg bg-navy-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800">Saqlash</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

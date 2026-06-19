@@ -1,0 +1,63 @@
+{% extends "panel/base.html" %}
+{% block title %}Analitika — Kutubxonachi paneli{% endblock %}
+
+{% block panel_content %}
+<div>
+    <h2 class="font-serif text-2xl font-semibold text-navy-900">Analitika</h2>
+    <p class="mt-1 text-sm text-navy-500">Kutubxona faoliyati ko'rsatkichlari</p>
+</div>
+
+{# Stat #}
+<div class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.books }}</p><p class="text-xs text-navy-500">Kitoblar</p></div>
+    <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.students }}</p><p class="text-xs text-navy-500">Talabalar</p></div>
+    <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.rentals }}</p><p class="text-xs text-navy-500">Jami ijaralar</p></div>
+    <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.reads }}</p><p class="text-xs text-navy-500">O'qishlar</p></div>
+</div>
+
+{# Grafiklar #}
+<div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft lg:col-span-2">
+        <h3 class="font-serif text-base font-semibold text-navy-900">Ijaralar dinamikasi <span class="text-xs font-normal text-navy-400">(30 kun)</span></h3>
+        <div class="mt-4 h-64"><canvas id="aRentals"></canvas></div>
+    </div>
+    <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+        <h3 class="font-serif text-base font-semibold text-navy-900">Kataloglar</h3>
+        <div class="mt-4 h-64"><canvas id="aCats"></canvas></div>
+    </div>
+    <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+        <h3 class="font-serif text-base font-semibold text-navy-900">Eng ko'p o'qilgan</h3>
+        <div class="mt-4 h-72"><canvas id="aViewed"></canvas></div>
+    </div>
+    <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+        <h3 class="font-serif text-base font-semibold text-navy-900">Eng ko'p ijaraga olingan</h3>
+        <div class="mt-4 h-72"><canvas id="aRented"></canvas></div>
+    </div>
+    <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+        <h3 class="font-serif text-base font-semibold text-navy-900">Faol talabalar</h3>
+        <div class="mt-4 space-y-2.5">
+            {% for s in active_students %}
+            <div class="flex items-center justify-between text-sm"><span class="truncate text-navy-700">{{ s.user.get_full_name }}</span><span class="font-semibold text-navy-900">{{ s.rc }}</span></div>
+            {% empty %}<p class="text-sm text-navy-400">Ma'lumot yo'q.</p>{% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const gold='#c69a3a', navy='#20335a';
+    const opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
+    const barY={...opts,indexAxis:'y',scales:{x:{beginAtZero:true,ticks:{precision:0}}}};
+    const rc={{ rentals_chart|safe }};
+    new Chart(aRentals,{type:'line',data:{labels:rc.labels,datasets:[{data:rc.data,borderColor:gold,backgroundColor:'rgba(198,154,58,.12)',fill:true,tension:.35,pointRadius:1,borderWidth:2}]},options:{...opts,scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'#eef2f9'}},x:{grid:{display:false}}}}});
+    const cc={{ cats_chart|safe }};
+    new Chart(aCats,{type:'doughnut',data:{labels:cc.labels,datasets:[{data:cc.data,backgroundColor:['#0e1a30','#20335a','#375789','#5474a6','#819cc4','#d6a945','#e1c06c','#ecd89f'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}}}});
+    const vc={{ viewed_chart|safe }};
+    new Chart(aViewed,{type:'bar',data:{labels:vc.labels,datasets:[{data:vc.data,backgroundColor:navy,borderRadius:4}]},options:barY});
+    const rdc={{ rented_chart|safe }};
+    new Chart(aRented,{type:'bar',data:{labels:rdc.labels,datasets:[{data:rdc.data,backgroundColor:gold,borderRadius:4}]},options:barY});
+})();
+</script>
+{% endblock %}

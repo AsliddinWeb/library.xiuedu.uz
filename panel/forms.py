@@ -3,7 +3,7 @@ from django.utils.text import slugify
 
 from book_app.models import Author, Book, Genre
 
-__all__ = ['PanelBookForm', 'PanelGenreForm', 'PanelAuthorForm']
+__all__ = ['PanelBookForm', 'PanelGenreForm', 'PanelAuthorForm', 'PanelSettingsForm']
 
 INPUT = ("w-full rounded-lg border border-navy-200 bg-paper px-3.5 py-2.5 text-sm text-navy-900 "
          "transition placeholder:text-navy-400 focus:border-gold-400 focus:ring-2 "
@@ -72,4 +72,17 @@ class PanelAuthorForm(forms.ModelForm):
         widgets = {
             'full_name': forms.TextInput(attrs={'class': INPUT, 'placeholder': 'Ism Familiya'}),
             'bio': forms.Textarea(attrs={'class': INPUT, 'rows': 4, 'placeholder': 'Qisqacha tavsif'}),
+        }
+
+
+class PanelSettingsForm(forms.ModelForm):
+    class Meta:
+        from circulation.models import LibrarySettings
+        model = LibrarySettings
+        fields = ['rental_days', 'reservation_hold_days', 'fine_per_day', 'max_active_rentals']
+        widgets = {
+            'rental_days': forms.NumberInput(attrs={'class': INPUT}),
+            'reservation_hold_days': forms.NumberInput(attrs={'class': INPUT}),
+            'fine_per_day': forms.NumberInput(attrs={'class': INPUT}),
+            'max_active_rentals': forms.NumberInput(attrs={'class': INPUT}),
         }

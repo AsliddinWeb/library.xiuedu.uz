@@ -1,0 +1,58 @@
+{% extends "panel/base.html" %}
+{% block title %}{{ member.user.get_full_name }} — Talaba{% endblock %}
+
+{% block panel_content %}
+<div class="mb-5 flex items-center gap-3">
+    <a href="{% url 'panel:members' %}" class="rounded-lg p-2 text-navy-500 hover:bg-navy-50">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <h2 class="font-serif text-2xl font-semibold text-navy-900">{{ member.user.get_full_name }}</h2>
+</div>
+
+<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    {# Profil #}
+    <div class="space-y-4">
+        <div class="rounded-2xl border border-navy-100 bg-paper p-6 text-center shadow-soft">
+            <span class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-navy-900 text-2xl font-semibold text-gold-300">{{ member.user.first_name|default:member.user.username|slice:":1"|upper }}</span>
+            <p class="mt-4 font-serif text-lg font-semibold text-navy-900">{{ member.user.get_full_name }}</p>
+            <p class="text-sm text-navy-400">{{ member.user.username }}</p>
+            <dl class="mt-5 space-y-2 border-t border-navy-50 pt-4 text-left text-sm">
+                <div class="flex justify-between"><dt class="text-navy-400">Guruh</dt><dd class="font-medium text-navy-900">{{ member.group|default:"—" }}</dd></div>
+                <div class="flex justify-between"><dt class="text-navy-400">Fakultet</dt><dd class="font-medium text-navy-900">{{ member.faculty|default:"—" }}</dd></div>
+                <div class="flex justify-between"><dt class="text-navy-400">Bosqich</dt><dd class="font-medium text-navy-900">{{ member.level|default:"—" }}</dd></div>
+                <div class="flex justify-between"><dt class="text-navy-400">Telefon</dt><dd class="font-medium text-navy-900">{{ member.user.phone|default:"—" }}</dd></div>
+            </dl>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-xl border border-navy-100 bg-paper px-4 py-3 text-center shadow-soft">
+                <p class="font-serif text-xl font-semibold text-navy-900">{{ active_count }}</p>
+                <p class="text-xs text-navy-500">Faol ijara</p>
+            </div>
+            <div class="rounded-xl border border-navy-100 bg-paper px-4 py-3 text-center shadow-soft">
+                <p class="font-serif text-xl font-semibold {% if unpaid_fines %}text-red-600{% else %}text-navy-900{% endif %}">{{ unpaid_fines }}</p>
+                <p class="text-xs text-navy-500">Jarima</p>
+            </div>
+        </div>
+    </div>
+
+    {# Ijara tarixi #}
+    <div class="lg:col-span-2">
+        <div class="rounded-2xl border border-navy-100 bg-paper shadow-soft">
+            <div class="border-b border-navy-100 px-6 py-4"><h3 class="font-serif text-base font-semibold text-navy-900">Ijara tarixi</h3></div>
+            <div class="divide-y divide-navy-50">
+                {% for r in rentals %}
+                <div class="flex items-center justify-between gap-3 px-6 py-3">
+                    <div class="min-w-0">
+                        <p class="truncate text-sm font-medium text-navy-900">{{ r.copy.book.title }}</p>
+                        <p class="text-xs text-navy-500">{{ r.borrowed_date|default:"—" }} · {{ r.copy.inventory_number }}</p>
+                    </div>
+                    {% if r.return_date %}<span class="flex-none rounded-full bg-navy-50 px-2.5 py-0.5 text-xs text-navy-500">Qaytarilgan</span>
+                    {% elif r.is_overdue %}<span class="flex-none rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600">Kechikkan</span>
+                    {% else %}<span class="flex-none rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Faol</span>{% endif %}
+                </div>
+                {% empty %}<p class="px-6 py-10 text-center text-sm text-navy-400">Ijara yo'q.</p>{% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

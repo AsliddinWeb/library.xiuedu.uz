@@ -47,8 +47,11 @@ urlpatterns = [
     path('fines/<int:pk>/paid/', views.fine_mark_paid, name='fine_mark_paid'),
 
     # Tizim
-    path('reviews/', cs, {'active': 'reviews', 'title': 'Sharhlar'}, name='reviews'),
-    path('members/', cs, {'active': 'members', 'title': 'Talabalar'}, name='members'),
-    path('analytics/', cs, {'active': 'analytics', 'title': 'Analitika'}, name='analytics'),
-    path('settings/', cs, {'active': 'settings', 'title': 'Sozlamalar'}, name='settings'),
+    path('reviews/', views.reviews_view, name='reviews'),
+    path('reviews/<int:pk>/approve/', views.review_approve, name='review_approve'),
+    path('reviews/<int:pk>/reject/', views.review_reject, name='review_reject'),
+    path('members/', views.members, name='members'),
+    path('members/<int:pk>/', views.member_detail, name='member_detail'),
+    path('analytics/', views.analytics, name='analytics'),
+    path('settings/', views.settings_view, name='settings'),
 ]
