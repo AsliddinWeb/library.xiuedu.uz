@@ -1,38 +1,32 @@
 {% load static %}
-{# Bu blok HTMX orqali almashtiriladi (#book-grid ichi) #}
+<span id="book-total" hx-swap-oob="true">{{ total }}</span>
 {% if page_obj.object_list %}
+    {% with qs="&q="|add:query|add:"&category="|add:category_id|add:"&digital="|add:digital|add:"&sort="|add:sort %}
     <div class="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-        {% for book in page_obj %}
-            {% include "book_app/book/partials/_book_card.html" %}
-        {% endfor %}
+        {% for book in page_obj %}{% include "book_app/book/partials/_book_card.html" %}{% endfor %}
     </div>
 
-    {# Paginatsiya #}
     {% if page_obj.paginator.num_pages > 1 %}
     <nav class="mt-10 flex items-center justify-center gap-1.5">
         {% if page_obj.has_previous %}
-            <button hx-get="{% url 'book_app:student_book_list' %}?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}"
-                    hx-target="#book-grid" hx-push-url="true"
+            <button hx-get="{% url 'book_app:student_book_list' %}?page={{ page_obj.previous_page_number }}{{ qs }}" hx-target="#book-grid" hx-push-url="true"
                     class="rounded-lg border border-navy-200 bg-paper px-3.5 py-2 text-sm text-navy-600 transition hover:border-navy-300 hover:bg-white">‹</button>
         {% endif %}
-
         {% for num in page_obj.paginator.page_range %}
             {% if num == page_obj.number %}
                 <span class="rounded-lg bg-navy-900 px-4 py-2 text-sm font-semibold text-white">{{ num }}</span>
             {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %}
-                <button hx-get="{% url 'book_app:student_book_list' %}?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}"
-                        hx-target="#book-grid" hx-push-url="true"
+                <button hx-get="{% url 'book_app:student_book_list' %}?page={{ num }}{{ qs }}" hx-target="#book-grid" hx-push-url="true"
                         class="rounded-lg border border-navy-200 bg-paper px-4 py-2 text-sm text-navy-600 transition hover:border-navy-300 hover:bg-white">{{ num }}</button>
             {% endif %}
         {% endfor %}
-
         {% if page_obj.has_next %}
-            <button hx-get="{% url 'book_app:student_book_list' %}?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}"
-                    hx-target="#book-grid" hx-push-url="true"
+            <button hx-get="{% url 'book_app:student_book_list' %}?page={{ page_obj.next_page_number }}{{ qs }}" hx-target="#book-grid" hx-push-url="true"
                     class="rounded-lg border border-navy-200 bg-paper px-3.5 py-2 text-sm text-navy-600 transition hover:border-navy-300 hover:bg-white">›</button>
         {% endif %}
     </nav>
     {% endif %}
+    {% endwith %}
 {% else %}
     <div class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-navy-200 py-20 text-center">
         <div class="flex h-14 w-14 items-center justify-center rounded-full bg-navy-50 text-navy-300">

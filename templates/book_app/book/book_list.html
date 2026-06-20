@@ -3,51 +3,43 @@
 {% block title %}Kitoblar katalogi — XIU Kutubxona{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-    <div class="max-w-2xl">
-        <div class="flex items-center gap-3">
-            <span class="h-px w-8 bg-gold-400"></span>
-            <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">Katalog</span>
-        </div>
-        <h1 class="mt-5 font-serif text-4xl font-semibold tracking-tight text-navy-950 sm:text-5xl">Kitoblar to'plami</h1>
-        <p class="mt-3 text-navy-600">Qidiring, kategoriya bo'yicha filtrlang va o'qishni boshlang.</p>
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div class="flex items-center gap-3">
+        <span class="h-px w-8 bg-gold-400"></span>
+        <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">Katalog</span>
     </div>
+    <h1 class="mt-4 font-serif text-4xl font-semibold tracking-tight text-navy-950 sm:text-5xl">Kitoblar to'plami</h1>
+    <p class="mt-2 text-navy-600"><span id="book-total">{{ total }}</span> ta kitob · qidiring va kashf eting</p>
 
-    {# Qidiruv va filtr #}
-    <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+    {# Filtr panel #}
+    <div class="mt-7 flex flex-col gap-3 lg:flex-row lg:items-center">
         <div class="relative flex-1">
             <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-navy-400">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.3-4.3M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/></svg>
             </span>
-            <input type="search" name="q" value="{{ query }}" placeholder="Kitob nomi yoki muallif..."
-                   autocomplete="off"
-                   hx-get="{% url 'book_app:student_book_list' %}"
-                   hx-target="#book-grid"
-                   hx-include="[name='category']"
-                   hx-trigger="input changed delay:400ms, search"
-                   hx-push-url="true"
-                   hx-indicator="#search-indicator"
+            <input type="search" name="q" value="{{ query }}" placeholder="Kitob nomi yoki muallif..." autocomplete="off"
+                   hx-get="{% url 'book_app:student_book_list' %}" hx-target="#book-grid" hx-include="#book-filters" hx-trigger="input changed delay:400ms, search" hx-push-url="true" hx-indicator="#search-ind"
                    class="w-full rounded-xl border border-navy-200 bg-paper py-3 pl-11 pr-4 text-sm text-navy-900 shadow-soft transition placeholder:text-navy-400 focus:border-gold-400 focus:ring-2 focus:ring-gold-200 focus:outline-none">
-            <span id="search-indicator" class="htmx-indicator absolute inset-y-0 right-4 flex items-center text-xs text-navy-400">yuklanmoqda…</span>
+            <span id="search-ind" class="htmx-indicator absolute inset-y-0 right-4 flex items-center text-xs text-navy-400">…</span>
         </div>
-
-        <select name="category"
-                hx-get="{% url 'book_app:student_book_list' %}"
-                hx-target="#book-grid"
-                hx-include="[name='q']"
-                hx-trigger="change"
-                hx-push-url="true"
-                class="rounded-xl border border-navy-200 bg-paper py-3 pl-4 pr-9 text-sm text-navy-900 shadow-soft transition focus:border-gold-400 focus:ring-2 focus:ring-gold-200 focus:outline-none">
-            <option value="">Barcha kataloglar</option>
-            {% for c in categories %}
-                <option value="{{ c.id }}" {% if category_id == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
-            {% endfor %}
-        </select>
+        <div id="book-filters" class="flex flex-wrap gap-3">
+            <select name="category" hx-get="{% url 'book_app:student_book_list' %}" hx-target="#book-grid" hx-include="[name='q'],#book-filters" hx-trigger="change" hx-push-url="true"
+                    class="rounded-xl border border-navy-200 bg-paper py-3 pl-3.5 pr-9 text-sm shadow-soft focus:border-gold-400 focus:ring-2 focus:ring-gold-200 focus:outline-none">
+                <option value="">Barcha kataloglar</option>
+                {% for c in categories %}<option value="{{ c.id }}" {% if category_id == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+            </select>
+            <select name="digital" hx-get="{% url 'book_app:student_book_list' %}" hx-target="#book-grid" hx-include="[name='q'],#book-filters" hx-trigger="change" hx-push-url="true"
+                    class="rounded-xl border border-navy-200 bg-paper py-3 pl-3.5 pr-9 text-sm shadow-soft focus:border-gold-400 focus:ring-2 focus:ring-gold-200 focus:outline-none">
+                <option value="">Hammasi</option>
+                <option value="1" {% if digital == '1' %}selected{% endif %}>Raqamli (o'qish/audio)</option>
+            </select>
+            <select name="sort" hx-get="{% url 'book_app:student_book_list' %}" hx-target="#book-grid" hx-include="[name='q'],#book-filters" hx-trigger="change" hx-push-url="true"
+                    class="rounded-xl border border-navy-200 bg-paper py-3 pl-3.5 pr-9 text-sm shadow-soft focus:border-gold-400 focus:ring-2 focus:ring-gold-200 focus:outline-none">
+                {% for val, label in sorts.items %}<option value="{{ val }}" {% if sort == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+        </div>
     </div>
 
-    {# Grid (HTMX shu yerni almashtiradi) #}
-    <div id="book-grid" class="mt-10">
-        {% include "book_app/book/partials/_book_grid.html" %}
-    </div>
+    <div id="book-grid" class="mt-8">{% include "book_app/book/partials/_book_grid.html" %}</div>
 </div>
 {% endblock %}
