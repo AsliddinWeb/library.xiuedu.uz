@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.timezone import now
@@ -26,7 +27,9 @@ def _reviews_ctx(request):
         qs = qs.filter(is_approved=False)
     elif view == 'approved':
         qs = qs.filter(is_approved=True)
-    return {'active': 'reviews', 'page_title': 'Sharhlar', 'reviews': qs[:100], 'view': view}
+    page_no = request.POST.get('page', request.GET.get('page', 1))
+    page = Paginator(qs.order_by('-id'), 20).get_page(page_no)
+    return {'active': 'reviews', 'page_title': 'Sharhlar', 'reviews': page, 'page_obj': page, 'view': view}
 
 
 @library_admin_role_required
@@ -60,7 +63,8 @@ def members(request):
     if q:
         qs = qs.filter(Q(user__first_name__icontains=q) | Q(user__username__icontains=q) |
                        Q(group__icontains=q) | Q(faculty__icontains=q))
-    ctx = {'active': 'members', 'page_title': 'Talabalar', 'members': qs.order_by('user__username')[:100], 'q': q}
+    page = Paginator(qs.order_by('user__username'), 24).get_page(request.GET.get('page', 1))
+    ctx = {'active': 'members', 'page_title': 'Talabalar', 'members': page, 'page_obj': page, 'q': q}
     if getattr(request, 'htmx', False):
         return render(request, 'panel/system/_members.html', ctx)
     return render(request, 'panel/system/members.html', ctx)

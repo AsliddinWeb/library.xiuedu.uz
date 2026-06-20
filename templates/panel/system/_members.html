@@ -37,3 +37,6 @@
         </table>
     </div>
 </div>
+
+{% url 'panel:members' as pg_url %}
+{% include "panel/partials/_pager.html" with pager_url=pg_url pager_target="#member-table" pager_include="[name='q']" %}

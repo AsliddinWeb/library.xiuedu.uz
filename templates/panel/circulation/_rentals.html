@@ -38,3 +38,6 @@
         </table>
     </div>
 </div>
+
+{% url 'panel:rentals' as pg_url %}
+{% include "panel/partials/_pager.html" with pager_url=pg_url pager_target="#rent-table" pager_include="#rent-filters,[name='q']" %}

@@ -18,7 +18,10 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body class="flex min-h-full flex-col bg-cream font-sans text-ink antialiased"
-      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+      hx-disabled-elt="this">
+
+    <div id="htmx-bar"></div>
 
     {% block header %}{% include "layouts/partials/navbar.html" %}{% endblock %}
 
@@ -34,6 +37,14 @@
     <script src="{% static 'js/vendor/htmx.min.js' %}"></script>
     <script src="{% static 'js/vendor/alpine.min.js' %}" defer></script>
     {% django_htmx_script %}
+    <script>
+        (function () {
+            const bar = document.getElementById('htmx-bar');
+            if (!bar) return;
+            document.body.addEventListener('htmx:beforeRequest', () => bar.classList.add('on'));
+            document.body.addEventListener('htmx:afterRequest', () => bar.classList.remove('on'));
+        })();
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

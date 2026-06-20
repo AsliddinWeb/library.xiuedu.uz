@@ -31,3 +31,6 @@
         </tbody>
     </table>
 </div>
+
+{% url 'panel:reservations' as pg_url %}
+{% include "panel/partials/_pager.html" with pager_url=pg_url pager_target="#res-table" pager_include="[name='q']" %}

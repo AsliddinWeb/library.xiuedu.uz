@@ -60,6 +60,16 @@
   .htmx-request .htmx-indicator,
   .htmx-request.htmx-indicator { opacity: 1; }
 
+  /* So'rov paytida o'chirilgan tugma (hx-disabled-elt) */
+  button:disabled, select:disabled, [disabled] { opacity: .55; cursor: wait; }
+  .htmx-request { cursor: wait; }
+
+  /* Global yuqori progress chizig'i */
+  #htmx-bar { position: fixed; inset-inline: 0; top: 0; height: 2px; z-index: 60;
+    background: var(--color-gold-400); transform: scaleX(0); transform-origin: left;
+    transition: transform .25s ease, opacity .3s ease; opacity: 0; pointer-events: none; }
+  #htmx-bar.on { transform: scaleX(0.9); opacity: 1; }
+
   /* Nozik oltin ajratuvchi chiziq */
   .gold-rule { height: 2px; width: 3rem; background: linear-gradient(90deg, var(--color-gold-400), transparent); }
 }

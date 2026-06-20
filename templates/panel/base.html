@@ -14,7 +14,10 @@
 </head>
 <body class="h-full bg-cream font-sans text-ink antialiased"
       hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+      hx-disabled-elt="this"
       x-data="{ sidebar: false }">
+
+    <div id="htmx-bar"></div>
 
     <div class="flex h-full">
         {# ---------------- Sidebar (desktop sticky / mobil drawer) ---------------- #}
@@ -39,6 +42,13 @@
     <script src="{% static 'js/vendor/alpine.min.js' %}" defer></script>
     <script src="{% static 'js/vendor/chart.umd.min.js' %}"></script>
     {% django_htmx_script %}
+    <script>
+        (function () {
+            const bar = document.getElementById('htmx-bar');
+            document.body.addEventListener('htmx:beforeRequest', () => bar.classList.add('on'));
+            document.body.addEventListener('htmx:afterRequest', () => bar.classList.remove('on'));
+        })();
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

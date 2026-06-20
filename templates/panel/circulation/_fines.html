@@ -38,3 +38,6 @@
         </table>
     </div>
 </div>
+
+{% url 'panel:fines' as pg_url %}
+{% include "panel/partials/_pager.html" with pager_url=pg_url pager_target="#fine-table" pager_include="#fine-filters,[name='q']" %}

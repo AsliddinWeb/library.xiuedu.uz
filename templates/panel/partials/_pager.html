@@ -1,0 +1,23 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
+    <p class="text-navy-400">{{ page_obj.paginator.count }} ta yozuv · {{ page_obj.number }}/{{ page_obj.paginator.num_pages }}-sahifa</p>
+    <div class="flex items-center gap-1">
+        {% if page_obj.has_previous %}
+        <button hx-get="{{ pager_url }}?page={{ page_obj.previous_page_number }}" hx-target="{{ pager_target }}" hx-include="{{ pager_include }}"
+                class="rounded-lg border border-navy-200 bg-paper px-3 py-1.5 text-navy-600 transition hover:bg-navy-50">‹</button>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+                <span class="rounded-lg bg-navy-900 px-3.5 py-1.5 font-semibold text-white">{{ num }}</span>
+            {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %}
+                <button hx-get="{{ pager_url }}?page={{ num }}" hx-target="{{ pager_target }}" hx-include="{{ pager_include }}"
+                        class="rounded-lg border border-navy-200 bg-paper px-3.5 py-1.5 text-navy-600 transition hover:bg-navy-50">{{ num }}</button>
+            {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <button hx-get="{{ pager_url }}?page={{ page_obj.next_page_number }}" hx-target="{{ pager_target }}" hx-include="{{ pager_include }}"
+                class="rounded-lg border border-navy-200 bg-paper px-3 py-1.5 text-navy-600 transition hover:bg-navy-50">›</button>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}

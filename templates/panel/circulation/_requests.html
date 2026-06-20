@@ -36,3 +36,6 @@
         </tbody>
     </table>
 </div>
+
+{% url 'panel:requests' as pg_url %}
+{% include "panel/partials/_pager.html" with pager_url=pg_url pager_target="#req-table" pager_include="#req-filters,[name='q']" %}

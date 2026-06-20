@@ -1,4 +1,5 @@
-from django.db.models import Q
+from django.core.paginator import Paginator
+from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_POST
 
@@ -10,6 +11,10 @@ from user_app.utils import library_admin_role_required
 
 def _param(request, key, default=''):
     return request.POST.get(key, request.GET.get(key, default))
+
+
+def _paginate(request, qs, per=20):
+    return Paginator(qs, per).get_page(_param(request, 'page', 1))
 
 
 # ============================================================ So'rovlar
@@ -24,7 +29,8 @@ def _requests_ctx(request):
         qs = qs.filter(Q(book__title__icontains=q) |
                        Q(student__user__username__icontains=q) |
                        Q(student__user__first_name__icontains=q))
-    return {'active': 'requests', 'page_title': "Ijara so'rovlari", 'requests': qs[:100],
+    page = _paginate(request, qs.order_by('-id'))
+    return {'active': 'requests', 'page_title': "Ijara so'rovlari", 'requests': page, 'page_obj': page,
             'status': status, 'q': q, 'statuses': RentalRequest.Status.choices}
 
 
@@ -66,7 +72,8 @@ def _rentals_ctx(request):
         qs = qs.filter(Q(copy__book__title__icontains=q) |
                        Q(student__user__username__icontains=q) |
                        Q(student__user__first_name__icontains=q))
-    return {'active': 'rentals', 'page_title': 'Ijaralar', 'rentals': qs.order_by('-id')[:100],
+    page = _paginate(request, qs.order_by('-id'))
+    return {'active': 'rentals', 'page_title': 'Ijaralar', 'rentals': page, 'page_obj': page,
             'view': view, 'q': q}
 
 
@@ -92,8 +99,9 @@ def _reservations_ctx(request):
     q = _param(request, 'q').strip()
     if q:
         qs = qs.filter(Q(book__title__icontains=q) | Q(student__user__first_name__icontains=q))
+    page = _paginate(request, qs.order_by('book', 'created_at'))
     return {'active': 'reservations', 'page_title': 'Navbatlar',
-            'reservations': qs.order_by('book', 'created_at')[:100], 'q': q}
+            'reservations': page, 'page_obj': page, 'q': q}
 
 
 @library_admin_role_required
@@ -125,8 +133,9 @@ def _fines_ctx(request):
     if q:
         qs = qs.filter(Q(student__user__first_name__icontains=q) |
                        Q(student__user__username__icontains=q))
-    total = sum(f.amount for f in qs if not f.is_paid)
-    return {'active': 'fines', 'page_title': 'Jarimalar', 'fines': qs.order_by('-created_at')[:100],
+    total = Fine.objects.filter(is_paid=False).aggregate(s=Sum('amount'))['s'] or 0
+    page = _paginate(request, qs.order_by('-created_at'))
+    return {'active': 'fines', 'page_title': 'Jarimalar', 'fines': page, 'page_obj': page,
             'view': view, 'q': q, 'total_unpaid': total}
 
 
