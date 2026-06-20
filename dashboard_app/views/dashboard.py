@@ -31,38 +31,47 @@ def dashboard(request):
 
 
 def _student_dashboard(request):
-    base_qs = Book.objects.select_related('category').prefetch_related('authors')
+    from circulation.models import Fine, Reservation
+    from reading.models import ReadingProgress
 
-    popular_books = (
-        base_qs.filter(is_active=True, category__is_active=True)
-        .annotate(rental_count=Count('copy__rental'))
-        .order_by('-rental_count', '-id')[:6]
-    )
+    base_qs = (Book.objects.select_related('category').prefetch_related('authors')
+               .filter(is_active=True, category__is_active=True))
+
+    popular_books = (base_qs.annotate(rental_count=Count('copy__rental'))
+                     .order_by('-rating_count', '-rental_count', '-view_count')[:12])
 
     one_month_ago = now() - timedelta(days=30)
-    recent_books = (
-        base_qs.filter(is_active=True, category__is_active=True, created_at__gte=one_month_ago)
-        .order_by('-created_at')[:6]
-    )
-    # Agar oxirgi oyda yangi kitob bo'lmasa — eng so'nggilarini ko'rsatamiz
+    recent_books = base_qs.filter(created_at__gte=one_month_ago).order_by('-created_at')[:12]
     if not recent_books:
-        recent_books = base_qs.filter(is_active=True, category__is_active=True).order_by('-created_at')[:6]
+        recent_books = base_qs.order_by('-created_at')[:12]
 
-    # Talabaning joriy (qaytarilmagan) ijaralari
+    # Davom ettirish — o'qish jarayoni
+    continue_reading = (ReadingProgress.objects
+                        .filter(user=request.user, percent__lt=100)
+                        .select_related('book').order_by('-updated_at')[:6])
+
+    # Ijaralar + eslatmalar
     active_rentals = []
+    overdue_count = unpaid_fines = available_res = 0
     student_profile = getattr(request.user, 'student_profile', None)
     if student_profile is not None:
-        active_rentals = (
-            Rental.objects
-            .filter(student=student_profile, return_date__isnull=True)
-            .select_related('copy__book')
-        )
+        active_rentals = list(Rental.objects
+                              .filter(student=student_profile, return_date__isnull=True)
+                              .select_related('copy__book'))
+        overdue_count = sum(1 for r in active_rentals if r.is_overdue)
+        unpaid_fines = Fine.objects.filter(student=student_profile, is_paid=False).count()
+        available_res = Reservation.objects.filter(
+            student=student_profile, status=Reservation.Status.AVAILABLE).count()
 
     ctx = {
+        'continue_reading': continue_reading,
         'popular_books': popular_books,
         'recent_books': recent_books,
         'active_rentals': active_rentals,
         'active_rentals_count': len(active_rentals),
-        'genres': Genre.objects.filter(is_active=True)[:8],
+        'overdue_count': overdue_count,
+        'unpaid_fines': unpaid_fines,
+        'available_res': available_res,
+        'genres': Genre.objects.filter(is_active=True)[:10],
     }
     return render(request, "dashboard/student.html", ctx)

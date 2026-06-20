@@ -3,30 +3,72 @@
 {% block title %}Kabinet — XIU Kutubxona{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 
-    {# Sarlavha #}
-    <div class="flex flex-col gap-6 border-b border-navy-100 pb-8 sm:flex-row sm:items-end sm:justify-between">
+    {# Salomlashish #}
+    <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
             <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">Kabinet</span>
-            <h1 class="mt-3 font-serif text-4xl font-semibold tracking-tight text-navy-950">
+            <h1 class="mt-2 font-serif text-3xl font-semibold tracking-tight text-navy-950 sm:text-4xl">
                 Salom, {{ request.user.first_name|default:request.user.username }}
             </h1>
-            <p class="mt-2 text-navy-600">Bugun nimani o'qiymiz?</p>
         </div>
-        <a href="/books/" class="inline-flex items-center gap-2 self-start rounded-full bg-navy-900 px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-navy-800 sm:self-auto">
+        <a href="/books/" class="inline-flex items-center gap-2 rounded-full bg-navy-900 px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-navy-800">
             <svg class="h-4 w-4 text-gold-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.3-4.3M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/></svg>
-            Katalogni ko'rish
+            Katalog
         </a>
     </div>
+
+    {# Eslatmalar #}
+    {% if overdue_count or unpaid_fines or available_res %}
+    <div class="mt-6 flex flex-wrap gap-3">
+        {% if available_res %}
+        <a href="/circulation/my-rentals/" class="inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700 ring-1 ring-emerald-100">
+            ✓ {{ available_res }} ta navbatdagi kitob bo'shadi
+        </a>
+        {% endif %}
+        {% if overdue_count %}
+        <a href="/circulation/my-rentals/" class="inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 ring-1 ring-red-100">
+            ⚠ {{ overdue_count }} ta ijara muddati o'tgan
+        </a>
+        {% endif %}
+        {% if unpaid_fines %}
+        <a href="/circulation/my-rentals/" class="inline-flex items-center gap-2 rounded-xl bg-gold-50 px-4 py-2.5 text-sm font-medium text-gold-700 ring-1 ring-gold-200">
+            {{ unpaid_fines }} ta to'lanmagan jarima
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# Davom ettirish #}
+    {% if continue_reading %}
+    <section class="mt-10">
+        {% include "partials/_section_header.html" with eyebrow="Davom ettirish" title="O'qishni davom eting" %}
+        <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {% for p in continue_reading %}
+            <a href="{% if p.mode == 'LISTEN' %}{% url 'reading:listen' p.book.pk %}{% else %}{% url 'reading:read' p.book.pk %}{% endif %}"
+               class="group flex gap-4 rounded-2xl border border-navy-100 bg-paper p-4 shadow-soft transition hover:border-gold-200 hover:shadow-lift">
+                <div class="h-20 w-14 flex-none overflow-hidden rounded-lg bg-navy-50">
+                    {% if p.book.cover_image %}<img src="{{ p.book.cover_image.url }}" class="h-full w-full object-cover">{% else %}<div class="flex h-full w-full items-center justify-center text-navy-300"><svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v16M8 8v12M12 6v14M16 9l4 11"/></svg></div>{% endif %}
+                </div>
+                <div class="flex min-w-0 flex-1 flex-col">
+                    <p class="line-clamp-2 font-serif text-sm font-semibold text-navy-900 group-hover:text-navy-700">{{ p.book.title }}</p>
+                    <p class="mt-0.5 text-xs text-navy-400">{% if p.mode == 'LISTEN' %}🎧 Tinglash{% else %}📖 O'qish{% endif %}</p>
+                    <div class="mt-auto pt-2">
+                        <div class="h-1.5 overflow-hidden rounded-full bg-navy-100"><div class="h-full rounded-full bg-gold-400" style="width: {{ p.percent }}%"></div></div>
+                        <p class="mt-1 text-[11px] text-navy-400">{{ p.percent }}%</p>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
 
     {# Joriy ijaralar #}
     {% if active_rentals %}
     <section class="mt-10">
-        <div class="flex items-end justify-between">
-            <h2 class="font-serif text-2xl font-semibold text-navy-900">Joriy ijaralaringiz</h2>
-            <a href="/circulation/my-rentals/" class="text-sm font-medium text-navy-600 underline decoration-gold-400 decoration-2 underline-offset-4 transition hover:text-navy-900">Barchasi</a>
-        </div>
+        {% include "partials/_section_header.html" with title="Joriy ijaralaringiz" link="/circulation/my-rentals/" %}
         <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {% for rental in active_rentals %}
             <div class="flex items-start gap-4 rounded-2xl border border-navy-100 bg-paper p-5 shadow-soft">
@@ -35,10 +77,8 @@
                 </div>
                 <div class="min-w-0">
                     <p class="truncate font-serif text-base font-semibold text-navy-900">{{ rental.copy.book.title }}</p>
-                    <p class="mt-1 text-sm text-navy-500">Inventar: {{ rental.copy.inventory_number }}</p>
-                    {% if rental.return_date %}
-                        <p class="mt-1 text-xs text-gold-700">Qaytarish: {{ rental.return_date }}</p>
-                    {% endif %}
+                    {% if rental.is_overdue %}<p class="mt-1 text-xs font-medium text-red-600">Muddat o'tgan: {{ rental.due_date }}</p>
+                    {% elif rental.due_date %}<p class="mt-1 text-xs text-navy-500">Qaytarish: {{ rental.due_date }}</p>{% endif %}
                 </div>
             </div>
             {% endfor %}
@@ -46,47 +86,29 @@
     </section>
     {% endif %}
 
-    {# Mashhur kitoblar #}
+    {# Tavsiya #}
     {% if popular_books %}
     <section class="mt-12">
-        <div class="flex items-end justify-between">
-            <div>
-                <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">Tavsiya</span>
-                <h2 class="mt-2 font-serif text-2xl font-semibold text-navy-900">Mashhur kitoblar</h2>
-            </div>
-            <a href="/books/" class="text-sm font-medium text-navy-600 underline decoration-gold-400 decoration-2 underline-offset-4 transition hover:text-navy-900">Barchasi</a>
-        </div>
-        <div class="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-6">
-            {% for book in popular_books %}{% include "book_app/book/partials/_book_card.html" %}{% endfor %}
-        </div>
+        {% include "partials/_section_header.html" with eyebrow="Siz uchun" title="Tavsiya etilgan kitoblar" link="/books/" %}
+        <div class="mt-5">{% include "book_app/book/partials/_book_carousel.html" with books=popular_books %}</div>
     </section>
     {% endif %}
 
-    {# Yangi qo'shilganlar #}
+    {# Yangi #}
     {% if recent_books %}
-    <section class="mt-14">
-        <div class="flex items-end justify-between">
-            <div>
-                <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">Yangi</span>
-                <h2 class="mt-2 font-serif text-2xl font-semibold text-navy-900">Yaqinda qo'shilgan</h2>
-            </div>
-            <a href="/books/" class="text-sm font-medium text-navy-600 underline decoration-gold-400 decoration-2 underline-offset-4 transition hover:text-navy-900">Barchasi</a>
-        </div>
-        <div class="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-6">
-            {% for book in recent_books %}{% include "book_app/book/partials/_book_card.html" %}{% endfor %}
-        </div>
+    <section class="mt-10">
+        {% include "partials/_section_header.html" with eyebrow="Yangi" title="Yaqinda qo'shilgan" link="/books/" %}
+        <div class="mt-5">{% include "book_app/book/partials/_book_carousel.html" with books=recent_books %}</div>
     </section>
     {% endif %}
 
     {# Kataloglar #}
     {% if genres %}
-    <section class="mt-14">
-        <h2 class="font-serif text-2xl font-semibold text-navy-900">Kataloglar bo'yicha</h2>
-        <div class="mt-5 flex flex-wrap gap-3">
+    <section class="mt-12">
+        <h2 class="font-serif text-xl font-semibold text-navy-900">Kataloglar bo'yicha</h2>
+        <div class="mt-4 flex flex-wrap gap-2.5">
             {% for genre in genres %}
-            <a href="/books/?category={{ genre.id }}" class="rounded-full border border-navy-200 bg-paper px-5 py-2.5 text-sm font-medium text-navy-700 shadow-soft transition hover:border-gold-300 hover:text-navy-950">
-                {{ genre.name }}
-            </a>
+            <a href="/books/?category={{ genre.id }}" class="rounded-full border border-navy-200 bg-paper px-4 py-2 text-sm font-medium text-navy-700 shadow-soft transition hover:border-gold-300 hover:text-navy-950">{{ genre.name }}</a>
             {% endfor %}
         </div>
     </section>
