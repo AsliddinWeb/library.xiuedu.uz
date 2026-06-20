@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from book_app.models import Book, Rental
@@ -135,9 +135,8 @@ def _render_panel(request, message=None, ok=True):
 
 @library_admin_role_required
 def manage(request):
-    ctx = _manage_context()
-    ctx['active'] = 'manage'
-    return render(request, 'circulation/manage.html', ctx)
+    # Eski sahifa — endi kutubxonachi paneli (/panel/) bilan almashtirildi
+    return redirect('panel:requests')
 
 
 @require_POST

@@ -54,4 +54,5 @@ class PermissionTests(TestCase):
         u.employe_profile.current_role = Role.objects.get(name=Roles.LIBRARIAN)
         u.employe_profile.save()
         self.client.login(username='lib', password='x')
-        self.assertEqual(self.client.get('/books/authors/list/').status_code, 200)
+        # Eski muallif sahifasi endi kutubxonachi paneliga yo'naltiradi
+        self.assertRedirects(self.client.get('/books/authors/list/'), '/panel/authors/')

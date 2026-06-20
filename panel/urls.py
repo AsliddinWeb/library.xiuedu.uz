@@ -4,9 +4,6 @@ from . import views
 
 app_name = "panel"
 
-# Hali qurilmagan bo'limlar — coming_soon (PART C-F da real view bilan almashtiriladi)
-cs = views.coming_soon
-
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
 
@@ -33,7 +30,7 @@ urlpatterns = [
     path('authors/<int:pk>/edit/', views.author_edit, name='author_edit'),
     path('authors/<int:pk>/delete/', views.author_delete, name='author_delete'),
 
-    path('import/', cs, {'active': 'import', 'title': 'Import'}, name='import_books'),
+    path('import/', views.import_books, name='import_books'),
 
     # Sirkulyatsiya
     path('requests/', views.requests_view, name='requests'),

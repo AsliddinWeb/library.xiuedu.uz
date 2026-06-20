@@ -28,6 +28,8 @@
 
     {% block footer %}{% include "layouts/partials/footer.html" %}{% endblock %}
 
+    {% include "partials/_toasts.html" %}
+
     {# Self-hosted skriptlar (tashqi CDN'siz) #}
     <script src="{% static 'js/vendor/htmx.min.js' %}"></script>
     <script src="{% static 'js/vendor/alpine.min.js' %}" defer></script>

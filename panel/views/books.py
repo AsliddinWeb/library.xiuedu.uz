@@ -1,10 +1,17 @@
+import os
+from io import BytesIO
+
+import requests as http
 from django.contrib import messages
+from django.core.files import File
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.text import slugify
 from django.views.decorators.http import require_POST
 
-from book_app.models import Book, Copy, Genre
+from book_app.models import Author, Book, Copy, Genre
 from book_app.utils import add_copies
 from user_app.utils import library_admin_role_required
 
@@ -134,3 +141,61 @@ def copy_delete(request, pk):
     else:
         copy.delete()
     return _render_copies(request, book)
+
+
+@library_admin_role_required
+def import_books(request):
+    """Tashqi API'dan kitoblarni ommaviy import (har bir kitob xato-bardosh)."""
+    if request.method != 'POST':
+        return render(request, 'panel/import.html', {'active': 'import', 'page_title': 'Kitob import'})
+
+    url = request.POST.get('url', '').strip()
+    if not url:
+        return JsonResponse({'error': 'URL kiriting.'}, status=400)
+    try:
+        resp = http.get(url, timeout=20)
+        resp.raise_for_status()
+        results = resp.json().get('results', [])
+    except Exception as e:
+        return JsonResponse({'error': f"Manbaga ulanib bo'lmadi: {e}"}, status=400)
+
+    created = 0
+    for item in results:
+        try:
+            year_raw = str(item.get('year') or '')
+            published_year = int(year_raw) if year_raw.isdigit() else None
+            author, _ = Author.objects.get_or_create(full_name=item.get('author', {}).get('name') or "Noma'lum")
+            category, _ = Genre.objects.get_or_create(name=item.get('category', {}).get('title') or 'Boshqa')
+            book = Book.objects.create(
+                title=item.get('title') or 'Nomsiz',
+                published_year=published_year,
+                description=item.get('description') or '',
+                page_count=item.get('page_count') or None,
+                category=category,
+                reading_mode=Book.ReadingMode.DIGITAL,
+            )
+            book.authors.add(author)
+            book.slug = f"{slugify(book.title)[:280] or 'kitob'}-{book.pk}"
+            book.save(update_fields=['slug'])
+
+            cover = item.get('photo')
+            if cover:
+                try:
+                    ir = http.get(cover, timeout=15)
+                    if ir.ok:
+                        book.cover_image.save(os.path.basename(cover) or 'cover.jpg', File(BytesIO(ir.content)), save=True)
+                except Exception:
+                    pass
+            src = item.get('source')
+            if src:
+                try:
+                    br = http.get(src, timeout=30)
+                    if br.ok:
+                        book.electronic_version.save(os.path.basename(src) or 'book.pdf', File(BytesIO(br.content)), save=True)
+                except Exception:
+                    pass
+            created += 1
+        except Exception:
+            continue
+
+    return JsonResponse({'success': f"{created} ta kitob muvaffaqiyatli qo'shildi."})

@@ -1,87 +1,9 @@
-import os
-from io import BytesIO
-
-import requests
-from django.core.files import File
-from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect
 
 from user_app.utils import library_admin_role_required
-
-from ..models import Author, Book, Genre
 
 
 @library_admin_role_required
 def save_books(request):
-    if request.method == "POST":
-        url = request.POST.get("url")
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            data = response.json()
-            books = data.get("results", [])
-
-            for book in books:
-
-                year_raw = str(book.get('year') or '')
-                published_year = int(year_raw) if year_raw.isdigit() else None
-
-                book_data = {
-                    'title': book.get('title', '.'),
-                    'author': book.get('author', {}).get('name', '.'),
-                    'category': book.get('category', {}).get('title', 'Boshqa'),
-                    'published_year': published_year,
-                    'description': book.get('description', '.'),
-                    'electronic_version': book.get('source', '.'),
-                    'page_count': book.get('page_count') or None,
-                    'cover_image': book.get('photo', ''),
-                    'language': "O'zbekcha",
-                    'isbn': "",
-                }
-
-                author, created = Author.objects.get_or_create(full_name=book_data['author'])
-                category, created = Genre.objects.get_or_create(name=book_data['category'])
-
-                # Create the book instance (manbada elektron versiya bor — raqamli)
-                book_create = Book(
-                    title=book_data['title'],
-                    published_year=book_data['published_year'],
-                    description=book_data['description'],
-                    page_count=book_data['page_count'],
-                    language=book_data['language'],
-                    isbn=book_data['isbn'],
-                    category=category,
-                    reading_mode=Book.ReadingMode.DIGITAL,
-                )
-
-                # Save the book instance to generate a primary key (ID)
-                book_create.save()
-
-                # Now you can add the author to the many-to-many field
-                book_create.authors.add(author)
-
-                # Handle book cover image
-                image_url = book_data['cover_image']
-                if image_url:
-                    image_response = requests.get(image_url)
-                    if image_response.status_code == 200:
-                        img_temp = BytesIO(image_response.content)
-                        book_create.cover_image.save(os.path.basename(image_url), File(img_temp))
-
-                # Handle electronic version
-                book_url = book_data['electronic_version']
-                if book_url:
-                    book_response = requests.get(book_url)
-                    if book_response.status_code == 200:
-                        book_temp = BytesIO(book_response.content)
-                        book_create.electronic_version.save(os.path.basename(book_url), File(book_temp))
-
-            return JsonResponse({
-                "success": f"{len(books)} ta kitob muvaffaqqiyatli qo'shildi!"
-            })
-
-
-        else:
-            return JsonResponse({"error": f"Xatolik yuz berdi: {response.status_code}"}, status=400)
-
-    return render(request, 'custom/save_books.html', {'active': 'import'})
+    # Eski import sahifasi — endi kutubxonachi paneli (/panel/import/) bilan almashtirildi
+    return redirect('panel:import_books')

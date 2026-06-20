@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from book_app.models import Book
@@ -70,9 +70,8 @@ def _render_moderation(request, message=None):
 
 @library_admin_role_required
 def moderate(request):
-    pending = Review.objects.filter(is_approved=False).select_related('user', 'book')
-    return render(request, 'engagement/moderate.html',
-                  {'pending_reviews': pending, 'active': 'moderate'})
+    # Eski sahifa — endi kutubxonachi paneli (/panel/reviews/) bilan almashtirildi
+    return redirect('panel:reviews')
 
 
 @require_POST
