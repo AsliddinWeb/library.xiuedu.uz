@@ -11,8 +11,11 @@
             </div>
         {% endif %}
         {% if book.category %}
-            <span class="absolute left-2.5 top-2.5 rounded-full bg-navy-950/85 px-2.5 py-1 text-[11px] font-medium text-gold-300 backdrop-blur-sm">
-                {{ book.category.name }}
+            <span class="absolute left-2.5 top-2.5 rounded-full bg-navy-950/85 px-2.5 py-1 text-[11px] font-medium text-gold-300 backdrop-blur-sm">{{ book.category.name }}</span>
+        {% endif %}
+        {% if book.electronic_version or book.audio_version %}
+            <span class="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+                {% if book.audio_version %}🎧{% else %}📖{% endif %} Raqamli
             </span>
         {% endif %}
     </div>
@@ -24,8 +27,7 @@
         {% if book.rating_count %}
         <div class="mt-2 flex items-center gap-1 text-xs text-navy-500">
             <svg class="h-3.5 w-3.5 text-gold-400" fill="currentColor" viewBox="0 0 24 24"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8 6.8 19.2l1-5.8-4.3-4.1 5.9-.9z"/></svg>
-            <span class="font-semibold text-navy-700">{{ book.avg_rating }}</span>
-            <span>({{ book.rating_count }})</span>
+            <span class="font-semibold text-navy-700">{{ book.avg_rating }}</span><span>({{ book.rating_count }})</span>
         </div>
         {% endif %}
     </div>

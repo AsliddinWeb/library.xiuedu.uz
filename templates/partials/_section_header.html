@@ -1,0 +1,8 @@
+{% comment %}params: title, link (ixtiyoriy), eyebrow (ixtiyoriy){% endcomment %}
+<div class="flex items-end justify-between gap-4">
+    <div>
+        {% if eyebrow %}<span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">{{ eyebrow }}</span>{% endif %}
+        <h2 class="{% if eyebrow %}mt-1.5 {% endif %}font-serif text-2xl font-semibold text-navy-900">{{ title }}</h2>
+    </div>
+    {% if link %}<a href="{{ link }}" class="flex-none text-sm font-medium text-navy-600 underline decoration-gold-400 decoration-2 underline-offset-4 transition hover:text-navy-900">Barchasi</a>{% endif %}
+</div>

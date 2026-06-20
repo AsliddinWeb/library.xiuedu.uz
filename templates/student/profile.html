@@ -1,0 +1,60 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Profil — XIU Kutubxona{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+    <div class="border-b border-navy-100 pb-8">
+        <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">Shaxsiy</span>
+        <h1 class="mt-3 font-serif text-4xl font-semibold tracking-tight text-navy-950">Profil</h1>
+    </div>
+
+    <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {# Profil karta #}
+        <div class="rounded-2xl border border-navy-100 bg-paper p-6 text-center shadow-soft">
+            {% if request.user.image %}
+                <img src="{{ request.user.image.url }}" class="mx-auto h-24 w-24 rounded-full object-cover ring-2 ring-navy-100">
+            {% else %}
+                <span class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-navy-900 text-3xl font-semibold text-gold-300">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}</span>
+            {% endif %}
+            <h2 class="mt-4 font-serif text-xl font-semibold text-navy-900">{{ request.user.get_full_name }}</h2>
+            <p class="text-sm text-navy-400">{{ request.user.username }}</p>
+            <span class="mt-3 inline-flex rounded-full bg-navy-50 px-3 py-1 text-xs font-medium text-navy-600">Talaba</span>
+        </div>
+
+        {# Ma'lumotlar #}
+        <div class="space-y-6 lg:col-span-2">
+            {% if student %}
+            <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+                <h3 class="font-serif text-base font-semibold text-navy-900">Ta'lim ma'lumotlari</h3>
+                <dl class="mt-4 grid grid-cols-2 gap-4 text-sm">
+                    <div><dt class="text-xs text-navy-400">Fakultet</dt><dd class="mt-0.5 font-medium text-navy-900">{{ student.faculty|default:"—" }}</dd></div>
+                    <div><dt class="text-xs text-navy-400">Guruh</dt><dd class="mt-0.5 font-medium text-navy-900">{{ student.group|default:"—" }}</dd></div>
+                    <div><dt class="text-xs text-navy-400">Bosqich</dt><dd class="mt-0.5 font-medium text-navy-900">{{ student.level|default:"—" }}</dd></div>
+                    <div><dt class="text-xs text-navy-400">Semestr</dt><dd class="mt-0.5 font-medium text-navy-900">{{ student.semester|default:"—" }}</dd></div>
+                    <div><dt class="text-xs text-navy-400">Ta'lim shakli</dt><dd class="mt-0.5 font-medium text-navy-900">{{ student.education_form|default:"—" }}</dd></div>
+                    <div><dt class="text-xs text-navy-400">To'lov shakli</dt><dd class="mt-0.5 font-medium text-navy-900">{{ student.payment_form|default:"—" }}</dd></div>
+                </dl>
+            </div>
+            {% endif %}
+
+            <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
+                <h3 class="font-serif text-base font-semibold text-navy-900">Aloqa</h3>
+                <dl class="mt-4 grid grid-cols-2 gap-4 text-sm">
+                    <div><dt class="text-xs text-navy-400">Email</dt><dd class="mt-0.5 font-medium text-navy-900">{{ request.user.email|default:"—" }}</dd></div>
+                    <div><dt class="text-xs text-navy-400">Telefon</dt><dd class="mt-0.5 font-medium text-navy-900">{{ request.user.phone|default:"—" }}</dd></div>
+                </dl>
+            </div>
+
+            {% if stats %}
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div class="rounded-xl border border-navy-100 bg-paper px-4 py-3 text-center shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.rentals }}</p><p class="text-xs text-navy-500">Ijaralar</p></div>
+                <div class="rounded-xl border border-navy-100 bg-paper px-4 py-3 text-center shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.reads }}</p><p class="text-xs text-navy-500">O'qishlar</p></div>
+                <div class="rounded-xl border border-navy-100 bg-paper px-4 py-3 text-center shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.favorites }}</p><p class="text-xs text-navy-500">Sevimlilar</p></div>
+                <div class="rounded-xl border border-navy-100 bg-paper px-4 py-3 text-center shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.reviews }}</p><p class="text-xs text-navy-500">Sharhlar</p></div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

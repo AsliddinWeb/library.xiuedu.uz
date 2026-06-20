@@ -1,0 +1,6 @@
+{% comment %}param: books (queryset){% endcomment %}
+<div class="-mx-1 flex snap-x gap-4 overflow-x-auto px-1 pb-2 [scrollbar-width:thin]">
+    {% for book in books %}
+    <div class="w-40 flex-none snap-start sm:w-44">{% include "book_app/book/partials/_book_card.html" %}</div>
+    {% endfor %}
+</div>
