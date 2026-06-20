@@ -2,25 +2,35 @@
 {% load static %}
 
 {% block title %}{{ book.title }} — O'qish{% endblock %}
-
 {% block header %}{% endblock %}
 {% block footer %}{% endblock %}
 
 {% block content %}
-<div class="flex min-h-screen flex-col bg-navy-950">
+<div id="reader-root" class="flex min-h-screen flex-col bg-navy-950">
     {# Toolbar #}
-    <div class="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-navy-800 bg-navy-950/90 px-4 py-3 backdrop-blur">
-        <a href="{% url 'book_app:student_book_detail' book.pk %}" class="inline-flex items-center gap-1.5 text-sm font-medium text-navy-300 transition hover:text-white">
+    <div class="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-navy-800 bg-navy-950/90 px-4 py-3 backdrop-blur">
+        <a href="{% url 'book_app:student_book_detail' book.pk %}" class="inline-flex flex-none items-center gap-1.5 text-sm font-medium text-navy-300 transition hover:text-white">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
-            Chiqish
+            <span class="hidden sm:inline">Chiqish</span>
         </a>
-        <p class="hidden truncate font-serif text-sm font-semibold text-white sm:block">{{ book.title }}</p>
-        <div class="flex items-center gap-2 text-sm text-navy-200">
+        <p class="hidden min-w-0 flex-1 truncate text-center font-serif text-sm font-semibold text-white md:block">{{ book.title }}</p>
+        <div class="flex flex-none items-center gap-1.5 text-sm text-navy-200">
+            <button id="zoomOut" class="rounded-lg border border-navy-700 px-2.5 py-1.5 transition hover:bg-navy-800" title="Kichraytirish">−</button>
+            <span id="zoomPct" class="w-12 text-center text-xs tabular-nums text-navy-400">100%</span>
+            <button id="zoomIn" class="rounded-lg border border-navy-700 px-2.5 py-1.5 transition hover:bg-navy-800" title="Kattalashtirish">+</button>
+            <span class="mx-1 h-5 w-px bg-navy-700"></span>
             <button id="prev" class="rounded-lg border border-navy-700 px-3 py-1.5 transition hover:bg-navy-800 disabled:opacity-40">‹</button>
-            <span class="tabular-nums"><span id="pageNum">–</span> / <span id="pageCount">–</span></span>
+            <span class="tabular-nums"><span id="pageNum">–</span>/<span id="pageCount">–</span></span>
             <button id="next" class="rounded-lg border border-navy-700 px-3 py-1.5 transition hover:bg-navy-800 disabled:opacity-40">›</button>
+            <span class="mx-1 h-5 w-px bg-navy-700"></span>
+            <button id="fs" class="rounded-lg border border-navy-700 p-1.5 transition hover:bg-navy-800" title="To'liq ekran">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/></svg>
+            </button>
         </div>
     </div>
+
+    {# Progress #}
+    <div class="h-1 w-full bg-navy-800"><div id="progbar" class="h-full bg-gold-400 transition-all" style="width:0%"></div></div>
 
     {# Canvas #}
     <div class="flex flex-1 justify-center overflow-auto px-2 py-6">
@@ -38,67 +48,62 @@ const progressUrl = "{% url 'reading:save_progress' book.pk %}";
 const csrf = "{{ csrf_token }}";
 const startPage = {{ start_page|default:0 }};
 
-const canvas = document.getElementById('pdf-canvas');
-const ctx = canvas.getContext('2d');
-const status = document.getElementById('status');
-const pageNumEl = document.getElementById('pageNum');
-const pageCountEl = document.getElementById('pageCount');
-const prevBtn = document.getElementById('prev');
-const nextBtn = document.getElementById('next');
-
-let pdfDoc = null, pageNum = 1, rendering = false, pending = null;
+const canvas = document.getElementById('pdf-canvas'), ctx = canvas.getContext('2d');
+const $ = (id) => document.getElementById(id);
+let pdfDoc = null, pageNum = 1, rendering = false, pending = null, zoom = 1;
 
 function renderPage(num) {
     rendering = true;
     pdfDoc.getPage(num).then((page) => {
         const containerWidth = Math.min(canvas.parentElement.clientWidth - 16, 900);
         const unscaled = page.getViewport({ scale: 1 });
-        const scale = containerWidth / unscaled.width;
+        const scale = (containerWidth / unscaled.width) * zoom;
         const viewport = page.getViewport({ scale });
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+        canvas.width = viewport.width; canvas.height = viewport.height;
         page.render({ canvasContext: ctx, viewport }).promise.then(() => {
             rendering = false;
             if (pending !== null) { const p = pending; pending = null; renderPage(p); }
         });
     });
-    pageNumEl.textContent = num;
-    prevBtn.disabled = num <= 1;
-    nextBtn.disabled = num >= pdfDoc.numPages;
+    $('pageNum').textContent = num;
+    $('prev').disabled = num <= 1;
+    $('next').disabled = num >= pdfDoc.numPages;
+    $('progbar').style.width = Math.round((num / pdfDoc.numPages) * 100) + '%';
     saveProgress(num);
 }
-
-function queueRender(num) {
-    if (rendering) pending = num; else renderPage(num);
-}
+function queueRender(num) { if (rendering) pending = num; else renderPage(num); }
+function go(n) { if (n >= 1 && n <= pdfDoc.numPages) { pageNum = n; queueRender(n); } }
 
 let saveTimer = null;
 function saveProgress(num) {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
         const percent = Math.round((num / pdfDoc.numPages) * 100);
-        const body = new URLSearchParams({ mode: 'READ', position: num, percent });
-        fetch(progressUrl, { method: 'POST', headers: { 'X-CSRFToken': csrf }, body });
+        fetch(progressUrl, { method: 'POST', headers: { 'X-CSRFToken': csrf },
+            body: new URLSearchParams({ mode: 'READ', position: num, percent }) });
     }, 800);
 }
 
-prevBtn.addEventListener('click', () => { if (pageNum > 1) { pageNum--; queueRender(pageNum); } });
-nextBtn.addEventListener('click', () => { if (pageNum < pdfDoc.numPages) { pageNum++; queueRender(pageNum); } });
+$('prev').addEventListener('click', () => go(pageNum - 1));
+$('next').addEventListener('click', () => go(pageNum + 1));
+$('zoomIn').addEventListener('click', () => { zoom = Math.min(zoom + 0.2, 3); $('zoomPct').textContent = Math.round(zoom*100)+'%'; queueRender(pageNum); });
+$('zoomOut').addEventListener('click', () => { zoom = Math.max(zoom - 0.2, 0.6); $('zoomPct').textContent = Math.round(zoom*100)+'%'; queueRender(pageNum); });
+$('fs').addEventListener('click', () => {
+    const el = $('reader-root');
+    if (!document.fullscreenElement) el.requestFullscreen?.(); else document.exitFullscreen?.();
+});
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft' && pageNum > 1) { pageNum--; queueRender(pageNum); }
-    if (e.key === 'ArrowRight' && pageNum < pdfDoc.numPages) { pageNum++; queueRender(pageNum); }
+    if (e.key === 'ArrowLeft') go(pageNum - 1);
+    if (e.key === 'ArrowRight') go(pageNum + 1);
 });
 
 pdfjsLib.getDocument(url).promise.then((pdf) => {
     pdfDoc = pdf;
-    pageCountEl.textContent = pdf.numPages;
+    $('pageCount').textContent = pdf.numPages;
     pageNum = (startPage >= 1 && startPage <= pdf.numPages) ? startPage : 1;
-    status.classList.add('hidden');
+    $('status').classList.add('hidden');
     canvas.classList.remove('hidden');
     renderPage(pageNum);
-}).catch((err) => {
-    status.textContent = "Kitobni yuklab bo'lmadi.";
-    console.error(err);
-});
+}).catch((err) => { $('status').textContent = "Kitobni yuklab bo'lmadi."; console.error(err); });
 </script>
 {% endblock %}
