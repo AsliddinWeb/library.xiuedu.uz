@@ -21,6 +21,11 @@ def student_book_detail(request, pk):
         student_profile = getattr(request.user, 'student_profile', None)
     context = book_action_context(student_profile, book)
     context.update(engagement_context(request.user, book))
+    context['similar'] = (Book.objects
+                          .filter(category=book.category, is_active=True)
+                          .exclude(pk=book.pk)
+                          .select_related('category').prefetch_related('authors')
+                          .order_by('-rating_count', '-view_count')[:6])
     return render(request, "book_app/book/detail.html", context)
 
 

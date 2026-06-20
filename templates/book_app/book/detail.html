@@ -32,6 +32,13 @@
             <p class="mt-3 text-navy-600">
                 {% for author in book.authors.all %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}Muallif noma'lum{% endfor %}
             </p>
+            {% if book.rating_count %}
+            <div class="mt-3 flex items-center gap-2">
+                <span class="flex">{% for i in "12345" %}<svg class="h-4 w-4 {% if forloop.counter <= book.avg_rating %}text-gold-400{% else %}text-navy-200{% endif %}" fill="currentColor" viewBox="0 0 24 24"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8 6.8 19.2l1-5.8-4.3-4.1 5.9-.9z"/></svg>{% endfor %}</span>
+                <span class="text-sm font-semibold text-navy-800">{{ book.avg_rating }}</span>
+                <span class="text-sm text-navy-400">· {{ book.rating_count }} ta baho</span>
+            </div>
+            {% endif %}
 
             {# Amallar (HTMX bilan yangilanadi) #}
             <div class="mt-7">
@@ -84,5 +91,13 @@
     <div class="mt-14 max-w-3xl">
         {% include "engagement/partials/_reviews.html" %}
     </div>
+
+    {# O'xshash kitoblar #}
+    {% if similar %}
+    <div class="mt-16">
+        {% include "partials/_section_header.html" with eyebrow="Shu katalogdan" title="O'xshash kitoblar" %}
+        <div class="mt-5">{% include "book_app/book/partials/_book_carousel.html" with books=similar %}</div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
