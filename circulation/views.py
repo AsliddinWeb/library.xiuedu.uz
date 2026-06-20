@@ -99,6 +99,13 @@ def my_rentals(request):
         'pending_requests': pending_requests,
         'reservations': reservations,
         'fines': fines,
+        'tabs': [
+            ('active', 'Joriy', len(active_rentals)),
+            ('requests', "So'rovlar", len(pending_requests)),
+            ('reservations', 'Navbatlar', len(reservations)),
+            ('fines', 'Jarimalar', len(fines)),
+            ('history', 'Tarix', 0),
+        ],
     }
     return render(request, 'circulation/my_rentals.html', ctx)
 
