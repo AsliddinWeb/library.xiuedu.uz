@@ -1,0 +1,94 @@
+{% comment %}
+  Kitob amallari (HTMX target: #book-actions).
+
+  Bir blokda: onlayn o'qish / tinglash, ijara so'rovi, navbat, sevimli.
+  Barcha amallar kutubxona a'zoligi (Patron) bo'yicha — talaba ham, xodim ham.
+{% endcomment %}
+<div id="book-actions">
+  {% if action_message %}
+    <div class="card card-body mb-4 border-l-4 {% if action_ok %}border-l-[color:var(--color-success-500)]{% else %}border-l-[color:var(--color-danger-500)]{% endif %}">
+      <p class="text-sm {% if not action_ok %}text-[color:var(--color-danger-700)]{% endif %}">{{ action_message }}</p>
+    </div>
+  {% endif %}
+
+  <div class="flex flex-wrap items-center gap-2">
+
+    {# --------- Raqamli nusxa --------- #}
+    {% if book.electronic_version %}
+      <a href="{% url 'reading:read' book.pk %}" class="btn btn-primary">
+        {% include "ui/_icon.html" with name="book" class="size-4" %}
+        Onlayn o'qish
+      </a>
+    {% endif %}
+    {% if book.audio_version %}
+      <a href="{% url 'reading:listen' book.pk %}" class="btn btn-secondary">
+        {% include "ui/_icon.html" with name="clock" class="size-4" %}
+        Audio tinglash
+      </a>
+    {% endif %}
+
+    {# --------- Jismoniy nusxa: ijara oqimi --------- #}
+    {% if patron %}
+      {% if active_rental %}
+        <span class="badge badge-success">
+          <span class="dot dot-success"></span>
+          Sizda{% if active_rental.due_date %} · qaytarish {{ active_rental.due_date }}{% endif %}
+        </span>
+
+      {% elif pending_request %}
+        <span class="badge badge-warning"><span class="dot dot-warning"></span> So'rov yuborilgan</span>
+        <button class="btn btn-ghost btn-sm"
+                hx-post="{% url 'circulation:cancel_request' book.pk %}"
+                hx-target="#book-actions" hx-swap="outerHTML">
+          Bekor qilish
+        </button>
+
+      {% elif reservation %}
+        <span class="badge badge-info">
+          <span class="dot dot-info"></span>
+          Navbatdasiz{% if reservation_pos %} · {{ reservation_pos }}-o'rin{% endif %}
+        </span>
+        <button class="btn btn-ghost btn-sm"
+                hx-post="{% url 'circulation:cancel_reservation' book.pk %}"
+                hx-target="#book-actions" hx-swap="outerHTML">
+          Navbatdan chiqish
+        </button>
+
+      {% elif not can_borrow %}
+        <span class="badge badge-danger" title="{{ borrow_block_reason }}">
+          {% include "ui/_icon.html" with name="alert" class="size-3.5" %}
+          {{ borrow_block_reason|truncatechars:48 }}
+        </span>
+
+      {% elif avail %}
+        <button class="btn btn-accent"
+                hx-post="{% url 'circulation:request_rental' book.pk %}"
+                hx-target="#book-actions" hx-swap="outerHTML">
+          {% include "ui/_icon.html" with name="plus" class="size-4" %}
+          Ijaraga so'rash
+        </button>
+        <span class="help">{{ avail }} ta nusxa mavjud</span>
+
+      {% elif book.items_count %}
+        <button class="btn btn-secondary"
+                hx-post="{% url 'circulation:reserve_book' book.pk %}"
+                hx-target="#book-actions" hx-swap="outerHTML">
+          {% include "ui/_icon.html" with name="clock" class="size-4" %}
+          Navbatga yozilish
+        </button>
+        <span class="help">Hozir hamma nusxa band</span>
+      {% endif %}
+    {% endif %}
+
+    {# --------- Sevimli --------- #}
+    {% if user.is_authenticated %}
+      <span class="ml-auto">{% include "engagement/partials/_favorite_button.html" %}</span>
+    {% endif %}
+  </div>
+
+  {% if not book.electronic_version and not book.audio_version and not book.items_count %}
+    <p class="help mt-3">
+      Bu yozuvda na raqamli fayl, na jismoniy nusxa bor — kutubxonachiga murojaat qiling.
+    </p>
+  {% endif %}
+</div>

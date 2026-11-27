@@ -33,7 +33,7 @@ def _render_actions(request, book, message=None, ok=True):
     ctx = services.book_action_context(_patron(request), book)
     ctx['action_message'] = message
     ctx['action_ok'] = ok
-    return render(request, 'book_app/book/partials/_book_actions.html', ctx)
+    return render(request, 'opac/_actions.html', ctx)
 
 
 @require_POST

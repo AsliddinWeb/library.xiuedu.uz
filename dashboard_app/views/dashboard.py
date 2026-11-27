@@ -19,18 +19,16 @@ def dashboard(request):
 
     if role == Roles.ADMIN:
         return redirect('/admin/')
-    if role == Roles.STUDENT:
-        return _student_dashboard(request)
     if role == Roles.LIBRARIAN:
         return redirect('/panel/')
-    if role == Roles.EMPLOYEE:
-        return render(request, 'dashboard/employee.html')
 
-    # Roli aniqlanmagan xodim — standart sifatida xodim paneli
-    return render(request, 'dashboard/employee.html')
+    # Talaba ham, xodim ham bir xil kabinetni ko'radi: v3 dan boshlab ikkalasi
+    # ham kutubxona a'zosi (Patron) — ijara, navbat, jarima, o'qish tarixi bir xil.
+    return _reader_cabinet(request)
 
 
-def _student_dashboard(request):
+def _reader_cabinet(request):
+    """O'quvchi kabineti — talaba va xodim uchun bir xil."""
     from circulation.models import Fine, Reservation
     from reading.models import ReadingProgress
 
@@ -76,4 +74,4 @@ def _student_dashboard(request):
         'available_res': available_res,
         'genres': Genre.objects.filter(is_active=True)[:10],
     }
-    return render(request, "dashboard/student.html", ctx)
+    return render(request, "opac/cabinet.html", ctx)

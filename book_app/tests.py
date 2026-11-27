@@ -7,7 +7,13 @@ va hissadorlar (rol bilan).
 from django.test import TestCase
 
 from audit.models import ActionLog
-from core.testing import make_book, make_genre, make_librarian, make_student
+from core.testing import (
+    make_book,
+    make_employee,
+    make_genre,
+    make_librarian,
+    make_student,
+)
 from holdings.models import ItemType, Library, ShelfLocation
 from user_app.services import get_or_create_patron
 
@@ -550,3 +556,143 @@ class OpacCatalogViewTests(TestCase):
     def test_empty_result_message(self):
         response = self.client.get('/books/', {'q': 'zzzqqqxxx'})
         self.assertShows(response, "topilmadi")
+
+
+# =============================================================================
+#  P5-B — kitob sahifasi, bibliografik tavsif, kabinet
+# =============================================================================
+
+class CitationTests(TestCase):
+    """GOST uslubidagi bibliografik tavsif."""
+
+    def test_full_citation(self):
+        from book_app.citation import gost
+        from book_app.models import Publisher
+
+        book = make_book(
+            "O'tkan kunlar",
+            publisher=Publisher.objects.create(name="Yangi asr avlodi"),
+            place_of_publication="Toshkent",
+            published_year=2019,
+            page_count=384,
+            isbn="9789943010101",
+        )
+        book.subtitle = "roman"
+        book.save()
+        Contributor.objects.create(
+            book=book, author=Author.objects.create(full_name="Abdulla Qodiriy"))
+
+        text = gost(book)
+        self.assertIn("Qodiriy A.", text)          # familiya + bosh harf
+        self.assertIn("O'tkan kunlar : roman", text)
+        self.assertIn("Toshkent : Yangi asr avlodi, 2019", text)
+        self.assertIn("384 b.", text)
+        self.assertIn("ISBN 9789943010101", text)
+
+    def test_citation_without_author(self):
+        from book_app.citation import gost
+        book = make_book("Anonim asar", published_year=2020)
+        self.assertTrue(gost(book).startswith("Anonim asar"))
+
+    def test_citation_truncates_many_authors(self):
+        from book_app.citation import gost
+        book = make_book("Jamoaviy ish")
+        for index in range(5):
+            Contributor.objects.create(
+                book=book, author=Author.objects.create(full_name=f"Muallif {index}"),
+                order=index)
+        self.assertIn("[va boshq.]", gost(book))
+
+
+class BookDetailPageTests(TestCase):
+    def setUp(self):
+        self.user = make_student(username='talaba-detail', password='x')
+        self.client.login(username=self.user.username, password='x')
+        self.book = make_book("Kitob sahifasi sinovi")
+        self.items = create_items(self.book, 2)
+
+    def test_page_renders_with_copies(self):
+        response = self.client.get(f'/books/{self.book.pk}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Fonddagi nusxalar")
+        self.assertContains(response, self.items[0].inventory_number)
+
+    def test_shows_shelf_location(self):
+        response = self.client.get(f'/books/{self.book.pk}/')
+        self.assertContains(response, "Asosiy fond")
+
+    def test_withdrawn_items_hidden(self):
+        from book_app.services import withdraw_item
+        withdraw_item(self.items[0], reason="Sinov")
+
+        response = self.client.get(f'/books/{self.book.pk}/')
+        self.assertNotContains(response, self.items[0].inventory_number)
+
+    def test_citation_block_present(self):
+        self.book.annotation = "Qisqacha tavsif"
+        self.book.save()
+        response = self.client.get(f'/books/{self.book.pk}/')
+        self.assertContains(response, "Bibliografik tavsif")
+
+    def test_request_button_for_available_book(self):
+        response = self.client.get(f'/books/{self.book.pk}/')
+        self.assertContains(response, "Ijaraga so")   # "Ijaraga so'rash"
+
+    def test_read_online_button_for_digital(self):
+        digital = make_book("Raqamli", electronic_version='ebooks/x.pdf')
+        response = self.client.get(f'/books/{digital.pk}/')
+        self.assertContains(response, "Onlayn o")     # "Onlayn o'qish"
+
+    def test_similar_books_section(self):
+        make_book("O'xshash kitob", genre=self.book.category)
+        response = self.client.get(f'/books/{self.book.pk}/')
+        self.assertContains(response, "xshash kitoblar")
+
+
+class ReaderCabinetTests(TestCase):
+    """Kabinet talabaga ham, xodimga ham ochiq (ikkalasi ham a'zo)."""
+
+    def test_student_sees_cabinet(self):
+        from user_app.services import get_or_create_patron
+
+        user = make_student(username='talaba-kab', password='x')
+        patron = get_or_create_patron(user)
+        self.client.login(username=user.username, password='x')
+
+        response = self.client.get('/dashboard/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, patron.card_number)
+
+    def test_employee_sees_same_cabinet(self):
+        user = make_employee(username='xodim-kab', password='x')
+        self.client.login(username=user.username, password='x')
+
+        response = self.client.get('/dashboard/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Mening ijaralarim")
+
+    def test_librarian_redirected_to_panel(self):
+        user = make_librarian(username='kutubxonachi-kab', password='x')
+        self.client.login(username=user.username, password='x')
+        self.assertRedirects(self.client.get('/dashboard/'), '/panel/',
+                             fetch_redirect_response=False)
+
+    def test_overdue_alert(self):
+        from datetime import timedelta
+
+        from django.utils.timezone import now
+
+        from book_app.models import Rental
+        from user_app.services import get_or_create_patron
+
+        user = make_student(username='talaba-kech', password='x')
+        patron = get_or_create_patron(user)
+        book = make_book("Kechikkan kitob")
+        item = create_items(book, 1)[0]
+        Rental.objects.create(copy=item, patron=patron,
+                              borrowed_date=now().date() - timedelta(days=30),
+                              due_date=now().date() - timedelta(days=5))
+
+        self.client.login(username=user.username, password='x')
+        response = self.client.get('/dashboard/')
+        self.assertContains(response, "muddati o")   # "muddati o'tgan"

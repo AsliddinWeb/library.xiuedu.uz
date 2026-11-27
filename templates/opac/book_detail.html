@@ -1,0 +1,202 @@
+{% extends "layouts/opac.html" %}
+{% comment %}
+  Kitob sahifasi (OPAC).
+
+  Tuzilishi: hero (muqova + amallar) · nusxalar jadvali (qaysi javonda) ·
+  tavsif · bibliografik ma'lumot + GOST tavsifi · sharhlar · o'xshash kitoblar.
+{% endcomment %}
+
+{% block title %}{{ book.title }} — XIU Kutubxona{% endblock %}
+{% block description %}{{ book.annotation|default:book.description|truncatechars:160 }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+
+  <nav class="breadcrumb mb-6">
+    <a href="{% url 'book_app:student_book_list' %}">Katalog</a>
+    <span>/</span>
+    <a href="{% url 'book_app:student_book_list' %}?category={{ book.category_id }}">{{ book.category.name }}</a>
+  </nav>
+
+  {# ======================= HERO ======================= #}
+  <div class="grid gap-8 lg:grid-cols-[18rem_1fr]">
+    <div>
+      <div class="overflow-hidden rounded-[var(--radius-lg)] bg-[color:var(--color-surface-sunken)] shadow-[var(--shadow-md)]">
+        {% if book.cover_image %}
+          <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="w-full object-cover">
+        {% else %}
+          <div class="flex aspect-[3/4] items-center justify-center text-[color:var(--color-content-subtle)]">
+            {% include "ui/_icon.html" with name="book" class="size-12" %}
+          </div>
+        {% endif %}
+      </div>
+
+      {% if book.avg_rating %}
+        <div class="mt-4 text-center">
+          <p class="text-2xl"><span class="text-[color:var(--color-accent)]">★</span> {{ book.avg_rating }}</p>
+          <p class="help">{{ book.rating_count }} ta baho</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="min-w-0">
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-accent)]">
+        {{ book.get_record_type_display }}
+      </p>
+      <h1 class="mt-2 font-display text-3xl leading-tight sm:text-4xl">{{ book.title }}</h1>
+      {% if book.subtitle %}
+        <p class="mt-2 text-lg text-[color:var(--color-content-muted)]">{{ book.subtitle }}</p>
+      {% endif %}
+
+      {# Hissadorlar rol bilan #}
+      <div class="mt-4 space-y-1 text-sm">
+        {% for role, people in book.contributors_by_role.items %}
+          <p>
+            <span class="text-[color:var(--color-content-muted)]">{{ role }}:</span>
+            {% for person in people %}{{ person.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          </p>
+        {% empty %}
+          <p class="text-[color:var(--color-content-muted)]">Muallif ko'rsatilmagan</p>
+        {% endfor %}
+      </div>
+
+      {# Mavzular — bosilsa katalogda filtrlaydi #}
+      {% if book.subjects.all %}
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          {% for subject in book.subjects.all %}
+            <a href="{% url 'book_app:student_book_list' %}?subject={{ subject.id }}" class="chip">
+              {{ subject.name }}
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {# Amallar (HTMX bilan yangilanadi) #}
+      <div class="mt-6">
+        {% include "opac/_actions.html" %}
+      </div>
+
+      {# Qisqa meta #}
+      <dl class="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+        {% if book.published_year %}
+          <div><dt class="help">Nashr yili</dt><dd>{{ book.published_year }}</dd></div>
+        {% endif %}
+        {% if book.publisher_id %}
+          <div><dt class="help">Nashriyot</dt><dd>{{ book.publisher.name }}</dd></div>
+        {% endif %}
+        {% if book.language %}
+          <div><dt class="help">Til</dt><dd>{{ book.language }}</dd></div>
+        {% endif %}
+        {% if book.page_count %}
+          <div><dt class="help">Sahifa</dt><dd>{{ book.page_count }}</dd></div>
+        {% endif %}
+        {% if book.isbn %}
+          <div><dt class="help">ISBN</dt><dd class="font-mono text-xs">{{ book.isbn }}</dd></div>
+        {% endif %}
+        {% if book.udc %}
+          <div><dt class="help">UDK</dt><dd class="font-mono text-xs">{{ book.udc }}</dd></div>
+        {% endif %}
+      </dl>
+    </div>
+  </div>
+
+  {# ======================= NUSXALAR ======================= #}
+  {% if items %}
+  <section class="mt-10">
+    <h2 class="font-display text-xl">Fonddagi nusxalar</h2>
+    <p class="page-sub">Kitob qaysi bo'limda va qaysi javonda turganini shu yerdan ko'ring.</p>
+
+    <div class="table-wrap mt-4">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Inventar</th>
+            <th>Turi</th>
+            <th>Bo'lim</th>
+            <th>Javon / joylashuv</th>
+            <th>Holati</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td class="font-mono text-xs">{{ item.inventory_number }}</td>
+            <td class="text-[color:var(--color-content-muted)]">{{ item.item_type.name|default:"—" }}</td>
+            <td>{{ item.library.name|default:"—" }}</td>
+            <td class="text-[color:var(--color-content-muted)]">
+              {% if item.shelf_location %}{{ item.shelf_location.directions }}{% else %}{{ item.call_number|default:"—" }}{% endif %}
+            </td>
+            <td>
+              {% if item.status == 'AVAILABLE' %}{% include "ui/_badge.html" with text="Mavjud" variant="success" dot=1 %}
+              {% elif item.status == 'ON_LOAN' %}{% include "ui/_badge.html" with text="Ijarada" variant="info" dot=1 %}
+              {% elif item.status == 'NOT_FOR_LOAN' %}{% include "ui/_badge.html" with text="Faqat zalda" variant="warning" dot=1 %}
+              {% else %}{% include "ui/_badge.html" with text=item.get_status_display variant="neutral" dot=1 %}{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+
+  {# ======================= TAVSIF ======================= #}
+  {% if book.annotation or book.description or book.contents_note %}
+  <section class="mt-10 grid gap-6 lg:grid-cols-3">
+    <div class="lg:col-span-2">
+      <h2 class="font-display text-xl">Kitob haqida</h2>
+      <div class="prose mt-3 max-w-none text-[15px] leading-relaxed">
+        {% if book.annotation %}<p>{{ book.annotation|linebreaksbr }}</p>{% endif %}
+        {% if book.description and book.description != book.annotation %}
+          <p class="mt-3">{{ book.description|linebreaksbr }}</p>
+        {% endif %}
+      </div>
+
+      {% if book.contents_note %}
+        <details class="card mt-4">
+          <summary class="card-head cursor-pointer select-none">
+            <span class="card-title">Mundarija</span>
+          </summary>
+          <div class="card-body whitespace-pre-line text-sm">{{ book.contents_note }}</div>
+        </details>
+      {% endif %}
+    </div>
+
+    {# --------- GOST tavsifi --------- #}
+    <div x-data="{ copied: false }">
+      <h2 class="font-display text-xl">Bibliografik tavsif</h2>
+      <p class="page-sub">Referat va dissertatsiyadagi adabiyotlar ro'yxati uchun.</p>
+      <div class="card card-body mt-3">
+        <p id="citation" class="text-sm leading-relaxed">{{ citation }}</p>
+        <button type="button" class="btn btn-secondary btn-sm mt-3"
+                @click="navigator.clipboard.writeText(document.getElementById('citation').innerText.trim());
+                        copied = true; toast('Tavsif nusxalandi', 'success'); setTimeout(() => copied = false, 2000)">
+          {% include "ui/_icon.html" with name="check" class="size-4" %}
+          <span x-text="copied ? 'Nusxalandi' : 'Nusxalash'">Nusxalash</span>
+        </button>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {# ======================= SHARHLAR ======================= #}
+  <section class="mt-10">
+    <h2 class="font-display text-xl">Sharhlar va baholar</h2>
+    <div class="mt-4">
+      {% include "engagement/partials/_reviews.html" %}
+    </div>
+  </section>
+
+  {# ======================= O'XSHASH ======================= #}
+  {% if similar %}
+  <section class="mt-12">
+    <h2 class="font-display text-xl">O'xshash kitoblar</h2>
+    <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {% for item in similar %}
+        {% include "opac/_book_card.html" with book=item %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
