@@ -20,15 +20,10 @@ def add_copies(book, quantity):
     ]
     Copy.objects.bulk_create(new_copies)
 
-def is_book_borrowed_by_student(student, book):
-    """
-    Talaba tomonidan kitobning ijaraga olinganligini tekshiradi.
-    :param student: StudentProfile obyekti
-    :param book: Book obyekti
-    :return: True agar ijaraga olingan bo'lsa, aks holda False
-    """
+def is_book_borrowed_by_patron(patron, book):
+    """Kitob shu a'zoda ijaradami (qaytarilmaganmi)."""
     return Rental.objects.filter(
-        student=student,
+        patron=patron,
         copy__book=book,
         return_date__isnull=True
     ).exists()

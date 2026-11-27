@@ -17,7 +17,7 @@
                 <tr class="transition hover:bg-navy-50/40">
                     <td class="px-4 py-3 font-medium text-navy-900">{{ rental.copy.book.title }}</td>
                     <td class="px-4 py-3 text-navy-500">{{ rental.copy.inventory_number }}</td>
-                    <td class="px-4 py-3 text-navy-600">{{ rental.student.user.get_full_name }}</td>
+                    <td class="px-4 py-3 text-navy-600">{{ rental.borrower_name }}</td>
                     <td class="px-4 py-3 text-navy-500">{{ rental.due_date|default:"—" }}</td>
                     <td class="px-4 py-3">
                         {% if rental.return_date %}<span class="rounded-full bg-navy-50 px-2.5 py-0.5 text-xs font-medium text-navy-500">Qaytarilgan</span>

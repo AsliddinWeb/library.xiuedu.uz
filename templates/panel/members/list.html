@@ -1,0 +1,61 @@
+{% extends "panel/base.html" %}
+{% comment %}A'zolar ro'yxati — yangi dizayn tizimi (staff qiyofasi).{% endcomment %}
+
+{% block title %}A'zolar — XIU Kutubxona{% endblock %}
+
+{% block panel_content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Kutubxona a'zolari</h1>
+    <p class="page-sub">Jami {{ total }} ta a'zo — talaba, magistrant, doktorant, o'qituvchi, xodim va tashqi o'quvchilar.</p>
+  </div>
+  <a href="{% url 'panel:member_create' %}" class="btn btn-primary">
+    {% include "ui/_icon.html" with name="plus" class="size-4" %}
+    Yangi a'zo
+  </a>
+</div>
+
+{# --- Filtr paneli (HTMX: sahifa yangilanmaydi) --- #}
+<form class="card card-body mb-4 flex flex-wrap items-end gap-3"
+      hx-get="{% url 'panel:members' %}" hx-target="#members-table" hx-trigger="submit, change from:select"
+      hx-push-url="true" hx-indicator="#members-loading">
+  <div class="field min-w-64 flex-1">
+    <label class="label">Qidiruv</label>
+    <label class="search">
+      <span class="text-[color:var(--color-content-subtle)]">{% include "ui/_icon.html" with name="search" class="size-4" %}</span>
+      <input type="search" name="q" value="{{ q }}" placeholder="Ism, bilet raqami, guruh, HEMIS ID..."
+             hx-get="{% url 'panel:members' %}" hx-target="#members-table" hx-trigger="keyup changed delay:400ms"
+             hx-include="closest form">
+    </label>
+  </div>
+  <div class="field w-48">
+    <label class="label">Toifa</label>
+    <select name="category" class="select">
+      <option value="">Hammasi</option>
+      {% for c in categories %}
+        <option value="{{ c.code }}" {% if category == c.code %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field w-44">
+    <label class="label">Holati</label>
+    <select name="status" class="select">
+      <option value="">Hammasi</option>
+      {% for value, label in statuses %}
+        <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="flex items-center gap-2">
+    <button type="submit" class="btn btn-secondary">Filtrlash</button>
+    {% if q or category or status %}
+      <a href="{% url 'panel:members' %}" class="btn btn-ghost btn-sm">Tozalash</a>
+    {% endif %}
+    <span id="members-loading" class="htmx-indicator text-xs text-[color:var(--color-content-subtle)]">yuklanmoqda...</span>
+  </div>
+</form>
+
+<div id="members-table">
+  {% include "panel/members/_table.html" %}
+</div>
+{% endblock %}

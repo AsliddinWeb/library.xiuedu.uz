@@ -13,14 +13,14 @@ from django.views.decorators.http import require_POST
 
 from book_app.models import Author, Book, Copy, Genre
 from book_app.utils import add_copies
-from user_app.utils import library_admin_role_required
+from user_app.permissions import Perms, require_perm
 
 from ..forms import PanelBookForm
 
 SORTS = {'title', '-title', '-created_at', 'created_at', '-view_count', 'view_count', '-id'}
 
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_VIEW)
 def book_list(request):
     books = (Book.objects
              .select_related('category')
@@ -61,7 +61,7 @@ def book_list(request):
     return render(request, 'panel/books/list.html', ctx)
 
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_EDIT)
 def book_create(request):
     form = PanelBookForm(request.POST or None, request.FILES or None)
     if request.method == 'POST' and form.is_valid():
@@ -72,7 +72,7 @@ def book_create(request):
                   {'form': form, 'active': 'books', 'page_title': 'Yangi kitob'})
 
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_EDIT)
 def book_edit(request, pk):
     book = get_object_or_404(Book, pk=pk)
     form = PanelBookForm(request.POST or None, request.FILES or None, instance=book)
@@ -84,7 +84,7 @@ def book_edit(request, pk):
                   {'form': form, 'book': book, 'active': 'books', 'page_title': 'Kitobni tahrirlash'})
 
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_VIEW)
 def book_detail(request, pk):
     book = get_object_or_404(
         Book.objects.select_related('category').prefetch_related('authors'), pk=pk)
@@ -92,7 +92,7 @@ def book_detail(request, pk):
                   {'book': book, 'active': 'books', 'page_title': book.title})
 
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_DELETE)
 def book_delete(request, pk):
     book = get_object_or_404(Book, pk=pk)
     if request.method == 'POST':
@@ -110,7 +110,7 @@ def _render_copies(request, book):
 
 
 @require_POST
-@library_admin_role_required
+@require_perm(Perms.ITEMS_MANAGE)
 def copy_add(request, pk):
     book = get_object_or_404(Book, pk=pk)
     try:
@@ -122,7 +122,7 @@ def copy_add(request, pk):
 
 
 @require_POST
-@library_admin_role_required
+@require_perm(Perms.ITEMS_MANAGE)
 def copy_toggle(request, pk):
     copy = get_object_or_404(Copy, pk=pk)
     copy.is_available = not copy.is_available
@@ -131,7 +131,7 @@ def copy_toggle(request, pk):
 
 
 @require_POST
-@library_admin_role_required
+@require_perm(Perms.ITEMS_MANAGE)
 def copy_delete(request, pk):
     copy = get_object_or_404(Copy, pk=pk)
     book = copy.book
@@ -143,7 +143,7 @@ def copy_delete(request, pk):
     return _render_copies(request, book)
 
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_IMPORT)
 def import_books(request):
     """Tashqi API'dan kitoblarni ommaviy import (har bir kitob xato-bardosh)."""
     if request.method != 'POST':

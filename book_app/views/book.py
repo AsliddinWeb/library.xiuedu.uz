@@ -15,11 +15,12 @@ def student_book_detail(request, pk):
 
     from circulation.services import book_action_context
     from engagement.services import engagement_context
-    # Faqat talabalar ijara/navbat amallarini ko'radi (rolga asoslangan)
-    student_profile = None
-    if request.user.user_type == 'STUDENT':
-        student_profile = getattr(request.user, 'student_profile', None)
-    context = book_action_context(student_profile, book)
+    # Ijara/navbat amallari kutubxona a'zoligi (Patron) bo'yicha — talaba ham, xodim ham
+    patron = None
+    if request.user.is_authenticated:
+        from user_app.services import get_or_create_patron
+        patron = get_or_create_patron(request.user)
+    context = book_action_context(patron, book)
     context.update(engagement_context(request.user, book))
     context['similar'] = (Book.objects
                           .filter(category=book.category, is_active=True)

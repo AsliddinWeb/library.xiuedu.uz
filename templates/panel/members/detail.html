@@ -1,0 +1,215 @@
+{% extends "panel/base.html" %}
+{% comment %}A'zo kartasi — ijaralar, so'rovlar, navbatlar, jarimalar va amallar.{% endcomment %}
+
+{% block title %}{{ patron.display_name }} — a'zo kartasi{% endblock %}
+
+{% block panel_content %}
+<div x-data="{ blockOpen: false }">
+
+  {# ---------------- Sarlavha va amallar ---------------- #}
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">{{ patron.display_name }}</h1>
+      <p class="page-sub">
+        <span class="font-mono">{{ patron.card_number }}</span> · {{ patron.category.name }}
+        {% if patron.user %}· {{ patron.user.username }}{% endif %}
+      </p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="{% url 'panel:member_edit' patron.pk %}" class="btn btn-secondary btn-sm">
+        {% include "ui/_icon.html" with name="pencil" class="size-4" %} Tahrirlash
+      </a>
+      <form method="post" action="{% url 'panel:member_renew' patron.pk %}">{% csrf_token %}
+        <button class="btn btn-secondary btn-sm">{% include "ui/_icon.html" with name="clock" class="size-4" %} Uzaytirish</button>
+      </form>
+      {% if patron.status == 'BLOCKED' %}
+        <form method="post" action="{% url 'panel:member_unblock' patron.pk %}">{% csrf_token %}
+          <button class="btn btn-primary btn-sm">{% include "ui/_icon.html" with name="check" class="size-4" %} Blokdan chiqarish</button>
+        </form>
+      {% else %}
+        <button class="btn btn-danger btn-sm" @click="blockOpen = true">
+          {% include "ui/_icon.html" with name="alert" class="size-4" %} Bloklash
+        </button>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ---------------- Holat bannerlari ---------------- #}
+  {% if not can_borrow %}
+    <div class="card card-body mb-4 border-l-4 border-l-[color:var(--color-danger-500)]">
+      <p class="font-medium text-[color:var(--color-danger-700)]">Kitob berib bo'lmaydi</p>
+      <p class="help mt-0.5">{{ block_reason }}</p>
+    </div>
+  {% endif %}
+
+  {# ---------------- Ko'rsatkichlar ---------------- #}
+  <div class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    {% include "ui/_stat.html" with label="Faol ijaralar" value=patron.active_loans_count icon="book" trend=patron.category.loan_limit|stringformat:"s"|add:" tadan" %}
+    {% include "ui/_stat.html" with label="Kechikkan" value=patron.overdue_count icon="clock" %}
+    {% include "ui/_stat.html" with label="Qarz (so'm)" value=patron.balance|floatformat:0 icon="cash" %}
+    {% include "ui/_stat.html" with label="Navbatlar" value=reservations|length icon="users" %}
+  </div>
+
+  <div class="grid gap-4 lg:grid-cols-3">
+
+    {# ---------------- Chap: ma'lumotlar ---------------- #}
+    <div class="space-y-4">
+      <div class="card">
+        <div class="card-head"><h2 class="card-title">A'zo ma'lumotlari</h2></div>
+        <div class="card-body space-y-2.5 text-sm">
+          <div class="flex justify-between gap-3">
+            <span class="text-[color:var(--color-content-muted)]">Holati</span>
+            <span>
+              {% if patron.status == 'ACTIVE' %}{% include "ui/_badge.html" with text="Faol" variant="success" dot=1 %}
+              {% elif patron.status == 'BLOCKED' %}{% include "ui/_badge.html" with text="Bloklangan" variant="danger" dot=1 %}
+              {% elif patron.status == 'DEBT' %}{% include "ui/_badge.html" with text="Qarzdor" variant="warning" dot=1 %}
+              {% elif patron.status == 'EXPIRED' %}{% include "ui/_badge.html" with text="Muddati o'tgan" variant="warning" dot=1 %}
+              {% else %}{% include "ui/_badge.html" with text="Yopilgan" variant="neutral" dot=1 %}{% endif %}
+            </span>
+          </div>
+          <div class="flex justify-between gap-3"><span class="text-[color:var(--color-content-muted)]">Ro'yxatga olingan</span><span>{{ patron.registered_on }}</span></div>
+          <div class="flex justify-between gap-3"><span class="text-[color:var(--color-content-muted)]">Amal qiladi</span><span>{{ patron.expires_on|default:"muddatsiz" }}</span></div>
+          <div class="flex justify-between gap-3"><span class="text-[color:var(--color-content-muted)]">Telefon</span><span>{{ patron.contact_phone|default:"—" }}</span></div>
+          <div class="flex justify-between gap-3"><span class="text-[color:var(--color-content-muted)]">E-pochta</span><span class="truncate">{{ patron.contact_email|default:"—" }}</span></div>
+          {% if patron.user.student_profile %}
+            <div class="flex justify-between gap-3"><span class="text-[color:var(--color-content-muted)]">Fakultet</span><span class="text-right">{{ patron.user.student_profile.faculty|default:"—" }}</span></div>
+            <div class="flex justify-between gap-3"><span class="text-[color:var(--color-content-muted)]">Guruh</span><span>{{ patron.user.student_profile.group|default:"—" }}</span></div>
+          {% elif patron.user.employe_profile %}
+            <div class="flex justify-between gap-3"><span class="text-[color:var(--color-content-muted)]">Bo'lim</span><span class="text-right">{{ patron.user.employe_profile.department|default:"—" }}</span></div>
+            <div class="flex justify-between gap-3"><span class="text-[color:var(--color-content-muted)]">Lavozim</span><span class="text-right">{{ patron.user.employe_profile.position|default:"—" }}</span></div>
+          {% endif %}
+          {% if patron.block_reason %}
+            <div class="rounded-[var(--radius-sm)] bg-[color:var(--color-danger-50)] p-2 text-[color:var(--color-danger-700)]">
+              <b>Blok:</b> {{ patron.block_reason }}
+              {% if patron.blocked_until %}<br>Muddat: {{ patron.blocked_until }}{% endif %}
+            </div>
+          {% endif %}
+          {% if patron.note %}<p class="help border-t border-[color:var(--color-line)] pt-2">{{ patron.note }}</p>{% endif %}
+        </div>
+      </div>
+
+      {% if history %}
+      <div class="card">
+        <div class="card-head"><h2 class="card-title">Audit</h2></div>
+        <div class="card-body space-y-2 text-xs">
+          {% for log in history %}
+            <div class="flex justify-between gap-2">
+              <span>{{ log.get_action_display }}{% if log.note %} — {{ log.note|truncatechars:40 }}{% endif %}</span>
+              <span class="whitespace-nowrap text-[color:var(--color-content-subtle)]">{{ log.at|date:"d.m H:i" }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    {# ---------------- O'ng: faoliyat ---------------- #}
+    <div class="space-y-4 lg:col-span-2">
+
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">Ijaralar</h2>
+          <span class="help">{{ active_rentals|length }} ta faol</span>
+        </div>
+        {% if rentals %}
+          <div class="table-wrap border-0">
+            <table class="table">
+              <thead><tr><th>Kitob</th><th>Nusxa</th><th>Olingan</th><th>Muddat</th><th>Holat</th></tr></thead>
+              <tbody>
+                {% for r in rentals %}
+                <tr>
+                  <td class="font-medium">{{ r.copy.book.title|truncatechars:42 }}</td>
+                  <td class="font-mono text-xs">{{ r.copy.inventory_number }}</td>
+                  <td>{{ r.borrowed_date|default:"—" }}</td>
+                  <td>{{ r.due_date|default:"—" }}</td>
+                  <td>
+                    {% if r.return_date %}{% include "ui/_badge.html" with text="Qaytarilgan" variant="neutral" %}
+                    {% elif r.is_overdue %}{% include "ui/_badge.html" with text="Muddat o'tgan" variant="danger" dot=1 %}
+                    {% else %}{% include "ui/_badge.html" with text="Ijarada" variant="info" dot=1 %}{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          {% include "ui/_empty.html" with icon="book" title="Ijara yo'q" text="Bu a'zo hali kitob olmagan." %}
+        {% endif %}
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="card">
+          <div class="card-head"><h2 class="card-title">So'rovlar</h2></div>
+          <div class="card-body space-y-2 text-sm">
+            {% for req in requests %}
+              <div class="flex items-center justify-between gap-2">
+                <span class="truncate">{{ req.book.title|truncatechars:28 }}</span>
+                <span class="whitespace-nowrap">
+                  {% if req.status == 'PENDING' %}{% include "ui/_badge.html" with text="Kutilmoqda" variant="warning" %}
+                  {% elif req.status == 'APPROVED' %}{% include "ui/_badge.html" with text="Tasdiqlangan" variant="success" %}
+                  {% elif req.status == 'REJECTED' %}{% include "ui/_badge.html" with text="Rad etilgan" variant="danger" %}
+                  {% else %}{% include "ui/_badge.html" with text="Bekor" variant="neutral" %}{% endif %}
+                </span>
+              </div>
+            {% empty %}<p class="help">So'rov yo'q.</p>{% endfor %}
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2 class="card-title">Jarimalar</h2>
+            {% if unpaid_fines %}<span class="badge badge-danger">{{ unpaid_fines|length }} to'lanmagan</span>{% endif %}
+          </div>
+          <div class="card-body space-y-2 text-sm">
+            {% for fine in fines %}
+              <div class="flex items-center justify-between gap-2">
+                <span class="truncate">{{ fine.rental.copy.book.title|truncatechars:24 }}
+                  <span class="help">· {{ fine.days_overdue }} kun</span></span>
+                <span class="whitespace-nowrap {% if fine.is_paid %}text-[color:var(--color-content-subtle)]{% else %}font-semibold text-[color:var(--color-danger-700)]{% endif %}">
+                  {{ fine.amount|floatformat:0 }} so'm
+                </span>
+              </div>
+            {% empty %}<p class="help">Jarima yo'q.</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ---------------- Bloklash modali ---------------- #}
+  <template x-teleport="body">
+    <div x-show="blockOpen" x-cloak>
+      <div class="overlay" @click="blockOpen = false"></div>
+      <div class="modal" role="dialog" aria-modal="true" @keydown.escape.window="blockOpen = false">
+        <form method="post" action="{% url 'panel:member_block' patron.pk %}" class="modal-panel">
+          {% csrf_token %}
+          <div class="card-head">
+            <h2 class="card-title">A'zoni bloklash</h2>
+            <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="blockOpen = false" aria-label="Yopish">
+              {% include "ui/_icon.html" with name="close" class="size-4" %}
+            </button>
+          </div>
+          <div class="card-body space-y-3">
+            <p class="text-sm text-[color:var(--color-content-muted)]">
+              Bloklangan a'zo yangi kitob ololmaydi. HEMIS'ga qayta kirish blokni ochmaydi.
+            </p>
+            <div class="field">
+              <label class="label label-required">Sabab</label>
+              <input name="reason" class="input" required placeholder="Masalan: kitob qaytarilmadi">
+            </div>
+            <div class="field">
+              <label class="label">Muddat (ixtiyoriy)</label>
+              <input type="date" name="until" class="input">
+              <p class="help">Bo'sh qoldirilsa — muddatsiz blok.</p>
+            </div>
+          </div>
+          <div class="card-foot">
+            <button type="button" class="btn btn-secondary" @click="blockOpen = false">Bekor qilish</button>
+            <button type="submit" class="btn btn-danger">Bloklash</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </template>
+</div>
+{% endblock %}

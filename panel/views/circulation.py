@@ -6,7 +6,7 @@ from django.views.decorators.http import require_POST
 from book_app.models import Rental
 from circulation import services
 from circulation.models import Fine, RentalRequest, Reservation
-from user_app.utils import library_admin_role_required
+from user_app.permissions import Perms, require_perm
 
 
 def _param(request, key, default=''):
@@ -20,21 +20,22 @@ def _paginate(request, qs, per=20):
 # ============================================================ So'rovlar
 
 def _requests_ctx(request):
-    qs = RentalRequest.objects.select_related('book', 'student__user')
+    qs = RentalRequest.objects.select_related('book', 'patron__user')
     status = _param(request, 'status', 'PENDING')
     if status in RentalRequest.Status.values:
         qs = qs.filter(status=status)
     q = _param(request, 'q').strip()
     if q:
         qs = qs.filter(Q(book__title__icontains=q) |
-                       Q(student__user__username__icontains=q) |
-                       Q(student__user__first_name__icontains=q))
+                       Q(patron__user__username__icontains=q) |
+                       Q(patron__user__first_name__icontains=q) |
+                       Q(patron__card_number__icontains=q))
     page = _paginate(request, qs.order_by('-id'))
     return {'active': 'requests', 'page_title': "Ijara so'rovlari", 'requests': page, 'page_obj': page,
             'status': status, 'q': q, 'statuses': RentalRequest.Status.choices}
 
 
-@library_admin_role_required
+@require_perm(Perms.CIRC_CHECKOUT)
 def requests_view(request):
     ctx = _requests_ctx(request)
     tpl = 'panel/circulation/_requests.html' if getattr(request, 'htmx', False) else 'panel/circulation/requests.html'
@@ -42,14 +43,14 @@ def requests_view(request):
 
 
 @require_POST
-@library_admin_role_required
+@require_perm(Perms.CIRC_CHECKOUT)
 def request_approve(request, pk):
     services.approve_request(get_object_or_404(RentalRequest, pk=pk), librarian=request.user)
     return render(request, 'panel/circulation/_requests.html', _requests_ctx(request))
 
 
 @require_POST
-@library_admin_role_required
+@require_perm(Perms.CIRC_CHECKOUT)
 def request_reject(request, pk):
     services.reject_request(get_object_or_404(RentalRequest, pk=pk), librarian=request.user)
     return render(request, 'panel/circulation/_requests.html', _requests_ctx(request))
@@ -58,7 +59,7 @@ def request_reject(request, pk):
 # ============================================================ Ijaralar
 
 def _rentals_ctx(request):
-    qs = Rental.objects.select_related('copy__book', 'student__user')
+    qs = Rental.objects.select_related('copy__book', 'patron__user')
     view = _param(request, 'view', 'active')
     if view == 'active':
         qs = qs.filter(return_date__isnull=True)
@@ -70,14 +71,15 @@ def _rentals_ctx(request):
     q = _param(request, 'q').strip()
     if q:
         qs = qs.filter(Q(copy__book__title__icontains=q) |
-                       Q(student__user__username__icontains=q) |
-                       Q(student__user__first_name__icontains=q))
+                       Q(patron__user__username__icontains=q) |
+                       Q(patron__user__first_name__icontains=q) |
+                       Q(patron__card_number__icontains=q))
     page = _paginate(request, qs.order_by('-id'))
     return {'active': 'rentals', 'page_title': 'Ijaralar', 'rentals': page, 'page_obj': page,
             'view': view, 'q': q}
 
 
-@library_admin_role_required
+@require_perm(Perms.CIRC_CHECKOUT)
 def rentals_view(request):
     ctx = _rentals_ctx(request)
     tpl = 'panel/circulation/_rentals.html' if getattr(request, 'htmx', False) else 'panel/circulation/rentals.html'
@@ -85,7 +87,7 @@ def rentals_view(request):
 
 
 @require_POST
-@library_admin_role_required
+@require_perm(Perms.CIRC_CHECKIN)
 def rental_return(request, pk):
     services.return_rental(get_object_or_404(Rental, pk=pk))
     return render(request, 'panel/circulation/_rentals.html', _rentals_ctx(request))
@@ -94,17 +96,18 @@ def rental_return(request, pk):
 # ============================================================ Navbatlar
 
 def _reservations_ctx(request):
-    qs = Reservation.objects.select_related('book', 'student__user').filter(
+    qs = Reservation.objects.select_related('book', 'patron__user').filter(
         status__in=[Reservation.Status.WAITING, Reservation.Status.AVAILABLE])
     q = _param(request, 'q').strip()
     if q:
-        qs = qs.filter(Q(book__title__icontains=q) | Q(student__user__first_name__icontains=q))
+        qs = qs.filter(Q(book__title__icontains=q) | Q(patron__user__first_name__icontains=q) |
+                       Q(patron__card_number__icontains=q))
     page = _paginate(request, qs.order_by('book', 'created_at'))
     return {'active': 'reservations', 'page_title': 'Navbatlar',
             'reservations': page, 'page_obj': page, 'q': q}
 
 
-@library_admin_role_required
+@require_perm(Perms.CIRC_HOLDS)
 def reservations_view(request):
     ctx = _reservations_ctx(request)
     tpl = 'panel/circulation/_reservations.html' if getattr(request, 'htmx', False) else 'panel/circulation/reservations.html'
@@ -112,7 +115,7 @@ def reservations_view(request):
 
 
 @require_POST
-@library_admin_role_required
+@require_perm(Perms.CIRC_HOLDS)
 def reservation_cancel(request, pk):
     res = get_object_or_404(Reservation, pk=pk)
     res.status = Reservation.Status.CANCELLED
@@ -123,7 +126,7 @@ def reservation_cancel(request, pk):
 # ============================================================ Jarimalar
 
 def _fines_ctx(request):
-    qs = Fine.objects.select_related('student__user', 'rental__copy__book')
+    qs = Fine.objects.select_related('patron__user', 'rental__copy__book')
     view = _param(request, 'view', 'unpaid')
     if view == 'unpaid':
         qs = qs.filter(is_paid=False)
@@ -131,15 +134,15 @@ def _fines_ctx(request):
         qs = qs.filter(is_paid=True)
     q = _param(request, 'q').strip()
     if q:
-        qs = qs.filter(Q(student__user__first_name__icontains=q) |
-                       Q(student__user__username__icontains=q))
+        qs = qs.filter(Q(patron__user__first_name__icontains=q) |
+                       Q(patron__user__username__icontains=q))
     total = Fine.objects.filter(is_paid=False).aggregate(s=Sum('amount'))['s'] or 0
     page = _paginate(request, qs.order_by('-created_at'))
     return {'active': 'fines', 'page_title': 'Jarimalar', 'fines': page, 'page_obj': page,
             'view': view, 'q': q, 'total_unpaid': total}
 
 
-@library_admin_role_required
+@require_perm(Perms.BILLING_CHARGE)
 def fines_view(request):
     ctx = _fines_ctx(request)
     tpl = 'panel/circulation/_fines.html' if getattr(request, 'htmx', False) else 'panel/circulation/fines.html'
@@ -147,7 +150,7 @@ def fines_view(request):
 
 
 @require_POST
-@library_admin_role_required
+@require_perm(Perms.BILLING_COLLECT)
 def fine_mark_paid(request, pk):
     services.mark_fine_paid(get_object_or_404(Fine, pk=pk))
     return render(request, 'panel/circulation/_fines.html', _fines_ctx(request))

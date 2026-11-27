@@ -1,5 +1,13 @@
 """
-Ijara (circulation) biznes mantig'i — view'lar yupqa, mantiq shu yerda.
+Sirkulyatsiya (ijara) biznes mantig'i — view'lar yupqa, mantiq shu yerda.
+
+P1-B dan boshlab qarz oluvchi — **`Patron`** (kutubxona a'zosi), ya'ni talaba ham,
+xodim/o'qituvchi ham, tashqi o'quvchi ham. Eski `student` (StudentProfile) maydoni
+yozuvlarda vaqtincha to'ldirilib boriladi (eski hisobotlar uchun) va P3'da
+`Loan` modeliga ko'chishda olib tashlanadi.
+
+Muddat va limitlar a'zo TOIFASIDAN olinadi (`PatronCategory`); toifada qiymat
+berilmagan bo'lsa — umumiy `LibrarySettings` zaxira sifatida ishlatiladi.
 """
 from datetime import timedelta
 
@@ -8,31 +16,73 @@ from django.utils.timezone import now
 
 from book_app.models import Copy, Rental
 
-from .models import LibrarySettings, RentalRequest, Reservation
+from .models import Fine, LibrarySettings, RentalRequest, Reservation
 
-# --- So'rovlar (queries) ---
+# --- Yordamchilar ---------------------------------------------------------
+
+
+def student_of(patron):
+    """A'zoga bog'langan StudentProfile (bo'lsa) — eski maydonni to'ldirish uchun."""
+    if patron is None or not patron.user_id:
+        return None
+    return getattr(patron.user, 'student_profile', None)
+
+
+def notify_patron(patron, title, message, **kwargs):
+    """A'zoga bildirishnoma (HEMIS'siz a'zoda foydalanuvchi bo'lmasligi mumkin)."""
+    if patron is None or not patron.user_id:
+        return
+    from notifications.services import notify
+    notify(patron.user, title, message, **kwargs)
+
+
+def loan_days_for(patron):
+    settings = LibrarySettings.load()
+    if patron is not None and patron.category.default_loan_days:
+        return patron.category.default_loan_days
+    return settings.rental_days
+
+
+def loan_limit_for(patron):
+    settings = LibrarySettings.load()
+    if patron is not None and patron.category.loan_limit:
+        return patron.category.loan_limit
+    return settings.max_active_rentals
+
+
+def hold_limit_for(patron):
+    if patron is not None and patron.category.hold_limit:
+        return patron.category.hold_limit
+    return 0
+
+
+# --- So'rovlar (queries) --------------------------------------------------
 
 def available_copies(book):
     return Copy.objects.filter(book=book, is_available=True).count()
 
 
-def student_active_rental(student, book):
+def patron_active_rental(patron, book):
     return (Rental.objects
-            .filter(student=student, copy__book=book, return_date__isnull=True)
+            .filter(patron=patron, copy__book=book, return_date__isnull=True)
             .first())
 
 
-def student_pending_request(student, book):
+def patron_pending_request(patron, book):
     return (RentalRequest.objects
-            .filter(student=student, book=book, status=RentalRequest.Status.PENDING)
+            .filter(patron=patron, book=book, status=RentalRequest.Status.PENDING)
             .first())
 
 
-def student_reservation(student, book):
+def patron_reservation(patron, book):
     return (Reservation.objects
-            .filter(student=student, book=book,
+            .filter(patron=patron, book=book,
                     status__in=[Reservation.Status.WAITING, Reservation.Status.AVAILABLE])
             .first())
+
+
+def active_loans_count(patron):
+    return Rental.objects.filter(patron=patron, return_date__isnull=True).count()
 
 
 def reservation_position(reservation):
@@ -47,41 +97,52 @@ def reservation_position(reservation):
     return earlier + 1
 
 
-def book_action_context(student, book):
-    """Kitob detali/amallar uchun talabaning shu kitobga nisbatan holati."""
-    reservation = student_reservation(student, book) if student else None
+def book_action_context(patron, book):
+    """Kitob sahifasidagi amallar uchun a'zoning shu kitobga nisbatan holati."""
+    reservation = patron_reservation(patron, book) if patron else None
+    can_borrow, borrow_block_reason = (patron.can_borrow() if patron else (False, ""))
     return {
         'book': book,
-        'is_student': student is not None,
+        'patron': patron,
+        # Shablonlarda eski nom ham ishlatiladi — ikkalasi bir xil ma'noda
+        'is_student': patron is not None,
+        'can_borrow': can_borrow,
+        'borrow_block_reason': borrow_block_reason,
         'avail': available_copies(book),
-        'active_rental': student_active_rental(student, book) if student else None,
-        'pending_request': student_pending_request(student, book) if student else None,
+        'active_rental': patron_active_rental(patron, book) if patron else None,
+        'pending_request': patron_pending_request(patron, book) if patron else None,
         'reservation': reservation,
         'reservation_pos': reservation_position(reservation) if reservation else None,
     }
 
 
-# --- Amallar (actions) ---
+# --- A'zo amallari --------------------------------------------------------
 
-def create_rental_request(student, book):
-    if student_pending_request(student, book):
+def create_rental_request(patron, book):
+    if patron is None:
+        return None, "Kutubxona a'zoligi topilmadi."
+
+    allowed, reason = patron.can_borrow()
+    if not allowed:
+        return None, reason
+
+    if patron_pending_request(patron, book):
         return None, "Bu kitobga so'rovingiz allaqachon yuborilgan."
-    if student_active_rental(student, book):
+    if patron_active_rental(patron, book):
         return None, "Bu kitob hozir sizda ijarada."
     if available_copies(book) == 0:
         return None, "Mavjud nusxa yo'q — navbatga yozilishingiz mumkin."
 
-    settings = LibrarySettings.load()
-    active = Rental.objects.filter(student=student, return_date__isnull=True).count()
-    if active >= settings.max_active_rentals:
-        return None, f"Bir vaqtda {settings.max_active_rentals} tadan ortiq kitob olib bo'lmaydi."
+    limit = loan_limit_for(patron)
+    if limit and active_loans_count(patron) >= limit:
+        return None, f"Bir vaqtda {limit} tadan ortiq kitob olib bo'lmaydi."
 
-    req = RentalRequest.objects.create(student=student, book=book)
+    req = RentalRequest.objects.create(patron=patron, student=student_of(patron), book=book)
     return req, "So'rov yuborildi. Kutubxonachi tasdiqlashini kuting."
 
 
-def cancel_rental_request(student, book):
-    req = student_pending_request(student, book)
+def cancel_rental_request(patron, book):
+    req = patron_pending_request(patron, book)
     if not req:
         return False, "Bekor qilinadigan so'rov topilmadi."
     req.status = RentalRequest.Status.CANCELLED
@@ -90,17 +151,33 @@ def cancel_rental_request(student, book):
     return True, "So'rov bekor qilindi."
 
 
-def create_reservation(student, book):
-    if student_reservation(student, book):
+def create_reservation(patron, book):
+    if patron is None:
+        return None, "Kutubxona a'zoligi topilmadi."
+
+    allowed, reason = patron.can_borrow()
+    if not allowed:
+        return None, reason
+
+    if patron_reservation(patron, book):
         return None, "Siz allaqachon navbatdasiz."
-    if student_active_rental(student, book):
+    if patron_active_rental(patron, book):
         return None, "Bu kitob hozir sizda ijarada."
-    res = Reservation.objects.create(student=student, book=book)
+
+    limit = hold_limit_for(patron)
+    if limit:
+        active = Reservation.objects.filter(
+            patron=patron,
+            status__in=[Reservation.Status.WAITING, Reservation.Status.AVAILABLE]).count()
+        if active >= limit:
+            return None, f"Bir vaqtda {limit} tadan ortiq navbatga yozilib bo'lmaydi."
+
+    res = Reservation.objects.create(patron=patron, student=student_of(patron), book=book)
     return res, "Navbatga yozildingiz. Kitob bo'shaganda xabar olasiz."
 
 
-def cancel_reservation(student, book):
-    res = student_reservation(student, book)
+def cancel_reservation(patron, book):
+    res = patron_reservation(patron, book)
     if not res:
         return False, "Bekor qilinadigan navbat topilmadi."
     res.status = Reservation.Status.CANCELLED
@@ -108,11 +185,11 @@ def cancel_reservation(student, book):
     return True, "Navbat bekor qilindi."
 
 
-# --- Kutubxonachi amallari ---
+# --- Kutubxonachi amallari ------------------------------------------------
 
 @transaction.atomic
 def approve_request(req, librarian=None):
-    """So'rovni tasdiqlaydi: bo'sh nusxa biriktiradi va Rental yaratadi."""
+    """So'rovni tasdiqlaydi: bo'sh nusxa biriktiradi va ijara yaratadi."""
     if req.status != RentalRequest.Status.PENDING:
         return None, "Bu so'rov allaqachon hal qilingan."
 
@@ -123,14 +200,14 @@ def approve_request(req, librarian=None):
     if copy is None:
         return None, "Mavjud nusxa yo'q. Tasdiqlab bo'lmaydi."
 
-    settings = LibrarySettings.load()
     today = now().date()
     rental = Rental.objects.create(
         copy=copy,
-        student=req.student,
+        patron=req.patron,
+        student=req.student or student_of(req.patron),
         library_admin_checked=True,
         borrowed_date=today,
-        due_date=today + timedelta(days=settings.rental_days),
+        due_date=today + timedelta(days=loan_days_for(req.patron)),
     )
     copy.is_available = False
     copy.save(update_fields=['is_available'])
@@ -141,11 +218,18 @@ def approve_request(req, librarian=None):
     req.decided_by = librarian
     req.save(update_fields=['status', 'rental', 'decided_at', 'decided_by'])
 
+    recalc_patron_counters(req.patron)
+
     from notifications.models import Notification
-    from notifications.services import notify
-    notify(req.student.user, "So'rovingiz tasdiqlandi",
-           f"«{req.book.title}» — kutubxonadan olishingiz mumkin. Qaytarish: {rental.due_date}.",
-           type=Notification.Type.REQUEST_APPROVED, link='/circulation/my-rentals/')
+    notify_patron(req.patron, "So'rovingiz tasdiqlandi",
+                  f"«{req.book.title}» — kutubxonadan olishingiz mumkin. "
+                  f"Qaytarish: {rental.due_date}.",
+                  type=Notification.Type.REQUEST_APPROVED, link='/circulation/my-rentals/')
+
+    from audit.models import ActionLog
+    from audit.services import log_action
+    log_action(ActionLog.Action.CHECKOUT, obj=rental,
+               note=f"{req.book.title} — {rental.borrower_name}")
     return rental, "So'rov tasdiqlandi."
 
 
@@ -159,28 +243,28 @@ def reject_request(req, librarian=None, note=""):
     req.save(update_fields=['status', 'note', 'decided_at', 'decided_by'])
 
     from notifications.models import Notification
-    from notifications.services import notify
-    notify(req.student.user, "So'rovingiz rad etildi",
-           f"«{req.book.title}» so'rovi rad etildi." + (f" Sabab: {note}" if note else ""),
-           type=Notification.Type.REQUEST_REJECTED, link=f'/books/{req.book_id}/')
+    notify_patron(req.patron, "So'rovingiz rad etildi",
+                  f"«{req.book.title}» so'rovi rad etildi." + (f" Sabab: {note}" if note else ""),
+                  type=Notification.Type.REQUEST_REJECTED, link=f'/books/{req.book_id}/')
     return True, "So'rov rad etildi."
 
 
 @transaction.atomic
 def return_rental(rental):
-    """Ijarani qaytarish: nusxani bo'shatadi va navbatdagi 1-talabaga ushlab turadi."""
+    """Ijarani qaytarish: nusxani bo'shatadi va navbatdagi 1-a'zoga ushlab turadi."""
     if rental.return_date is not None:
         return False, "Bu ijara allaqachon qaytarilgan."
 
-    today = now().date()
-    rental.return_date = today
+    rental.return_date = now().date()
     rental.save(update_fields=['return_date'])
 
     copy = rental.copy
     copy.is_available = True
     copy.save(update_fields=['is_available'])
 
-    # Navbatdagi 1-talabaga kitobni ushlab turamiz
+    recalc_patron_counters(rental.patron)
+
+    # Navbatdagi 1-a'zoga kitobni ushlab turamiz
     settings = LibrarySettings.load()
     nxt = (Reservation.objects
            .filter(book=copy.book, status=Reservation.Status.WAITING)
@@ -192,11 +276,16 @@ def return_rental(rental):
         nxt.save(update_fields=['status', 'hold_until'])
 
         from notifications.models import Notification
-        from notifications.services import notify
-        notify(nxt.student.user, "Navbatdagi kitob bo'shadi",
-               f"«{copy.book.title}» bo'shadi — {settings.reservation_hold_days} kun ichida ijaraga so'rang.",
-               type=Notification.Type.RESERVATION_AVAILABLE, link=f'/books/{copy.book_id}/')
+        notify_patron(nxt.patron, "Navbatdagi kitob bo'shadi",
+                      f"«{copy.book.title}» bo'shadi — {settings.reservation_hold_days} kun "
+                      f"ichida ijaraga so'rang.",
+                      type=Notification.Type.RESERVATION_AVAILABLE,
+                      link=f'/books/{copy.book_id}/')
 
+    from audit.models import ActionLog
+    from audit.services import log_action
+    log_action(ActionLog.Action.CHECKIN, obj=rental,
+               note=f"{copy.book.title} — {rental.borrower_name}")
     return True, "Kitob qaytarildi."
 
 
@@ -206,4 +295,31 @@ def mark_fine_paid(fine):
     fine.is_paid = True
     fine.paid_at = now()
     fine.save(update_fields=['is_paid', 'paid_at'])
+    recalc_patron_counters(fine.patron)
+
+    from audit.models import ActionLog
+    from audit.services import log_action
+    log_action(ActionLog.Action.PAYMENT, obj=fine,
+               note=f"{fine.borrower_name} — {fine.amount} so'm")
     return True, "Jarima to'langan deb belgilandi."
+
+
+# --- Hisoblagichlar -------------------------------------------------------
+
+def recalc_patron_counters(patron):
+    """A'zo kartasidagi denormalizatsiya maydonlarini qayta hisoblaydi."""
+    if patron is None:
+        return
+
+    today = now().date()
+    active = Rental.objects.filter(patron=patron, return_date__isnull=True)
+    overdue = active.filter(due_date__lt=today).count()
+    debt = sum(
+        (fine.amount for fine in Fine.objects.filter(patron=patron, is_paid=False)),
+        start=0,
+    )
+
+    patron.active_loans_count = active.count()
+    patron.overdue_count = overdue
+    patron.balance = debt
+    patron.save(update_fields=['active_loans_count', 'overdue_count', 'balance', 'updated_at'])

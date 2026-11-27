@@ -1,0 +1,81 @@
+{% extends "panel/base.html" %}
+{% comment %}Qo'lda a'zo qo'shish/tahrirlash (odatda tashqi o'quvchi).{% endcomment %}
+
+{% block title %}{{ page_title }} — XIU Kutubxona{% endblock %}
+
+{% block panel_content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">{{ page_title }}</h1>
+    <p class="page-sub">
+      {% if is_create %}HEMIS'da yo'q o'quvchi uchun qo'lda bilet ochiladi (tashqi o'quvchi, mehmon).
+      {% else %}Bilet ma'lumotlari va a'zolik shartlari.{% endif %}
+    </p>
+  </div>
+  <a href="{% url 'panel:members' %}" class="btn btn-ghost btn-sm">Ro'yxatga qaytish</a>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="max-w-3xl">
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+    <div class="card card-body mb-4 border-l-4 border-l-[color:var(--color-danger-500)]">
+      {{ form.non_field_errors }}
+    </div>
+  {% endif %}
+
+  <div class="card mb-4">
+    <div class="card-head"><h2 class="card-title">Bilet</h2></div>
+    <div class="card-body grid gap-4 sm:grid-cols-3">
+      {% for field in form %}
+        {% if field.name in "card_number,category,status" %}
+          <div class="field">
+            <label class="label {% if field.field.required %}label-required{% endif %}" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
+            {% for error in field.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-head">
+      <h2 class="card-title">Shaxsiy ma'lumotlar</h2>
+      {% if patron.user %}<span class="help">HEMIS a'zosi — ismi profildan olinadi</span>{% endif %}
+    </div>
+    <div class="card-body grid gap-4 sm:grid-cols-2">
+      {% for field in form %}
+        {% if field.name in "full_name,phone,email,birth_date,address,photo" %}
+          <div class="field {% if field.name == 'address' %}sm:col-span-2{% endif %}">
+            <label class="label {% if field.field.required %}label-required{% endif %}" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-head"><h2 class="card-title">A'zolik</h2></div>
+    <div class="card-body grid gap-4 sm:grid-cols-3">
+      {% for field in form %}
+        {% if field.name in "expires_on,deposit_amount,note" %}
+          <div class="field {% if field.name == 'note' %}sm:col-span-3{% endif %}">
+            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <button type="submit" class="btn btn-primary">{% if is_create %}A'zo qo'shish{% else %}Saqlash{% endif %}</button>
+    <a href="{% if patron %}{% url 'panel:member_detail' patron.pk %}{% else %}{% url 'panel:members' %}{% endif %}" class="btn btn-secondary">Bekor qilish</a>
+  </div>
+</form>
+{% endblock %}

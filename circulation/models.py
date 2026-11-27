@@ -40,9 +40,12 @@ class RentalRequest(models.Model):
         REJECTED = 'REJECTED', _('Rad etilgan')
         CANCELLED = 'CANCELLED', _('Bekor qilingan')
 
+    patron = models.ForeignKey(
+        'user_app.Patron', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='rental_requests', verbose_name="Kutubxona a'zosi")
     student = models.ForeignKey(
-        'user_app.StudentProfile', on_delete=models.CASCADE,
-        related_name='rental_requests', verbose_name="Talaba")
+        'user_app.StudentProfile', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='rental_requests', verbose_name="Talaba (eski)")
     book = models.ForeignKey(
         'book_app.Book', on_delete=models.CASCADE,
         related_name='rental_requests', verbose_name="Kitob")
@@ -66,13 +69,19 @@ class RentalRequest(models.Model):
         verbose_name_plural = "Ijara so'rovlari"
         ordering = ['-created_at']
         constraints = [
-            # Bir talaba bir kitobga faqat bitta ochiq (PENDING) so'rov yubora oladi
-            models.UniqueConstraint(fields=['student', 'book'], condition=Q(status='PENDING'),
-                                    name='uniq_pending_request_per_student_book'),
+            # Bir a'zo bir kitobga faqat bitta ochiq (PENDING) so'rov yubora oladi
+            models.UniqueConstraint(fields=['patron', 'book'], condition=Q(status='PENDING'),
+                                    name='uniq_pending_request_per_patron_book'),
         ]
 
     def __str__(self):
-        return f"{self.book.title} — {self.student.user.username} ({self.get_status_display()})"
+        return f"{self.book.title} — {self.borrower_name} ({self.get_status_display()})"
+
+    @property
+    def borrower_name(self):
+        if self.patron_id:
+            return self.patron.display_name
+        return self.student.user.get_full_name() if self.student_id else "—"
 
 
 class Reservation(models.Model):
@@ -84,9 +93,12 @@ class Reservation(models.Model):
         EXPIRED = 'EXPIRED', _("Muddati o'tdi")
         CANCELLED = 'CANCELLED', _('Bekor qilingan')
 
+    patron = models.ForeignKey(
+        'user_app.Patron', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='reservations', verbose_name="Kutubxona a'zosi")
     student = models.ForeignKey(
-        'user_app.StudentProfile', on_delete=models.CASCADE,
-        related_name='reservations', verbose_name="Talaba")
+        'user_app.StudentProfile', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='reservations', verbose_name="Talaba (eski)")
     book = models.ForeignKey(
         'book_app.Book', on_delete=models.CASCADE,
         related_name='reservations', verbose_name="Kitob")
@@ -104,10 +116,17 @@ class Reservation(models.Model):
         ordering = ['created_at']
         indexes = [
             models.Index(fields=['book', 'status']),
+            models.Index(fields=['patron', 'status']),
         ]
 
     def __str__(self):
-        return f"{self.book.title} — {self.student.user.username} ({self.get_status_display()})"
+        return f"{self.book.title} — {self.borrower_name} ({self.get_status_display()})"
+
+    @property
+    def borrower_name(self):
+        if self.patron_id:
+            return self.patron.display_name
+        return self.student.user.get_full_name() if self.student_id else "—"
 
 
 class Fine(models.Model):
@@ -115,9 +134,12 @@ class Fine(models.Model):
     rental = models.OneToOneField(
         'book_app.Rental', on_delete=models.CASCADE,
         related_name='fine', verbose_name="Ijara")
+    patron = models.ForeignKey(
+        'user_app.Patron', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='fines', verbose_name="Kutubxona a'zosi")
     student = models.ForeignKey(
-        'user_app.StudentProfile', on_delete=models.CASCADE,
-        related_name='fines', verbose_name="Talaba")
+        'user_app.StudentProfile', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='fines', verbose_name="Talaba (eski)")
 
     days_overdue = models.PositiveIntegerField(default=0, verbose_name="Kechikkan kunlar")
     amount = models.DecimalField(
@@ -133,4 +155,10 @@ class Fine(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.student.user.username} — {self.amount} so'm"
+        return f"{self.borrower_name} — {self.amount} so'm"
+
+    @property
+    def borrower_name(self):
+        if self.patron_id:
+            return self.patron.display_name
+        return self.student.user.get_full_name() if self.student_id else "—"

@@ -82,6 +82,8 @@ TEMPLATES = [
                 'dashboard_app.context_processors.librarian',
                 # Funksiya flaglari ({{ flags.<nom> }})
                 'core.context_processors.feature_flags',
+                # Ruxsat flaglari ({{ perms_flags }})
+                'core.context_processors.permissions',
             ],
         },
     },
@@ -296,6 +298,23 @@ UNFOLD = {
                         "title": _("Bildirishnomalar"),
                         "icon": "notifications",
                         "link": reverse_lazy("admin:notifications_notification_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("A'zolik"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Kutubxona a'zolari"),
+                        "icon": "card_membership",
+                        "link": reverse_lazy("admin:user_app_patron_changelist"),
+                        "badge": "core.unfold_badges.patron_count",
+                    },
+                    {
+                        "title": _("A'zo toifalari"),
+                        "icon": "groups_2",
+                        "link": reverse_lazy("admin:user_app_patroncategory_changelist"),
                     },
                 ],
             },

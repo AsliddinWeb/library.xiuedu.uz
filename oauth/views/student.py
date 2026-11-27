@@ -11,6 +11,7 @@ from django.views import View
 
 from oauth.client import oAuth2Client
 from user_app.models import EmployeProfile, Role, StudentProfile, User
+from user_app.services import sync_patron
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +121,13 @@ class AuthCallbackView(View):
 
         if not user:
             return JsonResponse({'status': False, 'error': "Foydalanuvchi ma'lumotlarini qayta ishlashda xatolik"}, status=400)
+
+        # Kutubxona a'zoligi: talaba ham, xodim ham shu yerda bilet oladi.
+        # Xatolik kirishni to'xtatmasligi kerak — a'zolikni keyin xodim ocha oladi.
+        try:
+            sync_patron(user)
+        except Exception:
+            logger.exception("A'zolikni sinxronlashda xatolik: %s", user.username)
 
         login(request, user)
         return redirect('dashboard')

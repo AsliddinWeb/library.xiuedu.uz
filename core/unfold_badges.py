@@ -88,3 +88,15 @@ def pending_reviews(request):
     """Moderatsiya kutayotgan sharhlar."""
     from engagement.models import Review
     return _safe(lambda: Review.objects.filter(is_approved=False).count())
+
+
+# --- A'zolik ---
+
+def patron_count(request):
+    from user_app.models import Patron
+    return _safe(lambda: Patron.objects.count())
+
+
+def blocked_patrons(request):
+    from user_app.models import Patron
+    return _safe(lambda: Patron.objects.filter(status=Patron.Status.BLOCKED).count())

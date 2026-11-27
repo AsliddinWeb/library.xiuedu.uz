@@ -1,0 +1,59 @@
+{% comment %}A'zolar jadvali (HTMX target).{% endcomment %}
+{% if members %}
+<div class="table-wrap">
+  <table class="table table-zebra">
+    <thead>
+      <tr>
+        <th>Bilet</th>
+        <th>F.I.Sh.</th>
+        <th>Toifa</th>
+        <th>Guruh / bo'lim</th>
+        <th>Holati</th>
+        <th class="table-num">Ijara</th>
+        <th class="table-num">Qarz</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in members %}
+      <tr>
+        <td class="font-mono text-xs">{{ m.card_number }}</td>
+        <td class="font-medium">
+          <a href="{% url 'panel:member_detail' m.pk %}" class="hover:underline">{{ m.display_name }}</a>
+          {% if not m.user_id %}<span class="badge badge-neutral ml-1">qo'lda</span>{% endif %}
+        </td>
+        <td class="text-[color:var(--color-content-muted)]">{{ m.category.name }}</td>
+        <td class="text-[color:var(--color-content-muted)]">
+          {% if m.user.student_profile %}{{ m.user.student_profile.group|default:"—" }}
+          {% elif m.user.employe_profile %}{{ m.user.employe_profile.department|default:"—"|truncatechars:28 }}
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% if m.status == 'ACTIVE' %}{% include "ui/_badge.html" with text="Faol" variant="success" dot=1 %}
+          {% elif m.status == 'BLOCKED' %}{% include "ui/_badge.html" with text="Bloklangan" variant="danger" dot=1 %}
+          {% elif m.status == 'DEBT' %}{% include "ui/_badge.html" with text="Qarzdor" variant="warning" dot=1 %}
+          {% elif m.status == 'EXPIRED' %}{% include "ui/_badge.html" with text="Muddati o'tgan" variant="warning" dot=1 %}
+          {% else %}{% include "ui/_badge.html" with text="Yopilgan" variant="neutral" dot=1 %}{% endif %}
+        </td>
+        <td class="table-num">{{ m.active_loans_count }}</td>
+        <td class="table-num">{% if m.balance %}<span class="text-[color:var(--color-danger-700)]">{{ m.balance|floatformat:0 }}</span>{% else %}—{% endif %}</td>
+        <td>
+          <div class="table-actions">
+            <a href="{% url 'panel:member_detail' m.pk %}" class="btn btn-ghost btn-icon btn-sm" aria-label="Ko'rish">
+              {% include "ui/_icon.html" with name="external" class="size-4" %}
+            </a>
+            <a href="{% url 'panel:member_edit' m.pk %}" class="btn btn-ghost btn-icon btn-sm" aria-label="Tahrirlash">
+              {% include "ui/_icon.html" with name="pencil" class="size-4" %}
+            </a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% include "ui/_pager.html" with page_obj=page_obj hx_get="/panel/members/" hx_target="#members-table" query=query %}
+{% else %}
+  {% include "ui/_empty.html" with icon="users" title="A'zo topilmadi" text="Qidiruv shartlarini o'zgartiring yoki yangi a'zo qo'shing." action_url="/panel/members/new/" action_label="Yangi a'zo" %}
+{% endif %}

@@ -18,7 +18,7 @@
             <div class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-navy-100 bg-paper p-5 shadow-soft">
                 <div class="min-w-0">
                     <p class="truncate font-serif text-base font-semibold text-navy-900">{{ req.book.title }}</p>
-                    <p class="mt-1 text-sm text-navy-500">{{ req.student.user.get_full_name }} · {{ req.created_at|date:"d M, H:i" }}</p>
+                    <p class="mt-1 text-sm text-navy-500">{{ req.borrower_name }} · {{ req.created_at|date:"d M, H:i" }}</p>
                 </div>
                 <div class="flex flex-none items-center gap-2">
                     <button hx-post="{% url 'circulation:approve_request' req.pk %}" hx-target="#manage-panel" hx-swap="outerHTML"
@@ -46,7 +46,7 @@
             <div class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-navy-100 bg-paper p-5 shadow-soft">
                 <div class="min-w-0">
                     <p class="truncate font-serif text-base font-semibold text-navy-900">{{ rental.copy.book.title }}</p>
-                    <p class="mt-1 text-sm text-navy-500">{{ rental.student.user.get_full_name }} · {{ rental.copy.inventory_number }}
+                    <p class="mt-1 text-sm text-navy-500">{{ rental.borrower_name }} · {{ rental.copy.inventory_number }}
                         {% if rental.due_date %}· qaytarish {{ rental.due_date }}{% endif %}</p>
                 </div>
                 <div class="flex flex-none items-center gap-3">
@@ -73,7 +73,7 @@
             {% for fine in unpaid_fines %}
             <div class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-navy-100 bg-paper p-5 shadow-soft">
                 <div class="min-w-0">
-                    <p class="truncate font-serif text-base font-semibold text-navy-900">{{ fine.student.user.get_full_name }}</p>
+                    <p class="truncate font-serif text-base font-semibold text-navy-900">{{ fine.borrower_name }}</p>
                     <p class="mt-1 text-sm text-navy-500">{{ fine.rental.copy.book.title }} · {{ fine.days_overdue }} kun · <span class="font-semibold text-red-600">{{ fine.amount }} so'm</span></p>
                 </div>
                 <button hx-post="{% url 'circulation:mark_fine_paid' fine.pk %}" hx-target="#manage-panel" hx-swap="outerHTML"

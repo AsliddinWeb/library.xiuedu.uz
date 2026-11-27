@@ -29,7 +29,7 @@
   <p class="nav-group-title">Katalog va fond</p>
   <a href="/panel/books/" class="nav-link {% if '/panel/books/' in request.path %}nav-link-active{% endif %}">
     {% include "ui/_icon.html" with name="book" class="size-4" %}<span>Kitoblar</span>
-    {% if books_count %}<span class="nav-badge">{{ books_count }}</span>{% endif %}
+    
   </a>
   <a href="/panel/genres/" class="nav-link {% if '/panel/genres/' in request.path %}nav-link-active{% endif %}">
     {% include "ui/_icon.html" with name="library" class="size-4" %}<span>Kataloglar</span>
@@ -44,26 +44,28 @@
   <p class="nav-group-title">Sirkulyatsiya</p>
   <a href="/panel/requests/" class="nav-link {% if '/panel/requests/' in request.path %}nav-link-active{% endif %}">
     {% include "ui/_icon.html" with name="inbox" class="size-4" %}<span>So'rovlar</span>
-    {% if pending_requests %}<span class="nav-badge">{{ pending_requests }}</span>{% endif %}
+    {% if lib_stats.pending_requests %}<span class="nav-badge">{{ lib_stats.pending_requests }}</span>{% endif %}
   </a>
   <a href="/panel/rentals/" class="nav-link {% if '/panel/rentals/' in request.path %}nav-link-active{% endif %}">
     {% include "ui/_icon.html" with name="clock" class="size-4" %}<span>Faol ijaralar</span>
+    {% if lib_stats.active_rentals %}<span class="nav-badge">{{ lib_stats.active_rentals }}</span>{% endif %}
   </a>
   <a href="/panel/reservations/" class="nav-link {% if '/panel/reservations/' in request.path %}nav-link-active{% endif %}">
     {% include "ui/_icon.html" with name="users" class="size-4" %}<span>Navbatlar</span>
   </a>
   <a href="/panel/fines/" class="nav-link {% if '/panel/fines/' in request.path %}nav-link-active{% endif %}">
     {% include "ui/_icon.html" with name="cash" class="size-4" %}<span>Jarimalar</span>
-    {% if unpaid_fines %}<span class="nav-badge">{{ unpaid_fines }}</span>{% endif %}
+    {% if lib_stats.unpaid_fines %}<span class="nav-badge">{{ lib_stats.unpaid_fines }}</span>{% endif %}
   </a>
 
   <p class="nav-group-title">A'zolar</p>
   <a href="/panel/members/" class="nav-link {% if '/panel/members/' in request.path %}nav-link-active{% endif %}">
     {% include "ui/_icon.html" with name="users" class="size-4" %}<span>A'zolar</span>
+    {% if lib_stats.patrons %}<span class="nav-badge">{{ lib_stats.patrons }}</span>{% endif %}
   </a>
   <a href="/panel/reviews/" class="nav-link {% if '/panel/reviews/' in request.path %}nav-link-active{% endif %}">
     {% include "ui/_icon.html" with name="check" class="size-4" %}<span>Sharh moderatsiyasi</span>
-    {% if pending_reviews %}<span class="nav-badge">{{ pending_reviews }}</span>{% endif %}
+    {% if lib_stats.pending_reviews %}<span class="nav-badge">{{ lib_stats.pending_reviews }}</span>{% endif %}
   </a>
 
   {% if flags.acquisitions or flags.serials %}

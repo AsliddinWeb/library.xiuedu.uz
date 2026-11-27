@@ -4,7 +4,7 @@ from django.views.decorators.http import require_POST
 
 from book_app.models import Book
 from reading.models import ReadingHistory
-from user_app.utils import library_admin_role_required
+from user_app.permissions import Perms, require_perm
 
 from . import services
 from .models import Favorite, Review
@@ -68,14 +68,14 @@ def _render_moderation(request, message=None):
     })
 
 
-@library_admin_role_required
+@require_perm(Perms.MODERATE_REVIEWS)
 def moderate(request):
     # Eski sahifa — endi kutubxonachi paneli (/panel/reviews/) bilan almashtirildi
     return redirect('panel:reviews')
 
 
 @require_POST
-@library_admin_role_required
+@require_perm(Perms.MODERATE_REVIEWS)
 def approve_review(request, pk):
     review = get_object_or_404(Review, pk=pk)
     services.approve_review(review)
@@ -83,7 +83,7 @@ def approve_review(request, pk):
 
 
 @require_POST
-@library_admin_role_required
+@require_perm(Perms.MODERATE_REVIEWS)
 def reject_review(request, pk):
     review = get_object_or_404(Review, pk=pk)
     services.reject_review(review)

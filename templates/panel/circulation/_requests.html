@@ -14,7 +14,7 @@
             {% for req in requests %}
             <tr class="transition hover:bg-navy-50/40">
                 <td class="px-4 py-3 font-medium text-navy-900">{{ req.book.title }}</td>
-                <td class="px-4 py-3 text-navy-600">{{ req.student.user.get_full_name }}</td>
+                <td class="px-4 py-3 text-navy-600">{{ req.borrower_name }}</td>
                 <td class="px-4 py-3 text-navy-500">{{ req.created_at|date:"d.m.Y H:i" }}</td>
                 <td class="px-4 py-3">
                     <span class="rounded-full px-2.5 py-0.5 text-xs font-medium {% if req.status == 'PENDING' %}bg-gold-50 text-gold-700{% elif req.status == 'APPROVED' %}bg-emerald-50 text-emerald-700{% elif req.status == 'REJECTED' %}bg-red-50 text-red-600{% else %}bg-navy-50 text-navy-500{% endif %}">{{ req.get_status_display }}</span>

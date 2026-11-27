@@ -3,7 +3,9 @@ from django.test import TestCase
 from book_app.models import Book, Copy, Genre
 from circulation import services as circ
 from circulation.models import RentalRequest
+from core.testing import make_employee, make_student
 from user_app.models import User
+from user_app.services import get_or_create_patron
 
 from .models import Notification
 from .services import notify, unread_count
@@ -20,13 +22,40 @@ class NotifyTests(TestCase):
 
 
 class EventNotificationTests(TestCase):
-    def test_approve_request_notifies_student(self):
-        g = Genre.objects.create(name='G')
-        book = Book.objects.create(title='B', category=g)
-        Copy.objects.create(book=book, inventory_number='1', is_available=True)
-        student = User.objects.create(username='s', user_type='STUDENT').student_profile
-        req = RentalRequest.objects.create(student=student, book=book)
+    def setUp(self):
+        genre = Genre.objects.create(name='G')
+        self.book = Book.objects.create(title='B', category=genre)
+        Copy.objects.create(book=self.book, inventory_number='1', is_available=True)
+
+    def test_approve_request_notifies_patron(self):
+        patron = get_or_create_patron(make_student(username='talaba-n'))
+        req = RentalRequest.objects.create(patron=patron, book=self.book)
+
         circ.approve_request(req)
+
         self.assertTrue(
             Notification.objects.filter(
-                user=student.user, type=Notification.Type.REQUEST_APPROVED).exists())
+                user=patron.user, type=Notification.Type.REQUEST_APPROVED).exists())
+
+    def test_employee_also_gets_notification(self):
+        patron = get_or_create_patron(make_employee(username='xodim-n'))
+        req = RentalRequest.objects.create(patron=patron, book=self.book)
+
+        circ.approve_request(req)
+
+        self.assertTrue(
+            Notification.objects.filter(
+                user=patron.user, type=Notification.Type.REQUEST_APPROVED).exists())
+
+    def test_manual_patron_without_user_is_skipped(self):
+        """HEMIS'siz a'zoda foydalanuvchi yo'q — bildirishnoma yuborilmaydi, xato ham bermaydi."""
+        from user_app.models import Patron, PatronCategory
+        from user_app.services import get_category
+        patron = Patron.objects.create(
+            card_number='XIU-990001', full_name="Tashqi a'zo",
+            category=get_category(PatronCategory.Code.EXTERNAL))
+        req = RentalRequest.objects.create(patron=patron, book=self.book)
+
+        rental, _ = circ.approve_request(req)
+        self.assertIsNotNone(rental)
+        self.assertEqual(Notification.objects.count(), 0)

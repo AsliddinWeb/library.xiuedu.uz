@@ -48,7 +48,12 @@ urlpatterns = [
     path('reviews/<int:pk>/approve/', views.review_approve, name='review_approve'),
     path('reviews/<int:pk>/reject/', views.review_reject, name='review_reject'),
     path('members/', views.members, name='members'),
+    path('members/new/', views.member_create, name='member_create'),
     path('members/<int:pk>/', views.member_detail, name='member_detail'),
+    path('members/<int:pk>/edit/', views.member_edit, name='member_edit'),
+    path('members/<int:pk>/block/', views.member_block, name='member_block'),
+    path('members/<int:pk>/unblock/', views.member_unblock, name='member_unblock'),
+    path('members/<int:pk>/renew/', views.member_renew, name='member_renew'),
     path('analytics/', views.analytics, name='analytics'),
     path('settings/', views.settings_view, name='settings'),
 ]

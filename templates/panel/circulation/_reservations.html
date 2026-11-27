@@ -14,7 +14,7 @@
             {% for res in reservations %}
             <tr class="transition hover:bg-navy-50/40">
                 <td class="px-4 py-3 font-medium text-navy-900">{{ res.book.title }}</td>
-                <td class="px-4 py-3 text-navy-600">{{ res.student.user.get_full_name }}</td>
+                <td class="px-4 py-3 text-navy-600">{{ res.borrower_name }}</td>
                 <td class="px-4 py-3 text-navy-500">{{ res.created_at|date:"d.m.Y" }}</td>
                 <td class="px-4 py-3">
                     {% if res.status == 'AVAILABLE' %}<span class="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Bo'shadi</span>

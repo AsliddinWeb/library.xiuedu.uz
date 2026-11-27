@@ -4,13 +4,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from book_app.models import Author, Genre
-from user_app.utils import library_admin_role_required
+from user_app.permissions import Perms, require_perm
 
 from ..forms import PanelAuthorForm, PanelGenreForm
 
 # ======================================================== Kataloglar (Genre)
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_VIEW)
 def genre_list(request):
     genres = Genre.objects.annotate(books=Count('book')).order_by('order', 'name')
     q = request.GET.get('q', '').strip()
@@ -22,7 +22,7 @@ def genre_list(request):
     return render(request, 'panel/genres/list.html', ctx)
 
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_EDIT)
 def genre_create(request):
     form = PanelGenreForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -33,7 +33,7 @@ def genre_create(request):
                   {'form': form, 'active': 'genres', 'page_title': 'Yangi katalog'})
 
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_EDIT)
 def genre_edit(request, pk):
     genre = get_object_or_404(Genre, pk=pk)
     form = PanelGenreForm(request.POST or None, instance=genre)
@@ -46,7 +46,7 @@ def genre_edit(request, pk):
 
 
 @require_POST
-@library_admin_role_required
+@require_perm(Perms.CATALOG_EDIT)
 def genre_toggle(request, pk):
     genre = get_object_or_404(Genre, pk=pk)
     genre.is_active = not genre.is_active
@@ -56,7 +56,7 @@ def genre_toggle(request, pk):
                   {'genres': genres, 'q': ''})
 
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_DELETE)
 def genre_delete(request, pk):
     genre = get_object_or_404(Genre, pk=pk)
     if request.method == 'POST':
@@ -73,7 +73,7 @@ def genre_delete(request, pk):
 
 # ======================================================== Mualliflar (Author)
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_VIEW)
 def author_list(request):
     authors = Author.objects.annotate(books=Count('book')).order_by('full_name')
     q = request.GET.get('q', '').strip()
@@ -85,7 +85,7 @@ def author_list(request):
     return render(request, 'panel/authors/list.html', ctx)
 
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_EDIT)
 def author_create(request):
     form = PanelAuthorForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -96,7 +96,7 @@ def author_create(request):
                   {'form': form, 'active': 'authors', 'page_title': 'Yangi muallif'})
 
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_EDIT)
 def author_edit(request, pk):
     author = get_object_or_404(Author, pk=pk)
     form = PanelAuthorForm(request.POST or None, instance=author)
@@ -108,7 +108,7 @@ def author_edit(request, pk):
                   {'form': form, 'author': author, 'active': 'authors', 'page_title': 'Muallifni tahrirlash'})
 
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_DELETE)
 def author_delete(request, pk):
     author = get_object_or_404(Author, pk=pk)
     if request.method == 'POST':

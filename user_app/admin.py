@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
+from django.utils.html import format_html, format_html_join
 from unfold.admin import ModelAdmin, StackedInline
 from unfold.decorators import display
 from unfold.forms import AdminPasswordChangeForm
@@ -10,7 +11,8 @@ from unfold.forms import UserChangeForm as BaseUserChangeForm
 from unfold.forms import UserCreationForm as BaseUserCreationForm
 from unfold.widgets import UnfoldAdminSelectWidget
 
-from .models import EmployeProfile, Role, StudentProfile, User
+from .models import EmployeProfile, Patron, PatronCategory, Role, StudentProfile, User
+from .permissions import PERMISSION_GROUPS
 
 
 def _role_field():
@@ -174,5 +176,84 @@ class StudentProfileAdmin(ModelAdmin):
 
 @admin.register(Role)
 class RoleAdmin(ModelAdmin):
-    list_display = ("name", "description")
+    list_display = ("name", "description", "permission_summary")
     search_fields = ("name",)
+    readonly_fields = ("permission_help",)
+    fields = ("name", "description", "permissions", "permission_help")
+
+    @display(description="Ruxsatlar")
+    def permission_summary(self, obj):
+        perms = obj.permissions or []
+        if '*' in perms:
+            return "Barcha ruxsatlar"
+        return f"{len(perms)} ta" if perms else "—"
+
+    @display(description="Mavjud ruxsat kodlari")
+    def permission_help(self, obj):
+        groups = format_html_join(
+            "<br>", "<b>{}:</b> {}",
+            ((group, ", ".join(flag for flag, _ in items)) for group, items in PERMISSION_GROUPS),
+        )
+        return format_html('{}<br><i>"*" — barcha ruxsatlar.</i>', groups)
+
+
+# =============================================================================
+#  A'zolik (Patron)
+# =============================================================================
+
+@admin.register(PatronCategory)
+class PatronCategoryAdmin(ModelAdmin):
+    list_display = ("name", "code", "default_loan_days", "loan_limit", "hold_limit",
+                    "renewals_allowed", "patrons_count", "is_active")
+    list_filter = ("is_active", "requires_deposit")
+    search_fields = ("name", "code")
+    ordering = ("order", "name")
+    fieldsets = (
+        (None, {"fields": ("code", "name", "description", "order", "is_active")}),
+        ("Sirkulyatsiya qoidalari", {
+            "fields": ("default_loan_days", "loan_limit", "hold_limit", "renewals_allowed",
+                       "fine_per_day", "debt_block_amount", "can_borrow_reading_room_items"),
+            "description": "P3'da bu qiymatlar (filial x toifa x nusxa turi) "
+                           "matritsasi bilan to'ldiriladi; hozir standart qiymat sifatida ishlaydi.",
+        }),
+        ("A'zolik", {"fields": ("membership_months", "requires_deposit")}),
+    )
+
+    @display(description="A'zolar")
+    def patrons_count(self, obj):
+        return obj.patrons.count()
+
+
+@admin.register(Patron)
+class PatronAdmin(ModelAdmin):
+    list_display = ("card_number", "display_name_col", "category", "status_badge",
+                    "active_loans_count", "balance", "expires_on")
+    list_filter = ("status", "category", "registered_on")
+    search_fields = ("card_number", "full_name", "phone", "email",
+                     "user__username", "user__first_name", "user__second_name")
+    autocomplete_fields = ("user",)
+    readonly_fields = ("registered_on", "created_at", "updated_at",
+                       "active_loans_count", "overdue_count", "balance")
+    list_select_related = ("user", "category")
+    fieldsets = (
+        (None, {"fields": ("card_number", "category", "status", "user")}),
+        ("HEMIS'siz a'zo ma'lumotlari", {
+            "classes": ("collapse",),
+            "fields": ("full_name", "phone", "email", "birth_date", "address", "photo"),
+            "description": "Faqat qo'lda qo'shilgan (HEMIS'siz) a'zolar uchun to'ldiriladi.",
+        }),
+        ("A'zolik", {"fields": ("registered_on", "expires_on", "deposit_amount")}),
+        ("Cheklov", {"fields": ("block_reason", "blocked_until", "note")}),
+        ("Hisob (avtomatik)", {"fields": ("active_loans_count", "overdue_count", "balance")}),
+    )
+
+    @display(description="F.I.Sh.")
+    def display_name_col(self, obj):
+        return obj.display_name
+
+    @display(description="Holati", label={
+        "Faol": "success", "Bloklangan": "danger", "Qarzdor": "warning",
+        "Muddati o'tgan": "warning", "Yopilgan": "info",
+    })
+    def status_badge(self, obj):
+        return obj.get_status_display()

@@ -53,17 +53,19 @@ def _student_dashboard(request):
     # Ijaralar + eslatmalar
     active_rentals = []
     overdue_count = unpaid_fines = available_res = 0
-    student_profile = getattr(request.user, 'student_profile', None)
-    if student_profile is not None:
+    from user_app.services import get_or_create_patron
+    patron = get_or_create_patron(request.user)
+    if patron is not None:
         active_rentals = list(Rental.objects
-                              .filter(student=student_profile, return_date__isnull=True)
+                              .filter(patron=patron, return_date__isnull=True)
                               .select_related('copy__book'))
         overdue_count = sum(1 for r in active_rentals if r.is_overdue)
-        unpaid_fines = Fine.objects.filter(student=student_profile, is_paid=False).count()
+        unpaid_fines = Fine.objects.filter(patron=patron, is_paid=False).count()
         available_res = Reservation.objects.filter(
-            student=student_profile, status=Reservation.Status.AVAILABLE).count()
+            patron=patron, status=Reservation.Status.AVAILABLE).count()
 
     ctx = {
+        'patron': patron,
         'continue_reading': continue_reading,
         'popular_books': popular_books,
         'recent_books': recent_books,

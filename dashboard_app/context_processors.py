@@ -11,6 +11,7 @@ def librarian(request):
     from book_app.models import Rental
     from circulation.models import Fine, RentalRequest, Reservation
     from engagement.models import Review
+    from user_app.models import Patron
     return {
         'lib_stats': {
             'pending_requests': RentalRequest.objects.filter(
@@ -20,5 +21,6 @@ def librarian(request):
             'reservations': Reservation.objects.filter(
                 status=Reservation.Status.WAITING).count(),
             'unpaid_fines': Fine.objects.filter(is_paid=False).count(),
+            'patrons': Patron.objects.count(),
         }
     }

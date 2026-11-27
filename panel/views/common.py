@@ -9,17 +9,17 @@ from book_app.models import Book, Genre, Rental
 from circulation.models import Fine, RentalRequest, Reservation
 from engagement.models import Review
 from user_app.models import StudentProfile
-from user_app.utils import library_admin_role_required
+from user_app.permissions import Perms, require_perm
 
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_VIEW)
 def dashboard(request):
     today = now().date()
 
     pending = RentalRequest.objects.filter(status=RentalRequest.Status.PENDING)
     overdue_qs = (Rental.objects
                   .filter(return_date__isnull=True, due_date__lt=today)
-                  .select_related('copy__book', 'student__user'))
+                  .select_related('copy__book', 'patron__user'))
 
     stats = {
         'pending_requests': pending.count(),
@@ -46,7 +46,7 @@ def dashboard(request):
         'active': 'dashboard',
         'page_title': 'Boshqaruv paneli',
         'stats': stats,
-        'recent_requests': pending.select_related('book', 'student__user')[:6],
+        'recent_requests': pending.select_related('book', 'patron__user')[:6],
         'overdue': overdue_qs[:6],
         'rentals_chart': json.dumps(rentals_chart),
         'cats_chart': json.dumps(cats_chart),
@@ -54,6 +54,6 @@ def dashboard(request):
     return render(request, 'panel/dashboard.html', ctx)
 
 
-@library_admin_role_required
+@require_perm(Perms.CATALOG_VIEW)
 def coming_soon(request, active='', title='Bo\'lim'):
     return render(request, 'panel/coming_soon.html', {'active': active, 'page_title': title})

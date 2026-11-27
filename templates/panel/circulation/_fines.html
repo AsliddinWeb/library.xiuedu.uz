@@ -16,7 +16,7 @@
             <tbody class="divide-y divide-navy-50">
                 {% for fine in fines %}
                 <tr class="transition hover:bg-navy-50/40">
-                    <td class="px-4 py-3 font-medium text-navy-900">{{ fine.student.user.get_full_name }}</td>
+                    <td class="px-4 py-3 font-medium text-navy-900">{{ fine.borrower_name }}</td>
                     <td class="px-4 py-3 text-navy-600">{{ fine.rental.copy.book.title }}</td>
                     <td class="px-4 py-3 text-navy-500">{{ fine.days_overdue }} kun</td>
                     <td class="px-4 py-3 font-semibold text-navy-900">{{ fine.amount }} so'm</td>

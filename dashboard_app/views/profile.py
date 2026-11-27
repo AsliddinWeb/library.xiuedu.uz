@@ -12,7 +12,7 @@ def profile(request):
     stats = {}
     if student is not None:
         stats = {
-            'rentals': Rental.objects.filter(student=student).count(),
+            'rentals': Rental.objects.filter(patron__user=request.user).count(),
             'favorites': Favorite.objects.filter(user=request.user).count(),
             'reviews': Review.objects.filter(user=request.user).count(),
             'reads': ReadingHistory.objects.filter(user=request.user).count(),

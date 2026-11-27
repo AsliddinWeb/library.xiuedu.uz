@@ -10,7 +10,7 @@
 {# Stat #}
 <div class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
     <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.books }}</p><p class="text-xs text-navy-500">Kitoblar</p></div>
-    <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.students }}</p><p class="text-xs text-navy-500">Talabalar</p></div>
+    <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.patrons }}</p><p class="text-xs text-navy-500">A'zolar</p></div>
     <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.rentals }}</p><p class="text-xs text-navy-500">Jami ijaralar</p></div>
     <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.reads }}</p><p class="text-xs text-navy-500">O'qishlar</p></div>
 </div>
@@ -34,10 +34,14 @@
         <div class="mt-4 h-72"><canvas id="aRented"></canvas></div>
     </div>
     <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
-        <h3 class="font-serif text-base font-semibold text-navy-900">Faol talabalar</h3>
+        <h3 class="font-serif text-base font-semibold text-navy-900">Faol o'quvchilar</h3>
         <div class="mt-4 space-y-2.5">
-            {% for s in active_students %}
-            <div class="flex items-center justify-between text-sm"><span class="truncate text-navy-700">{{ s.user.get_full_name }}</span><span class="font-semibold text-navy-900">{{ s.rc }}</span></div>
+            {% for p in active_patrons %}
+            <div class="flex items-center justify-between text-sm">
+                <span class="truncate text-navy-700">{{ p.display_name }}
+                    <span class="text-xs text-navy-400">· {{ p.category.name }}</span></span>
+                <span class="font-semibold text-navy-900">{{ p.rc }}</span>
+            </div>
             {% empty %}<p class="text-sm text-navy-400">Ma'lumot yo'q.</p>{% endfor %}
         </div>
     </div>

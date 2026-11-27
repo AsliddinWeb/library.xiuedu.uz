@@ -108,8 +108,16 @@ class Copy(models.Model):
 
 
 class Rental(models.Model):
+    """Ijara (P3'da `circulation.Loan`ga aylanadi).
+
+    Qarz oluvchi — `patron`. `student` maydoni eski kod/hisobotlar uchun vaqtincha
+    to'ldirilib boriladi (faqat talabalar uchun) va P3'da olib tashlanadi.
+    """
     copy = models.ForeignKey(Copy, on_delete=models.CASCADE, verbose_name="Nusxa")
-    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, verbose_name="O'quvchi")
+    patron = models.ForeignKey('user_app.Patron', on_delete=models.CASCADE, null=True, blank=True,
+                               related_name='loans', verbose_name="Kutubxona a'zosi")
+    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, null=True, blank=True,
+                                verbose_name="O'quvchi (eski)")
 
     library_admin_checked = models.BooleanField(default=False, verbose_name="Kutubxonachi tasdiqladimi?")
 
@@ -128,9 +136,25 @@ class Rental(models.Model):
             models.UniqueConstraint(fields=['copy'], condition=Q(return_date__isnull=True),
                                     name='uniq_active_rental_per_copy'),
         ]
+        indexes = [
+            models.Index(fields=['patron', 'return_date']),
+        ]
 
     def __str__(self):
-        return f"{self.copy.book.title} ({self.student.user.first_name} {self.student.user.third_name})"
+        return f"{self.copy.book.title} — {self.borrower_name}"
+
+    # --- Qarz oluvchi (patron birlamchi, student — eski yo'l) ---
+    @property
+    def borrower(self):
+        return self.patron
+
+    @property
+    def borrower_name(self):
+        if self.patron_id:
+            return self.patron.display_name
+        if self.student_id:
+            return self.student.user.get_full_name()
+        return "—"
 
     @property
     def is_active(self):
