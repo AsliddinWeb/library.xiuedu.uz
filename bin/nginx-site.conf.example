@@ -1,56 +1,56 @@
-# XIU Library — nginx konfiguratsiyasi namunasi
+# XIU Library — nginx konfiguratsiyasi (v3 uchun)
 # =============================================================================
-# Serverda boshqa loyihalar ham bo'lsa, `bin/server-setup.sh` mavjud
-# konfiguratsiyaga tegmaydi. Shu faylni namuna sifatida ishlatib, o'zingizning
-# /etc/nginx/sites-available/library.xiuedu.uz faylingizni yangilang.
+# Bu fayl XIU serveridagi MAVJUD konfiguratsiya asosida yozilgan
+# (gunicorn unix-socket orqali ishlaydi: /run/library.sock).
 #
-# v3 dan keyin IKKI narsa o'zgardi:
-#   1. /static/  ->  staticfiles/   (ilgari static/ bo'lishi mumkin edi)
-#   2. /protected-media/ — raqamli kitoblar himoyasi uchun SHART
+# O'rnatish:
+#   sudo cp bin/nginx-site.conf.example /etc/nginx/sites-available/library.xiuedu.uz
+#   sudo nginx -t && sudo systemctl reload nginx
 #
-# Yo'llarni o'z serveringizga moslang: /home/ubuntu/projects/library.xiuedu.uz
+# v3 da UCHTA o'zgarish bor — pastda "O'ZGARDI" deb belgilangan.
 # =============================================================================
 
 server {
     listen 80;
-    server_name library.xiuedu.uz www.library.xiuedu.uz;
+    server_name library.xiuedu.uz;
 
-    # Katta ebook/audio fayllarni yuklash uchun
+    # O'ZGARDI (1): katta ebook/audio yuklash uchun.
+    # nginx standarti — atigi 1 MB; busiz 10 MB lik PDF "413" xatosi beradi.
     client_max_body_size 200M;
 
-    # --- Statik fayllar ---------------------------------------------------
-    # MUHIM: collectstatic natijasi `staticfiles/` papkasiga tushadi.
-    # Agar bu yerda `static/` yozilgan bo'lsa, sayt eski CSS bilan qoladi.
+    location = /favicon.ico { access_log off; log_not_found off; }
+
+    # O'ZGARDI (2): collectstatic endi `staticfiles/` papkasiga yig'adi.
+    # Ilgari `root` bilan `static/` berilardi; endi `alias` + `staticfiles/`.
     location /static/ {
         alias /home/ubuntu/projects/library.xiuedu.uz/staticfiles/;
         expires 30d;
         access_log off;
     }
 
-    # --- Ommaviy media (muqovalar, profil rasmlari) ------------------------
+    # Ommaviy media: muqovalar, profil rasmlari (o'zgarmadi)
     location /media/ {
-        alias /home/ubuntu/projects/library.xiuedu.uz/media/;
+        root /home/ubuntu/projects/library.xiuedu.uz;
     }
 
-    # --- Himoyalangan raqamli kitoblar ------------------------------------
-    # `internal` — bu manzilni brauzerdan to'g'ridan-to'g'ri ochib bo'lmaydi.
-    # Django ruxsat bergandagina (X-Accel-Redirect) nginx faylni beradi.
-    # Bu blok bo'lmasa, PDF/audio stream ishlamaydi.
+    # O'ZGARDI (3): himoyalangan raqamli kitoblar.
+    # `internal` — bu manzilni brauzerdan to'g'ridan-to'g'ri ochib bo'lmaydi;
+    # faylni faqat Django ruxsat bergandan keyin (X-Accel-Redirect) nginx beradi.
+    # BU BLOK BO'LMASA onlayn o'qish va audio tinglash ISHLAMAYDI.
     location /protected-media/ {
         internal;
         alias /home/ubuntu/projects/library.xiuedu.uz/media/;
     }
 
-    # --- Django (gunicorn) -------------------------------------------------
     location / {
-        proxy_pass http://127.0.0.1:8001;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 60s;
+        include proxy_params;
+        proxy_pass http://unix:/run/library.sock;
     }
 }
 
 # HTTPS ni certbot o'zi qo'shadi:
-#   sudo certbot --nginx -d library.xiuedu.uz -d www.library.xiuedu.uz
+#   sudo certbot --nginx -d library.xiuedu.uz
+#
+# ESLATMA: nginx `www-data` nomidan ishlaydi va statik fayllarni o'qishi uchun
+# uy papkasiga kirish huquqi kerak. "403 Forbidden" chiqsa:
+#   chmod o+x /home/ubuntu /home/ubuntu/projects

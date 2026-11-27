@@ -22,6 +22,11 @@
 #     --branch NOM     boshqa branchdan (default: main)
 #     --skip-health    oxirgi tekshiruvni o'tkazib yuboradi
 #
+# Muhit o'zgaruvchilari:
+#     LIBRARY_SERVICE=library          systemd xizmati nomi
+#     LIBRARY_HEALTH_URL=http://...    tekshiriladigan manzil (default: nginx orqali)
+#     LIBRARY_HEALTH_HOST=domen        Host sarlavhasi
+#
 # MUHIM: Docker KERAK EMAS. docker-compose.yml faqat dasturchining
 # kompyuterida ishlatiladi; serverda tizimning o'z PostgreSQL'i.
 # =============================================================================
@@ -32,7 +37,9 @@ cd "$APP_DIR"
 
 BRANCH="main"
 SERVICE="${LIBRARY_SERVICE:-library}"
-HEALTH_URL="${LIBRARY_HEALTH_URL:-http://127.0.0.1:8001/}"
+# Tekshiruv nginx orqali o'tadi — gunicorn porti ham, unix-socket ham bo'lsa
+# ishlaydi va butun zanjirni (nginx -> gunicorn -> Django) sinaydi.
+HEALTH_URL="${LIBRARY_HEALTH_URL:-http://127.0.0.1/}"
 HEALTH_HOST="${LIBRARY_HEALTH_HOST:-library.xiuedu.uz}"
 BACKUP_DIR="$APP_DIR/var/backups"
 KEEP_BACKUPS=10
@@ -215,7 +222,12 @@ if [[ $DO_HEALTH -eq 1 ]]; then
             break
         fi
         if [[ $attempt -eq 5 ]]; then
-            echo "Sayt javob bermadi (oxirgi kod: ${CODE:-javobsiz})"; exit 1
+            echo "Sayt javob bermadi (oxirgi kod: ${CODE:-javobsiz})"
+            echo "  Tekshirilgan manzil: $HEALTH_URL (Host: $HEALTH_HOST)"
+            echo "  Boshqa manzil kerak bo'lsa:"
+            echo "    LIBRARY_HEALTH_URL=http://127.0.0.1:8001/ ./deploy.sh --no-backup --no-pull"
+            echo "  Gunicorn holati: systemctl status $SERVICE --no-pager -n 20"
+            exit 1
         fi
         sleep 2
     done

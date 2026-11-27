@@ -153,6 +153,16 @@ Bayroqlar:
 ./deploy.sh --skip-health        # oxirgi HTTP tekshiruvisiz
 ```
 
+### Health check
+
+Oxirgi bosqich saytni **nginx orqali** tekshiradi (`http://127.0.0.1/`, `Host:` sarlavhasi
+bilan) — shuning uchun gunicorn port orqali ham, **unix-socket** orqali ham ishlayversin,
+farqi yo'q. Boshqa manzilni tekshirish kerak bo'lsa:
+
+```bash
+LIBRARY_HEALTH_URL=http://127.0.0.1:8001/ LIBRARY_HEALTH_HOST=library.xiuedu.uz ./deploy.sh
+```
+
 > **Tailwind CSS:** `static/css/app.css` git orqali keladi — serverda Node ham,
 > Tailwind binar fayli ham kerak emas. Dizaynni o'zgartirgandan keyin
 > **lokalda `make css` ishlatib, natijani commit qiling**, aks holda serverda
