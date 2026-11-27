@@ -224,3 +224,70 @@ class CatalogModelTests(TestCase):
         recalc_book_counters(self.book)
         self.book.refresh_from_db()
         self.assertEqual(self.book.items_count, 2)
+
+
+class SeedItemsCommandTests(TestCase):
+    """`seed_items` — nusxasi yo'q kitoblarga fond yaratish (bir martalik ko'chirish)."""
+
+    def setUp(self):
+        from django.core.management import call_command
+        self.call = call_command
+        self.physical = make_book("Qog'oz kitob")                       # nusxasiz
+        self.with_items = make_book("Nusxasi bor kitob")
+        create_items(self.with_items, 2)
+        self.digital = make_book("Raqamli kitob", reading_mode=Book.ReadingMode.DIGITAL)
+
+    def test_creates_one_item_per_book_by_default(self):
+        self.call('seed_items', verbosity=0)
+
+        self.assertEqual(Item.objects.filter(book=self.physical).count(), 1)
+        item = Item.objects.get(book=self.physical)
+        self.assertTrue(item.barcode.startswith('XIU'))
+        self.assertEqual(item.status, Item.Status.AVAILABLE)
+        self.assertIsNotNone(item.library_id)
+        self.assertIsNotNone(item.item_type_id)
+
+    def test_skips_books_that_already_have_items(self):
+        self.call('seed_items', verbosity=0)
+        self.assertEqual(Item.objects.filter(book=self.with_items).count(), 2)
+
+    def test_skips_digital_books_by_default(self):
+        self.call('seed_items', verbosity=0)
+        self.assertEqual(Item.objects.filter(book=self.digital).count(), 0)
+
+    def test_modes_all_includes_digital(self):
+        self.call('seed_items', modes='ALL', verbosity=0)
+        self.assertEqual(Item.objects.filter(book=self.digital).count(), 1)
+
+    def test_per_book_option(self):
+        self.call('seed_items', per_book=3, verbosity=0)
+
+        items = Item.objects.filter(book=self.physical)
+        self.assertEqual(items.count(), 3)
+        self.assertEqual(sorted(items.values_list('inventory_number', flat=True)),
+                         ['INV-1', 'INV-2', 'INV-3'])
+
+    def test_counters_updated(self):
+        self.call('seed_items', per_book=2, verbosity=0)
+        self.physical.refresh_from_db()
+        self.assertEqual(self.physical.items_count, 2)
+        self.assertEqual(self.physical.available_count, 2)
+
+    def test_barcodes_are_unique_and_continue_sequence(self):
+        before = set(Item.objects.values_list('barcode', flat=True))
+        self.call('seed_items', verbosity=0)
+        after = set(Item.objects.values_list('barcode', flat=True))
+
+        self.assertEqual(len(after), Item.objects.count())   # dublikat yo'q
+        self.assertTrue(after > before)
+
+    def test_idempotent(self):
+        self.call('seed_items', verbosity=0)
+        count = Item.objects.count()
+        self.call('seed_items', verbosity=0)
+        self.assertEqual(Item.objects.count(), count)
+
+    def test_dry_run_writes_nothing(self):
+        count = Item.objects.count()
+        self.call('seed_items', dry_run=True, verbosity=0)
+        self.assertEqual(Item.objects.count(), count)

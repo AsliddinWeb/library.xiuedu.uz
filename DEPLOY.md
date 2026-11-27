@@ -209,6 +209,34 @@ chmod o+x /home/ubuntu /home/ubuntu/projects
 
 ---
 
+## 2-C. v1/v2 dan keyin: fondni to'ldirish
+
+v1/v2 da kitoblar katalogga kiritilgan, lekin **jismoniy nusxalar yuritilmagan**.
+v3 da ijara nusxaga (Item) beriladi, shuning uchun har qog'oz kitobga kamida
+bitta nusxa kerak. Buning uchun bir martalik buyruq bor:
+
+```bash
+cd ~/projects/library.xiuedu.uz
+
+# 1. Avval ko'rib chiqing — hech narsa yozilmaydi
+DJANGO_ENV=production venv/bin/python manage.py seed_items --dry-run
+
+# 2. Har kitobga bitta nusxa (shtrix-kod avtomatik beriladi)
+DJANGO_ENV=production venv/bin/python manage.py seed_items
+```
+
+Standart holatda faqat `PHYSICAL` va `BOTH` yozuvlariga nusxa ochiladi —
+raqamli kitoblar chetlab o'tiladi. Buyruq **idempotent**: nusxasi bor kitobga
+tegmaydi, shuning uchun qayta ishga tushirish xavfsiz.
+
+Bayroqlar: `--per-book 3`, `--item-type DARSLIK`, `--library MAIN`,
+`--shelf B-14`, `--modes ALL`.
+
+Keyin kutubxonachi panelda (`/panel/items/`) haqiqiy sonini, javonini va
+turini to'g'rilaydi.
+
+---
+
 ## 3. Xatolik bo'lsa
 
 ```bash
