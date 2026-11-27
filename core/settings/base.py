@@ -102,6 +102,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Loyiha darajasidagi statik fayllar (app.css, ui.js, vendor kutubxonalari).
+# MUHIM: bu ro'yxat ilgari faqat `local.py` da edi — shu sababli production'da
+# `collectstatic` ularni yig'masdan, saytda CSS/JS yo'q bo'lib qolardi.
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media/'
 

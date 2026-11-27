@@ -270,11 +270,26 @@ ok "Xizmat ishlamoqda: $GUNICORN_BIND"
 # =============================================================================
 step "6. nginx"
 # =============================================================================
-SITE="/etc/nginx/sites-available/${SERVICE}"
-if [[ -f "$SITE" ]]; then
-    ok "$SITE mavjud — tegilmadi"
+# DIQQAT: bu serverda boshqa loyihalar ham bo'lishi mumkin. Shu sababli:
+#   · mavjud konfiguratsiya HECH QACHON ustidan yozilmaydi;
+#   · `default` sayt O'CHIRILMAYDI;
+#   · domen uchun konfiguratsiya allaqachon bo'lsa — yangisi yaratilmaydi.
+EXISTING_SITE="$(grep -rls "server_name[^;]*${DOMAIN}" /etc/nginx/sites-enabled/ 2>/dev/null | head -1 || true)"
+
+if [[ -n "$EXISTING_SITE" ]]; then
+    ok "nginx konfiguratsiyasi mavjud: $EXISTING_SITE — tegilmadi"
+    warn "Uni qo'lda tekshiring (yangi versiya uchun 2 ta narsa muhim):"
+    echo "      1) location /static/  ->  alias $APP_DIR/staticfiles/;"
+    echo "         (ilgari 'static/' bo'lgan bo'lishi mumkin — endi 'staticfiles/')"
+    echo "      2) location /protected-media/ { internal; alias $APP_DIR/media/; }"
+    echo "         (raqamli kitoblarni to'g'ridan-to'g'ri yuklab olishdan himoya)"
+    echo "      Namuna: $APP_DIR/bin/nginx-site.conf.example"
 else
-    cat > "$SITE" <<NGINX
+    SITE="/etc/nginx/sites-available/${SERVICE}"
+    if [[ -f "$SITE" ]]; then
+        ok "$SITE mavjud — tegilmadi"
+    else
+        cat > "$SITE" <<NGINX
 server {
     listen 80;
     server_name $DOMAIN www.$DOMAIN;
@@ -309,12 +324,18 @@ server {
     }
 }
 NGINX
-    ln -sf "$SITE" "/etc/nginx/sites-enabled/${SERVICE}"
-    rm -f /etc/nginx/sites-enabled/default
-    ok "$SITE yaratildi va yoqildi"
+        ln -sf "$SITE" "/etc/nginx/sites-enabled/${SERVICE}"
+        ok "$SITE yaratildi va yoqildi"
+    fi
 fi
-nginx -t >/dev/null 2>&1 && systemctl reload nginx
-ok "nginx qayta yuklandi"
+
+if nginx -t >/dev/null 2>&1; then
+    systemctl reload nginx
+    ok "nginx qayta yuklandi"
+else
+    warn "nginx -t xato berdi — konfiguratsiya o'zgartirilmadi, qo'lda tekshiring:"
+    nginx -t 2>&1 | sed 's/^/      /'
+fi
 
 # =============================================================================
 step "7. Davriy vazifalar (cron)"
