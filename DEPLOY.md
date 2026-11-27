@@ -237,6 +237,37 @@ turini to'g'rilaydi.
 
 ---
 
+## 2-D. Oldinda proxy bo'lsa (Nginx Proxy Manager, Cloudflare)
+
+Sertifikat tashqi proxy'da bo'lsa, serverdagi nginx'ga oddiy HTTP keladi.
+`proxy_params` ichidagi `X-Forwarded-Proto $scheme` bunday holatda "http" deb
+yuboradi va Django saytni himoyalanmagan deb hisoblab, cheksiz yo'naltirish
+hosil qiladi. Yechim — bitta satr:
+
+```nginx
+location / {
+    include proxy_params;
+    proxy_pass http://unix:/run/library.sock;
+    proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;   # <-- shu
+}
+```
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Keyin `USE_HTTPS=0` ni olib tashlang — cookie'lar `Secure` bo'lishi uchun:
+
+```bash
+cd ~/projects/library.xiuedu.uz
+sudo sed -i '/^USE_HTTPS=0$/d' .env && sudo systemctl restart library
+curl -I -H "Host: library.xiuedu.uz" -H "X-Forwarded-Proto: https" http://127.0.0.1/ | head -3
+```
+
+`HTTP/1.1 200 OK` chiqishi kerak (yo'naltirish emas).
+
+---
+
 ## 3. Xatolik bo'lsa
 
 ```bash
