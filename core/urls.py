@@ -1,26 +1,16 @@
 """
-URL configuration for core project.
+Loyihaning asosiy URL konfiguratsiyasi.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+Bo'limlar app'lar bo'yicha ajratilgan; har app o'z `urls.py` fayliga ega.
 """
-# Static settings
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-# Admin custom
+from .views import design_system
+
+# Admin sarlavhalari
 admin.site.site_title = "Admin"
 admin.site.site_header = "XIU Library"
 admin.site.index_title = "Dashboard"
@@ -28,29 +18,32 @@ admin.site.index_title = "Dashboard"
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Hemis Oauth
+    # HEMIS oAuth
     path('auth/', include('oauth.urls')),
 
-    # Dashboard
+    # Bosh sahifa, kabinet, profil, analitika
     path('', include('dashboard_app.urls')),
 
-    # Book
+    # Katalog
     path('books/', include('book_app.urls')),
 
-    # Circulation (ijara/navbat)
+    # Sirkulyatsiya (ijara/navbat)
     path('circulation/', include('circulation.urls')),
 
-    # Reading (onlayn o'qish/tinglash)
+    # Raqamli kutubxona (onlayn o'qish/tinglash)
     path('reading/', include('reading.urls')),
 
-    # Engagement (sharh/reyting/sevimli)
+    # Faollik (sharh/reyting/sevimli)
     path('engagement/', include('engagement.urls')),
 
     # Bildirishnomalar
     path('notifications/', include('notifications.urls')),
 
-    # Kutubxonachi admin paneli
+    # Xodim paneli
     path('panel/', include('panel.urls')),
+
+    # Dizayn tizimi (style-guide) — xodim uchun, flag bilan boshqariladi
+    path('_design/', design_system, name='design_system'),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

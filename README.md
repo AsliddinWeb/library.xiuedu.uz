@@ -17,7 +17,7 @@ jismoniy nusxalarni ijaraga oladi, sharh/baho qoldiradi va sevimlilarini yuritad
 
 ## Texnologiyalar
 
-Django 5.2 (LTS) · PostgreSQL (prod) / SQLite (dev) · Tailwind CSS (standalone CLI) ·
+Django 5.2 (LTS) · **PostgreSQL** (dev va prod) · Tailwind CSS 4 (standalone CLI) ·
 HTMX + Alpine.js · PDF.js · django-unfold · WhiteNoise · gunicorn
 
 ## Loyiha tuzilishi
@@ -32,6 +32,8 @@ HTMX + Alpine.js · PDF.js · django-unfold · WhiteNoise · gunicorn
 | `engagement` | Review, Favorite |
 | `notifications` | In-app bildirishnomalar |
 | `dashboard_app` | Rol-based dashboard + analitika |
+| `panel` | Xodim (kutubxonachi) paneli — to'liq CRUD |
+| `audit` | Audit jurnali (`ActionLog`) + davriy vazifalar jurnali (`JobRun`) |
 
 ## Rollar
 
@@ -41,39 +43,82 @@ ruxsat `user_app.roles.effective_role()` orqali aniqlanadi.
 ## O'rnatish (lokal)
 
 ```bash
-# 1. Virtual muhit (Python 3.12+ tavsiya; 3.14 uchun Django 5.2 shart)
+# 1. Virtual muhit (Python 3.12+; 3.14 uchun Django 5.2 shart)
 python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
-# 2. .env yarating (.env.sample asosida) — SECRET_KEY, HEMIS oAuth, DB
+# 2. .env yarating (.env.sample asosida) — SECRET_KEY, HEMIS oAuth, DB_*
 
-# 3. Migratsiya (default rollar avtomatik seed qilinadi)
-python manage.py migrate
-python manage.py createsuperuser
+# 3. PostgreSQL (docker) — v3'dan boshlab dev'da ham Postgres ishlatiladi
+make db-up                 # docker compose up -d db + tayyor bo'lguncha kutadi
+make migrate
+make superuser
 
 # 4. Tailwind CSS (standalone CLI — Node shart emas)
-#    Binar: https://github.com/tailwindlabs/tailwindcss/releases  -> bin/tailwindcss
-./bin/css-build.sh        # bir martalik build
-./bin/css-watch.sh        # dev paytida kuzatuv
+make css                   # bir martalik build
+make css-watch             # dev paytida kuzatuv
 
 # 5. Ishga tushirish
-python manage.py runserver
+make run                   # http://localhost:8000
 ```
 
-## Cron (davriy vazifa)
+`make help` — barcha buyruqlar ro'yxati.
 
-Jarima hisoblash, muddat-yaqin ogohlantirish va navbat muddatini tekshirish —
-kuniga bir marta:
+> **SQLite kerak bo'lsa** (vaqtincha): `USE_SQLITE=1 python manage.py runserver`.
+> Lekin to'liq matnli qidiruv va trigram faqat Postgres'da ishlaydi.
+
+### SQLite'dan Postgres'ga ko'chirish (bir martalik)
+
+```bash
+make data-dump             # eski db.sqlite3 -> var/sqlite-dump.json
+make db-up && make data-load
+```
+
+## Dizayn tizimi
+
+Ikki qiyofa (dual shell): **OPAC** (o'quvchi — issiq qog'oz, bo'sh joy ko'p) va
+**Staff** (xodim — neytral, zich ish quroli). Ikkisi bir xil komponent klasslarini
+ishlatadi; farq `data-shell` atributidagi semantik tokenlarda.
+
+| Fayl | Vazifasi |
+|------|----------|
+| `theme/tokens.css` | rang/shrift/zichlik tokenlari + qiyofa farqlari |
+| `theme/components.css` | komponentlar (btn, input, table, badge, modal, ...) |
+| `templates/layouts/opac.html` | o'quvchi shell'i |
+| `templates/layouts/staff.html` | xodim shell'i |
+| `templates/ui/*.html` | qayta ishlatiladigan partial'lar (icon, stat, badge, pager, ...) |
+
+Barcha komponentlarni ko'rish: **`/_design/`** (xodim uchun, `design_styleguide` flagi).
+
+## Funksiya flaglari
+
+Yarim tayyor modullarni yoqib/o'chirish: `core/flags.py`. Muhitdan ham boshqariladi —
+masalan `FLAG_ACQUISITIONS=1`. Shablonda: `{{ flags.acquisitions }}`.
+
+## Davriy vazifalar (cron)
+
+Barcha davriy ish bitta buyruqdan boshqariladi va har ishga tushish
+`audit.JobRun` jadvaliga yoziladi:
+
+```bash
+make jobs-list                       # vazifalar ro'yxati
+python manage.py run_jobs --schedule daily
+python manage.py run_jobs fines_accrual
+```
 
 ```cron
-0 1 * * *  /path/to/venv/bin/python /path/to/manage.py circulation_tick
+0 1 * * *  /path/to/venv/bin/python /path/to/manage.py run_jobs --schedule daily
 ```
+
+Hozirgi vazifalar: `due_soon_notices`, `fines_accrual`, `reservation_expiry`.
+(Eski `circulation_tick` buyrug'i orqaga moslik uchun qoldirilgan.)
 
 ## Testlar va linter
 
 ```bash
-python manage.py test          # 31 ta test (rol, ijara, stream, engagement, ...)
-ruff check .                    # linter (pip install -r requirements-dev.txt)
+make test     # 57 ta test (rol, ijara, stream, engagement, audit, vazifalar, dizayn)
+make cov      # testlar + qamrov hisoboti
+make lint     # ruff linter
 ```
 
 ## Production deploy

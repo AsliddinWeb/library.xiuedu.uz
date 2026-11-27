@@ -1,0 +1,61 @@
+{% load static django_htmx %}{% comment %}
+  QIYOFA B — STAFF (xodim ish quroli): zich, klaviaturaga yo'naltirilgan.
+
+  Bloklar:
+    title, extra_head
+    sidebar (standart: v3/_staff_sidebar.html)
+    topbar  (standart: v3/_staff_topbar.html)
+    page_title, page_sub, breadcrumb, page_actions   -> topbar ichida
+    content
+    extra_js
+
+  Klaviatura: "/" yoki Ctrl+K — global qidiruv, "[" — sidebar yig'ish.
+{% endcomment %}<!doctype html>
+<html lang="uz" class="h-full" data-shell="staff">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Kutubxona paneli — XIU{% endblock %}</title>
+    <link rel="icon" href="{% static 'favicon.ico' %}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+      x-data="{ nav: false }">
+
+    <div id="htmx-bar"></div>
+
+    <div class="flex h-full">
+        {# --- Sidebar: desktopda doimiy, mobilda drawer --- #}
+        <div x-show="nav" x-cloak @click="nav = false" class="overlay lg:hidden"></div>
+        <aside :class="nav ? 'translate-x-0' : '-translate-x-full'"
+               class="shell-sidebar fixed inset-y-0 left-0 z-40 transform overflow-y-auto transition-transform duration-200 lg:static lg:translate-x-0">
+            {% block sidebar %}{% include "layouts/v3/_staff_sidebar.html" %}{% endblock %}
+        </aside>
+
+        {# --- Asosiy ustun --- #}
+        <div class="flex min-w-0 flex-1 flex-col">
+            {% block topbar %}{% include "layouts/v3/_staff_topbar.html" %}{% endblock %}
+
+            <main class="flex-1 overflow-y-auto p-4 lg:p-6">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    {% include "ui/_toasts.html" %}
+
+    <script src="{% static 'js/vendor/htmx.min.js' %}"></script>
+    <script src="{% static 'js/vendor/alpine.min.js' %}" defer></script>
+    <script src="{% static 'js/vendor/chart.umd.min.js' %}"></script>
+    {% django_htmx_script %}
+    <script src="{% static 'js/ui.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

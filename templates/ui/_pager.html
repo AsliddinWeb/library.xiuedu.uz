@@ -1,0 +1,37 @@
+{% comment %}
+  Paginatsiya (Django `page_obj` bilan).
+      {% include "ui/_pager.html" with page_obj=page_obj %}
+  HTMX bilan: `hx_get` va `hx_target` berilsa, havolalar HTMX orqali yuklanadi.
+{% endcomment %}
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="pager mt-4">
+  <p class="pager-info">
+    {{ page_obj.start_index }}–{{ page_obj.end_index }} / {{ page_obj.paginator.count }}
+  </p>
+  <div class="pager-links">
+    {% if page_obj.has_previous %}
+      <a class="pager-link" {% if hx_get %}hx-get="{{ hx_get }}?page={{ page_obj.previous_page_number }}{{ query }}" hx-target="{{ hx_target }}"{% else %}href="?page={{ page_obj.previous_page_number }}{{ query }}"{% endif %}>
+        {% include "ui/_icon.html" with name="chevron-left" class="size-4" %}
+      </a>
+    {% else %}
+      <span class="pager-link pager-link-disabled">{% include "ui/_icon.html" with name="chevron-left" class="size-4" %}</span>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if num == page_obj.number %}
+        <span class="pager-link pager-link-active">{{ num }}</span>
+      {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+        <a class="pager-link" {% if hx_get %}hx-get="{{ hx_get }}?page={{ num }}{{ query }}" hx-target="{{ hx_target }}"{% else %}href="?page={{ num }}{{ query }}"{% endif %}>{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <a class="pager-link" {% if hx_get %}hx-get="{{ hx_get }}?page={{ page_obj.next_page_number }}{{ query }}" hx-target="{{ hx_target }}"{% else %}href="?page={{ page_obj.next_page_number }}{{ query }}"{% endif %}>
+        {% include "ui/_icon.html" with name="chevron-right" class="size-4" %}
+      </a>
+    {% else %}
+      <span class="pager-link pager-link-disabled">{% include "ui/_icon.html" with name="chevron-right" class="size-4" %}</span>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

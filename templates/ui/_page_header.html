@@ -1,0 +1,14 @@
+{% comment %}
+  Sahifa sarlavhasi.
+      {% include "ui/_page_header.html" with title="Kitoblar" subtitle="Fond katalogi" %}
+  Amallar uchun: shu partialni ishlatmasdan `.page-head` klassini to'g'ridan-to'g'ri
+  yozish mumkin (o'ng tomonga tugma qo'yish kerak bo'lsa).
+{% endcomment %}
+<div class="page-head">
+  <div>
+    {% if breadcrumb %}<nav class="breadcrumb mb-1">{{ breadcrumb }}</nav>{% endif %}
+    <h1 class="page-title">{{ title }}</h1>
+    {% if subtitle %}<p class="page-sub">{{ subtitle }}</p>{% endif %}
+  </div>
+  {% if actions %}<div class="flex items-center gap-2">{{ actions }}</div>{% endif %}
+</div>

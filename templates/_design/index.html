@@ -1,0 +1,356 @@
+{% load static %}{% comment %}
+  Dizayn tizimi (style-guide) — /_design/
+
+  Maqsad: har bir komponentni IKKI QIYOFADA ham bir joyda ko'rish. Yangi sahifa
+  yozishdan oldin shu yerdan kerakli klassni olish kifoya.
+
+  Bu sahifa `design_styleguide` flagi bilan boshqariladi va faqat xodimga ochiq.
+{% endcomment %}<!doctype html>
+<html lang="uz" data-shell="staff">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dizayn tizimi — XIU Kutubxona</title>
+  <link rel="icon" href="{% static 'favicon.ico' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="min-h-screen">
+<div id="htmx-bar"></div>
+
+<div class="mx-auto max-w-6xl px-4 py-8">
+
+  <header class="mb-10">
+    <p class="breadcrumb">XIU Kutubxona · v3</p>
+    <h1 class="page-title mt-1">Dizayn tizimi</h1>
+    <p class="page-sub max-w-2xl">
+      Ikki qiyofa: <b>OPAC</b> (o'quvchi — issiq qog'oz, bo'sh joy ko'p) va
+      <b>Staff</b> (xodim — neytral, zich). Komponent klasslari bir xil; ranglar va
+      zichlik <code class="kbd">data-shell</code> atributiga qarab o'zgaradi.
+    </p>
+    <div class="rule-accent mt-4"></div>
+  </header>
+
+  {# ====================================================================== #}
+  <section class="mb-12">
+    <h2 class="mb-3 text-lg font-semibold">1. Palitra</h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {% for item in palette %}
+        <div class="card overflow-hidden">
+          <div class="h-16" style="background: {{ item.value }}"></div>
+          <div class="card-body">
+            <p class="font-medium">{{ item.name }}</p>
+            <p class="help">{{ item.token }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <p class="help mt-3">
+      Semantik tokenlar: <code>--color-surface</code>, <code>--color-surface-raised</code>,
+      <code>--color-line</code>, <code>--color-content</code>, <code>--color-brand</code>,
+      <code>--color-accent</code>. Komponentlarda faqat shular ishlatiladi.
+    </p>
+  </section>
+
+  {# ====================================================================== #}
+  <section class="mb-12">
+    <h2 class="mb-3 text-lg font-semibold">2. Tipografiya</h2>
+    <div class="grid gap-6 lg:grid-cols-2">
+      <div data-shell="opac" class="card card-body">
+        <p class="badge badge-brand mb-3">OPAC</p>
+        <h3 class="text-3xl">Kutubxona fondi</h3>
+        <p class="mt-2 text-[color:var(--color-content-muted)]">
+          Newsreader (display serif) + Inter. Sarlavhalar nafis, matn o'qishga qulay.
+        </p>
+      </div>
+      <div data-shell="staff" class="card card-body">
+        <p class="badge badge-neutral mb-3">STAFF</p>
+        <h3 class="text-2xl">Sirkulyatsiya deski</h3>
+        <p class="mt-2 text-[color:var(--color-content-muted)]">
+          Faqat Inter, tabular raqamlar: 1 234 567 · 2026-11-27 · 14 kun.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {# ====================================================================== #}
+  <section class="mb-12">
+    <h2 class="mb-3 text-lg font-semibold">3. Tugmalar (ikki qiyofada)</h2>
+    <div class="grid gap-6 lg:grid-cols-2">
+      {% for shell in shells %}
+        <div data-shell="{{ shell.code }}" class="card card-body">
+          <p class="badge {{ shell.badge }} mb-4">{{ shell.label }}</p>
+          <div class="flex flex-wrap items-center gap-2">
+            <button class="btn btn-primary">Saqlash</button>
+            <button class="btn btn-secondary">Bekor qilish</button>
+            <button class="btn btn-accent">Ijaraga berish</button>
+            <button class="btn btn-ghost">Tozalash</button>
+            <button class="btn btn-danger">O'chirish</button>
+            <button class="btn btn-primary" disabled>O'chirilgan</button>
+          </div>
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <button class="btn btn-primary btn-sm">Kichik</button>
+            <button class="btn btn-secondary btn-sm">Kichik</button>
+            <button class="btn btn-secondary btn-icon btn-sm" aria-label="Tahrirlash">
+              {% include "ui/_icon.html" with name="pencil" class="size-4" %}
+            </button>
+            <button class="btn btn-secondary btn-icon btn-sm" aria-label="O'chirish"
+                    data-confirm="Rostdan o'chirilsinmi?">
+              {% include "ui/_icon.html" with name="trash" class="size-4" %}
+            </button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {# ====================================================================== #}
+  <section class="mb-12">
+    <h2 class="mb-3 text-lg font-semibold">4. Forma elementlari</h2>
+    <div class="grid gap-6 lg:grid-cols-2">
+      {% for shell in shells %}
+        <div data-shell="{{ shell.code }}" class="card card-body">
+          <p class="badge {{ shell.badge }} mb-4">{{ shell.label }}</p>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="field">
+              <label class="label label-required">Kitob nomi</label>
+              <input class="input" placeholder="Masalan: Algoritmlar">
+            </div>
+            <div class="field">
+              <label class="label">Katalog</label>
+              <select class="select">
+                <option>Badiiy adabiyot</option>
+                <option>Ilmiy adabiyot</option>
+              </select>
+            </div>
+            <div class="field sm:col-span-2">
+              <label class="label">Annotatsiya</label>
+              <textarea class="textarea" placeholder="Qisqacha tavsif"></textarea>
+              <p class="help">Katalogda va kitob sahifasida ko'rinadi.</p>
+            </div>
+            <div class="field">
+              <label class="label">ISBN</label>
+              <input class="input is-invalid" value="978-9943-">
+              <p class="error-text">ISBN 13 belgidan iborat bo'lishi kerak.</p>
+            </div>
+            <div class="field">
+              <label class="label">Holat</label>
+              <label class="check-row"><input type="checkbox" class="checkbox" checked> Faol</label>
+              <label class="check-row"><input type="checkbox" class="checkbox"> Yuklab olishga ruxsat</label>
+            </div>
+          </div>
+          <div class="mt-4">
+            <label class="search">
+              <span class="text-[color:var(--color-content-subtle)]">{% include "ui/_icon.html" with name="search" class="size-4" %}</span>
+              <input type="search" placeholder="Qidirish...">
+              <span class="kbd">/</span>
+            </label>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {# ====================================================================== #}
+  <section class="mb-12">
+    <h2 class="mb-3 text-lg font-semibold">5. Status belgilari</h2>
+    <div class="card card-body">
+      <div class="flex flex-wrap items-center gap-2">
+        {% include "ui/_badge.html" with text="Mavjud" variant="success" dot=1 %}
+        {% include "ui/_badge.html" with text="Ijarada" variant="info" dot=1 %}
+        {% include "ui/_badge.html" with text="Navbatda" variant="warning" dot=1 %}
+        {% include "ui/_badge.html" with text="Muddat o'tgan" variant="danger" dot=1 %}
+        {% include "ui/_badge.html" with text="Yo'qolgan" variant="neutral" dot=1 %}
+        {% include "ui/_badge.html" with text="Yangi" variant="accent" %}
+        {% include "ui/_badge.html" with text="Raqamli" variant="brand" %}
+      </div>
+      <div class="mt-4 flex flex-wrap items-center gap-2">
+        <button class="chip chip-active">Hammasi</button>
+        <button class="chip">Badiiy</button>
+        <button class="chip">Ilmiy</button>
+        <button class="chip">Darslik</button>
+        <span class="kbd">F2</span><span class="kbd">Ctrl</span><span class="kbd">K</span>
+      </div>
+    </div>
+  </section>
+
+  {# ====================================================================== #}
+  <section class="mb-12">
+    <h2 class="mb-3 text-lg font-semibold">6. Statistika kartalari</h2>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {% include "ui/_stat.html" with label="Faol ijaralar" value="128" icon="book" trend="+12% oyga nisbatan" trend_dir="up" %}
+      {% include "ui/_stat.html" with label="Kutilayotgan so'rov" value="7" icon="inbox" %}
+      {% include "ui/_stat.html" with label="Kechikkan" value="4" icon="clock" trend="-2 ta" trend_dir="down" %}
+      {% include "ui/_stat.html" with label="To'lanmagan jarima" value="320 000" icon="cash" trend="so'm" %}
+    </div>
+  </section>
+
+  {# ====================================================================== #}
+  <section class="mb-12">
+    <h2 class="mb-3 text-lg font-semibold">7. Jadval (zichlik farqi shu yerda ko'rinadi)</h2>
+    {% for shell in shells %}
+      <div data-shell="{{ shell.code }}" class="mb-4">
+        <p class="badge {{ shell.badge }} mb-2">{{ shell.label }}</p>
+        <div class="table-wrap">
+          <table class="table table-zebra">
+            <thead>
+              <tr>
+                <th class="th-sort">Nomi</th>
+                <th>Muallif</th>
+                <th>Shtrix-kod</th>
+                <th>Holat</th>
+                <th class="table-num">Nusxa</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in table_rows %}
+                <tr>
+                  <td class="font-medium">{{ row.title }}</td>
+                  <td class="text-[color:var(--color-content-muted)]">{{ row.author }}</td>
+                  <td class="font-mono text-xs">{{ row.barcode }}</td>
+                  <td>{% include "ui/_badge.html" with text=row.status_label variant=row.status dot=1 %}</td>
+                  <td class="table-num">{{ row.copies }}</td>
+                  <td>
+                    <div class="table-actions">
+                      <button class="btn btn-ghost btn-icon btn-sm" aria-label="Tahrirlash">
+                        {% include "ui/_icon.html" with name="pencil" class="size-4" %}
+                      </button>
+                      <button class="btn btn-ghost btn-icon btn-sm" aria-label="O'chirish">
+                        {% include "ui/_icon.html" with name="trash" class="size-4" %}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endfor %}
+  </section>
+
+  {# ====================================================================== #}
+  <section class="mb-12">
+    <h2 class="mb-3 text-lg font-semibold">8. Tab, paginatsiya, bo'sh holat, skeleton</h2>
+    <div class="card">
+      <div class="px-4 pt-3">
+        <div class="tabs">
+          <button class="tab tab-active">Faol (12)</button>
+          <button class="tab">Navbatlar (3)</button>
+          <button class="tab">Tarix</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="pager">
+          <p class="pager-info">1–20 / 184</p>
+          <div class="pager-links">
+            <span class="pager-link pager-link-disabled">{% include "ui/_icon.html" with name="chevron-left" class="size-4" %}</span>
+            <span class="pager-link pager-link-active">1</span>
+            <a class="pager-link" href="#">2</a>
+            <a class="pager-link" href="#">3</a>
+            <a class="pager-link" href="#">{% include "ui/_icon.html" with name="chevron-right" class="size-4" %}</a>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-6 lg:grid-cols-2">
+          <div class="card">
+            {% include "ui/_empty.html" with icon="inbox" title="So'rov yo'q" text="Hozircha yangi ijara so'rovlari yo'q. Yangi so'rov kelganda shu yerda ko'rinadi." %}
+          </div>
+          <div class="card card-body">
+            <p class="help mb-2">Skeleton (yuklanish holati)</p>
+            <div class="skeleton h-4 w-3/4"></div>
+            <div class="skeleton mt-2 h-4 w-1/2"></div>
+            <div class="skeleton mt-2 h-4 w-5/6"></div>
+            <div class="skeleton mt-4 h-24 w-full"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ====================================================================== #}
+  <section class="mb-12" x-data="{ open: false, slide: false }">
+    <h2 class="mb-3 text-lg font-semibold">9. Modal, slide-over, toast</h2>
+    <div class="card card-body flex flex-wrap gap-2">
+      <button class="btn btn-secondary" @click="open = true">Modal ochish</button>
+      <button class="btn btn-secondary" @click="slide = true">Slide-over ochish</button>
+      <button class="btn btn-secondary" onclick="toast('Saqlandi', 'success')">Toast: muvaffaqiyat</button>
+      <button class="btn btn-secondary" onclick="toast('Nusxa band', 'danger')">Toast: xato</button>
+      <button class="btn btn-secondary" onclick="toast('Muddat yaqin', 'warning')">Toast: ogohlantirish</button>
+    </div>
+
+    {% include "ui/_modal.html" with title="Nusxani hisobdan chiqarish" body="Bu amal nusxani fonddan chiqaradi va chiqim aktiga yozadi. Davom etilsinmi?" confirm_label="Chiqarish" confirm_class="btn-danger" %}
+
+    <template x-teleport="body">
+      <div x-show="slide" x-cloak>
+        <div class="overlay" @click="slide = false"></div>
+        <div class="slideover">
+          <div class="card-head">
+            <h2 class="card-title">Yangi muallif</h2>
+            <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="slide = false" aria-label="Yopish">
+              {% include "ui/_icon.html" with name="close" class="size-4" %}
+            </button>
+          </div>
+          <div class="card-body flex-1">
+            <div class="field">
+              <label class="label label-required">Ism familiya</label>
+              <input class="input" placeholder="Abdulla Qodiriy">
+            </div>
+          </div>
+          <div class="card-foot">
+            <button class="btn btn-secondary" @click="slide = false">Bekor qilish</button>
+            <button class="btn btn-primary">Saqlash</button>
+          </div>
+        </div>
+      </div>
+    </template>
+  </section>
+
+  {# ====================================================================== #}
+  <section class="mb-12">
+    <h2 class="mb-3 text-lg font-semibold">10. Ikonkalar</h2>
+    <div class="card card-body">
+      <div class="grid grid-cols-4 gap-4 sm:grid-cols-6 lg:grid-cols-8">
+        {% for icon in icons %}
+          <div class="flex flex-col items-center gap-1.5 text-center">
+            {% include "ui/_icon.html" with name=icon class="size-5" %}
+            <span class="text-[11px] text-[color:var(--color-content-subtle)]">{{ icon }}</span>
+          </div>
+        {% endfor %}
+      </div>
+      <p class="help mt-4">
+        Ishlatish: <code>{% templatetag openblock %} include "ui/_icon.html" with name="search" class="size-5" {% templatetag closeblock %}</code>
+      </p>
+    </div>
+  </section>
+
+  {# ====================================================================== #}
+  <section class="mb-16">
+    <h2 class="mb-3 text-lg font-semibold">11. Shell'lar</h2>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="card card-body">
+        <p class="card-title">OPAC shell</p>
+        <p class="help mt-1">templates/layouts/opac.html</p>
+        <p class="mt-3 text-sm">Bloklar: title, description, header, content, footer, extra_js.</p>
+      </div>
+      <div class="card card-body">
+        <p class="card-title">Staff shell</p>
+        <p class="help mt-1">templates/layouts/staff.html</p>
+        <p class="mt-3 text-sm">
+          Bloklar: title, sidebar, topbar, content. Sarlavha kontekstdan:
+          <code>page_title</code>, <code>breadcrumb</code>.
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+
+{% include "ui/_toasts.html" %}
+
+<script src="{% static 'js/vendor/alpine.min.js' %}" defer></script>
+<script src="{% static 'js/ui.js' %}"></script>
+</body>
+</html>

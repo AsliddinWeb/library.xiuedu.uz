@@ -1,0 +1,25 @@
+{% comment %}
+  Slide-over panel (o'ngdan chiqadigan forma uchun).
+      <div x-data="{ open: false }"> ... {% include "ui/_slideover.html" with title="Yangi muallif" %}
+  Ichki kontent: `slideover_content` nomli blok o'rniga `{% include %}` bilan
+  to'ldiriladigan shablon berish mumkin (`content_template`).
+{% endcomment %}
+<template x-teleport="body">
+  <div x-show="open" x-cloak>
+    <div class="overlay" @click="open = false"></div>
+    <div class="slideover" role="dialog" aria-modal="true"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+         @keydown.escape.window="open = false">
+      <div class="card-head">
+        <h2 class="card-title">{{ title }}</h2>
+        <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="open = false" aria-label="Yopish">
+          {% include "ui/_icon.html" with name="close" class="size-4" %}
+        </button>
+      </div>
+      <div class="card-body flex-1 overflow-y-auto">
+        {% if content_template %}{% include content_template %}{% endif %}
+      </div>
+    </div>
+  </div>
+</template>

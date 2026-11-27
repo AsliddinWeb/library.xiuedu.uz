@@ -1,0 +1,527 @@
+/* ===========================================================================
+   XIU Library — komponent kutubxonasi (v3)
+   ---------------------------------------------------------------------------
+   Har komponent FAQAT semantik tokenlar bilan yozilgan (`tokens.css`), shuning
+   uchun bir xil klass OPAC'da ham, Staff panelida ham to'g'ri ko'rinadi —
+   zichlik va ranglar qiyofaga qarab o'zi moslashadi.
+
+   Ko'rib chiqish:  /_design/   (style-guide sahifasi)
+=========================================================================== */
+
+@layer base {
+  html { -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-content);
+    font-family: var(--font-sans);
+    font-size: var(--ui-text, 0.9375rem);
+    font-feature-settings: "ss01", "cv01";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Sarlavhalar — OPAC'da serif display, Staff'da oddiy sans (zichlik uchun) */
+  [data-shell="opac"] h1,
+  [data-shell="opac"] h2,
+  [data-shell="opac"] h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+  }
+  [data-shell="staff"] h1,
+  [data-shell="staff"] h2,
+  [data-shell="staff"] h3 {
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+
+  /* Raqamlar jadvalda bir tekis turishi uchun */
+  [data-shell="staff"] table { font-variant-numeric: tabular-nums; }
+
+  :where(a) { color: inherit; }
+
+  /* Klaviatura bilan yurganda ko'rinadigan fokus (sichqonchada chiqmaydi) */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  [x-cloak] { display: none !important; }
+}
+
+@layer components {
+
+  /* =======================================================================
+     Tugmalar
+     ======================================================================= */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: var(--ui-control-h);
+    padding-inline: var(--ui-control-px);
+    border: 1px solid transparent;
+    border-radius: var(--ui-radius);
+    font-size: var(--ui-text);
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease,
+                box-shadow .15s ease, transform .08s ease;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled, .btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; transform: none; }
+
+  .btn-primary {
+    background-color: var(--color-brand);
+    color: var(--color-brand-content);
+    box-shadow: var(--shadow-xs);
+  }
+  .btn-primary:hover:not(:disabled) { background-color: var(--color-brand-hover); }
+
+  .btn-secondary {
+    background-color: var(--color-surface-raised);
+    border-color: var(--color-line-strong);
+    color: var(--color-content);
+  }
+  .btn-secondary:hover:not(:disabled) { background-color: var(--color-surface-sunken); }
+
+  .btn-accent {
+    background-color: var(--color-accent);
+    color: #fff;
+  }
+  .btn-accent:hover:not(:disabled) { background-color: var(--color-clay-600); }
+
+  .btn-ghost { color: var(--color-content-muted); }
+  .btn-ghost:hover:not(:disabled) {
+    background-color: var(--color-surface-sunken);
+    color: var(--color-content);
+  }
+
+  .btn-danger { background-color: var(--color-danger-700); color: #fff; }
+  .btn-danger:hover:not(:disabled) { background-color: var(--color-danger-500); }
+
+  .btn-sm { height: var(--ui-control-h-sm); padding-inline: 0.625rem; font-size: var(--ui-text-sm); }
+  .btn-icon { width: var(--ui-control-h); padding-inline: 0; }
+  .btn-icon.btn-sm { width: var(--ui-control-h-sm); }
+  .btn-block { width: 100%; }
+
+  /* =======================================================================
+     Forma elementlari
+     ======================================================================= */
+  .field { display: flex; flex-direction: column; gap: 0.3125rem; }
+
+  .label {
+    font-size: var(--ui-text-sm);
+    font-weight: 500;
+    color: var(--color-content-muted);
+  }
+  .label-required::after { content: " *"; color: var(--color-danger-500); }
+
+  .input, .select, .textarea {
+    width: 100%;
+    min-height: var(--ui-control-h);
+    padding: 0 var(--ui-control-px);
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--ui-radius);
+    color: var(--color-content);
+    font-size: var(--ui-text);
+    font-family: inherit;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .textarea { padding: 0.5rem var(--ui-control-px); min-height: 5rem; resize: vertical; line-height: 1.5; }
+  .select { appearance: none; padding-right: 2rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b757f'%3E%3Cpath fill-rule='evenodd' d='M5.2 7.3a1 1 0 0 1 1.4 0L10 10.6l3.4-3.3a1 1 0 1 1 1.4 1.4l-4.1 4a1 1 0 0 1-1.4 0l-4.1-4a1 1 0 0 1 0-1.4Z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1.1em; }
+
+  .input::placeholder, .textarea::placeholder { color: var(--color-content-subtle); }
+  .input:focus, .select:focus, .textarea:focus {
+    outline: none;
+    border-color: var(--color-focus);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 22%, transparent);
+  }
+  .input:disabled, .select:disabled, .textarea:disabled {
+    background-color: var(--color-surface-sunken);
+    color: var(--color-content-subtle);
+    cursor: not-allowed;
+  }
+  .input-invalid, .input.is-invalid { border-color: var(--color-danger-500); }
+
+  .help { font-size: var(--ui-text-sm); color: var(--color-content-subtle); }
+  .error-text { font-size: var(--ui-text-sm); color: var(--color-danger-700); }
+
+  .checkbox, .radio {
+    width: 1.05rem; height: 1.05rem;
+    accent-color: var(--color-brand);
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+  }
+  .radio { border-radius: 50%; }
+
+  .check-row {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: var(--ui-text); cursor: pointer;
+  }
+
+  /* Qidiruv maydoni (ikonka joyi bilan) */
+  .search {
+    display: flex; align-items: center; gap: 0.5rem;
+    height: var(--ui-control-h);
+    padding-inline: var(--ui-control-px);
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-line-strong);
+    border-radius: 999px;
+  }
+  .search:focus-within {
+    border-color: var(--color-focus);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 22%, transparent);
+  }
+  .search > input {
+    flex: 1 1 auto; min-width: 0;
+    background: transparent; border: 0; outline: none;
+    font-size: var(--ui-text); color: inherit;
+  }
+
+  /* =======================================================================
+     Sirtlar: karta, panel
+     ======================================================================= */
+  .card {
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-line);
+    border-radius: var(--ui-radius);
+    box-shadow: var(--shadow-xs);
+  }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--ui-gap);
+    padding: var(--ui-card-p);
+    padding-bottom: calc(var(--ui-card-p) * 0.6);
+    border-bottom: 1px solid var(--color-line);
+  }
+  .card-title { font-size: calc(var(--ui-text) * 1.08); font-weight: 600; }
+  .card-body { padding: var(--ui-card-p); }
+  .card-foot {
+    display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem;
+    padding: calc(var(--ui-card-p) * 0.7) var(--ui-card-p);
+    border-top: 1px solid var(--color-line);
+    background-color: var(--color-surface-sunken);
+    border-end-start-radius: var(--ui-radius);
+    border-end-end-radius: var(--ui-radius);
+  }
+  .card-hover { transition: box-shadow .18s ease, transform .18s ease; }
+  .card-hover:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+  /* Sahifa sarlavhasi */
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: var(--ui-gap); flex-wrap: wrap;
+    margin-bottom: calc(var(--ui-gap) * 1.25);
+  }
+  .page-title { font-size: calc(var(--ui-text) * 1.75); font-weight: 600; line-height: 1.15; }
+  .page-sub { margin-top: 0.25rem; font-size: var(--ui-text-sm); color: var(--color-content-muted); }
+  .breadcrumb {
+    display: flex; align-items: center; gap: 0.375rem;
+    font-size: var(--ui-text-sm); color: var(--color-content-subtle);
+  }
+  .breadcrumb a:hover { color: var(--color-content); text-decoration: underline; }
+
+  /* Nozik aksent chizig'i (eski `.gold-rule` o'rniga) */
+  .rule-accent {
+    height: 2px; width: 3rem;
+    background: linear-gradient(90deg, var(--color-accent), transparent);
+  }
+
+  /* =======================================================================
+     Jadval (ma'lumot jadvali)
+     ======================================================================= */
+  .table-wrap {
+    overflow: auto;
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-line);
+    border-radius: var(--ui-radius);
+  }
+  .table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--ui-text); }
+  .table thead th {
+    position: sticky; top: 0; z-index: 1;
+    padding: calc(var(--ui-row-py) * 1.1) var(--ui-cell-px);
+    background-color: var(--color-surface-sunken);
+    border-bottom: 1px solid var(--color-line-strong);
+    font-size: var(--ui-text-sm);
+    font-weight: 600;
+    color: var(--color-content-muted);
+    text-align: left;
+    white-space: nowrap;
+  }
+  .table tbody td {
+    padding: var(--ui-row-py) var(--ui-cell-px);
+    border-bottom: 1px solid var(--color-line);
+    vertical-align: middle;
+  }
+  .table tbody tr:last-child td { border-bottom: 0; }
+  .table tbody tr:hover td { background-color: var(--color-surface-sunken); }
+  .table-zebra tbody tr:nth-child(even) td { background-color: color-mix(in srgb, var(--color-surface-sunken) 55%, transparent); }
+  .table-num { text-align: right; font-variant-numeric: tabular-nums; }
+  .table-actions { display: flex; align-items: center; gap: 0.25rem; justify-content: flex-end; }
+
+  /* Saralanadigan sarlavha */
+  .th-sort { cursor: pointer; user-select: none; }
+  .th-sort:hover { color: var(--color-content); }
+
+  /* =======================================================================
+     Badge, chip, status nuqtasi
+     ======================================================================= */
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    font-size: var(--ui-text-sm);
+    font-weight: 500;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+  .badge-neutral { background-color: var(--color-surface-sunken); color: var(--color-content-muted); }
+  .badge-brand   { background-color: var(--color-brand-soft);     color: var(--color-pine-700); }
+  .badge-accent  { background-color: var(--color-accent-soft);    color: var(--color-clay-700); }
+  .badge-success { background-color: var(--color-success-50);     color: var(--color-success-700); }
+  .badge-warning { background-color: var(--color-warning-50);     color: var(--color-warning-700); }
+  .badge-danger  { background-color: var(--color-danger-50);      color: var(--color-danger-700); }
+  .badge-info    { background-color: var(--color-info-50);        color: var(--color-info-700); }
+
+  .dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; flex: none; }
+  .dot-success { background-color: var(--color-success-500); }
+  .dot-warning { background-color: var(--color-warning-500); }
+  .dot-danger  { background-color: var(--color-danger-500); }
+  .dot-info    { background-color: var(--color-info-500); }
+  .dot-neutral { background-color: var(--color-content-subtle); }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    height: var(--ui-control-h-sm);
+    padding-inline: 0.75rem;
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-line-strong);
+    border-radius: 999px;
+    font-size: var(--ui-text-sm);
+    cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease;
+  }
+  .chip:hover { background-color: var(--color-surface-sunken); }
+  .chip-active {
+    background-color: var(--color-brand);
+    border-color: var(--color-brand);
+    color: var(--color-brand-content);
+  }
+
+  .kbd {
+    display: inline-flex; align-items: center;
+    min-width: 1.4rem; height: 1.4rem;
+    padding-inline: 0.3rem;
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-line-strong);
+    border-bottom-width: 2px;
+    border-radius: var(--radius-xs);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--color-content-muted);
+    justify-content: center;
+  }
+
+  /* =======================================================================
+     Statistika kartasi
+     ======================================================================= */
+  .stat {
+    display: flex; flex-direction: column; gap: 0.375rem;
+    padding: var(--ui-card-p);
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-line);
+    border-radius: var(--ui-radius);
+  }
+  .stat-label {
+    display: flex; align-items: center; gap: 0.375rem;
+    font-size: var(--ui-text-sm);
+    color: var(--color-content-muted);
+  }
+  .stat-value {
+    font-size: calc(var(--ui-text) * 2);
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-trend { font-size: var(--ui-text-sm); color: var(--color-content-subtle); }
+  .stat-trend-up { color: var(--color-success-700); }
+  .stat-trend-down { color: var(--color-danger-700); }
+
+  /* =======================================================================
+     Tab, pagination, bo'sh holat, skeleton
+     ======================================================================= */
+  .tabs {
+    display: flex; align-items: center; gap: 0.25rem;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .tab {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 2px solid transparent;
+    font-size: var(--ui-text);
+    color: var(--color-content-muted);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--color-content); }
+  .tab-active { border-bottom-color: var(--color-brand); color: var(--color-content); font-weight: 500; }
+
+  .pager { display: flex; align-items: center; justify-content: space-between; gap: var(--ui-gap); }
+  .pager-info { font-size: var(--ui-text-sm); color: var(--color-content-muted); }
+  .pager-links { display: flex; align-items: center; gap: 0.25rem; }
+  .pager-link {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: var(--ui-control-h-sm); height: var(--ui-control-h-sm);
+    padding-inline: 0.5rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-sm);
+    font-size: var(--ui-text-sm);
+    background-color: var(--color-surface-raised);
+  }
+  .pager-link:hover { background-color: var(--color-surface-sunken); }
+  .pager-link-active {
+    background-color: var(--color-brand);
+    border-color: var(--color-brand);
+    color: var(--color-brand-content);
+  }
+  .pager-link-disabled { opacity: .45; pointer-events: none; }
+
+  .empty {
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    padding: calc(var(--ui-card-p) * 2) var(--ui-card-p);
+    text-align: center;
+    color: var(--color-content-muted);
+  }
+  .empty-title { font-size: calc(var(--ui-text) * 1.1); font-weight: 600; color: var(--color-content); }
+  .empty-text { font-size: var(--ui-text-sm); max-width: 28rem; }
+
+  .skeleton {
+    background: linear-gradient(90deg,
+      var(--color-surface-sunken) 25%,
+      color-mix(in srgb, var(--color-surface-sunken) 55%, transparent) 50%,
+      var(--color-surface-sunken) 75%);
+    background-size: 200% 100%;
+    border-radius: var(--radius-sm);
+    animation: skeleton 1.4s ease-in-out infinite;
+  }
+  @keyframes skeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* =======================================================================
+     Modal / slide-over / toast
+     ======================================================================= */
+  .overlay { position: fixed; inset: 0; z-index: 40; background-color: rgb(8 11 16 / 0.55); }
+
+  .modal {
+    position: fixed; inset: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem;
+  }
+  .modal-panel {
+    width: 100%; max-width: 32rem; max-height: 85vh; overflow: auto;
+    background-color: var(--color-surface-raised);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .slideover {
+    position: fixed; inset-block: 0; inset-inline-end: 0; z-index: 50;
+    width: 100%; max-width: 30rem;
+    display: flex; flex-direction: column;
+    background-color: var(--color-surface-raised);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .toast-host {
+    position: fixed; inset-block-end: 1rem; inset-inline-end: 1rem; z-index: 60;
+    display: flex; flex-direction: column; gap: 0.5rem;
+    max-width: 24rem;
+  }
+  .toast {
+    display: flex; align-items: flex-start; gap: 0.625rem;
+    padding: 0.75rem 0.875rem;
+    background-color: var(--color-surface-invert);
+    color: var(--color-content-invert);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    font-size: var(--ui-text-sm);
+  }
+  .toast-success { background-color: var(--color-success-700); }
+  .toast-danger  { background-color: var(--color-danger-700); }
+  .toast-warning { background-color: var(--color-warning-700); }
+
+  /* =======================================================================
+     Staff shell: sidebar va topbar
+     ======================================================================= */
+  .shell-sidebar {
+    display: flex; flex-direction: column;
+    width: 15rem; flex: none;
+    background-color: var(--color-ink-900);
+    color: #cfd5db;
+  }
+  .nav-group-title {
+    padding: 0.875rem 0.875rem 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-400);
+  }
+  .nav-link {
+    display: flex; align-items: center; gap: 0.625rem;
+    margin-inline: 0.5rem;
+    padding: 0.4375rem 0.625rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--ui-text);
+    color: #c3cad1;
+    transition: background-color .15s ease, color .15s ease;
+  }
+  .nav-link:hover { background-color: rgb(255 255 255 / 0.06); color: #fff; }
+  .nav-link-active { background-color: var(--color-pine-700); color: #fff; font-weight: 500; }
+  .nav-badge {
+    margin-inline-start: auto;
+    padding: 0.0625rem 0.375rem;
+    background-color: rgb(255 255 255 / 0.12);
+    border-radius: 999px;
+    font-size: 0.6875rem;
+  }
+
+  /* Dropdown / menyu elementi */
+  .nav-item {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.4375rem 0.75rem;
+    font-size: var(--ui-text);
+    color: var(--color-content);
+    transition: background-color .12s ease;
+  }
+  .nav-item:hover { background-color: var(--color-surface-sunken); }
+
+  .shell-topbar {
+    display: flex; align-items: center; gap: var(--ui-gap);
+    height: 3.25rem; flex: none;
+    padding-inline: 1rem;
+    background-color: var(--color-surface-raised);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  /* =======================================================================
+     HTMX ko'rsatkichlari
+     ======================================================================= */
+  .htmx-indicator { opacity: 0; transition: opacity .2s ease-in; }
+  .htmx-request .htmx-indicator,
+  .htmx-request.htmx-indicator { opacity: 1; }
+  .htmx-request { cursor: progress; }
+
+  #htmx-bar {
+    position: fixed; inset-inline: 0; top: 0; height: 2px; z-index: 70;
+    background: var(--color-accent);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform .25s ease, opacity .3s ease;
+    opacity: 0; pointer-events: none;
+  }
+  #htmx-bar.on { transform: scaleX(0.9); opacity: 1; }
+}

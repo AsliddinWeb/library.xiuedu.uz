@@ -1,0 +1,51 @@
+{% load static django_htmx %}{% comment %}
+  QIYOFA A — OPAC (o'quvchi tomoni): issiq qog'oz, editorial, mobil birinchi.
+
+  Bloklar:
+    title, description, body_class, extra_head
+    header (standart: v3/_opac_header.html)
+    content
+    footer (standart: v3/_opac_footer.html)
+    extra_js
+
+  Eski `layouts/base.html` hali ko'chirilmagan sahifalar uchun turadi;
+  yangi sahifalar shu shell'dan meros oladi.
+{% endcomment %}<!doctype html>
+<html lang="uz" class="h-full" data-shell="opac">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}XIU Elektron kutubxona{% endblock %}</title>
+    <meta name="description" content="{% block description %}Xalqaro Innovatsion Universitet elektron kutubxonasi — katalog, onlayn o'qish, ijara{% endblock %}">
+    <link rel="icon" href="{% static 'favicon.ico' %}">
+
+    {# v3 shriftlar: Newsreader (display serif) + Inter (matn) #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="flex min-h-full flex-col {% block body_class %}{% endblock %}"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+
+    <div id="htmx-bar"></div>
+
+    {% block header %}{% include "layouts/v3/_opac_header.html" %}{% endblock %}
+
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block footer %}{% include "layouts/v3/_opac_footer.html" %}{% endblock %}
+
+    {% include "ui/_toasts.html" %}
+
+    <script src="{% static 'js/vendor/htmx.min.js' %}"></script>
+    <script src="{% static 'js/vendor/alpine.min.js' %}" defer></script>
+    {% django_htmx_script %}
+    <script src="{% static 'js/ui.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

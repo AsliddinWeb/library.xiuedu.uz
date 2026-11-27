@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',   # FTS, trigram, JSON lookuplar
 
     # Third party
     'django_htmx',
@@ -35,6 +36,7 @@ INSTALLED_APPS = [
     'oauth',
 
     # Local APPS
+    'audit',
     'user_app',
     'dashboard_app',
     'book_app',
@@ -52,6 +54,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'audit.middleware.AuditContextMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_htmx.middleware.HtmxMiddleware',
@@ -77,6 +80,8 @@ TEMPLATES = [
                 'notifications.context_processors.notifications',
                 # Kutubxonachi sidebar statistikasi
                 'dashboard_app.context_processors.librarian',
+                # Funksiya flaglari ({{ flags.<nom> }})
+                'core.context_processors.feature_flags',
             ],
         },
     },
@@ -101,6 +106,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = "user_app.User"
 
+# ---------------------------------------------------------------------------
+# Funksiya flaglari — standart qiymatlar `core/flags.py`da, bu yerda loyiha
+# bo'yicha ustun qiymat beriladi. Muhitdan: FLAG_<NOM>=1/0
+# ---------------------------------------------------------------------------
+FEATURE_FLAGS: dict[str, bool] = {}
+
 # Autentifikatsiya yo'naltirishlari
 LOGIN_URL = '/auth/student-login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
@@ -121,6 +132,8 @@ LOGGING = {
         # Loyiha modullari
         'oauth': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
         'circulation': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'audit': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'jobs': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
     },
 }
 

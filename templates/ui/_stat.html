@@ -1,0 +1,14 @@
+{% comment %}
+  Statistika kartasi.
+      {% include "ui/_stat.html" with label="Faol ijaralar" value=42 icon="book" trend="+12%" trend_dir="up" %}
+{% endcomment %}
+<div class="stat">
+  <div class="stat-label">
+    {% if icon %}{% include "ui/_icon.html" with name=icon class="size-4" %}{% endif %}
+    <span>{{ label }}</span>
+  </div>
+  <div class="stat-value">{{ value }}</div>
+  {% if trend %}
+    <div class="stat-trend {% if trend_dir == 'up' %}stat-trend-up{% elif trend_dir == 'down' %}stat-trend-down{% endif %}">{{ trend }}</div>
+  {% endif %}
+</div>

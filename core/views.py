@@ -1,0 +1,68 @@
+"""
+Loyiha darajasidagi yordamchi sahifalar.
+
+Hozircha bitta: dizayn tizimi (style-guide) — /_design/
+"""
+from django.conf import settings
+from django.http import Http404
+from django.shortcuts import render
+
+from user_app.roles import Roles, effective_role
+
+from .flags import flag_enabled
+
+PALETTE = [
+    {'name': "Pine 700 — brend", 'token': '--color-pine-700', 'value': '#164a41'},
+    {'name': "Clay 500 — aksent", 'token': '--color-clay-500', 'value': '#c2683f'},
+    {'name': "Ink 900 — matn", 'token': '--color-ink-900', 'value': '#10151c'},
+    {'name': "Paper — OPAC foni", 'token': '--color-paper', 'value': '#faf8f4'},
+    {'name': "Slate — Staff foni", 'token': '--color-slate-bg', 'value': '#f3f5f7'},
+    {'name': "Success", 'token': '--color-success-700', 'value': '#15803d'},
+    {'name': "Warning", 'token': '--color-warning-700', 'value': '#b45309'},
+    {'name': "Danger", 'token': '--color-danger-700', 'value': '#b91c1c'},
+]
+
+SHELLS = [
+    {'code': 'opac', 'label': 'OPAC — bo\'sh (comfortable)', 'badge': 'badge-brand'},
+    {'code': 'staff', 'label': 'STAFF — kompakt (compact)', 'badge': 'badge-neutral'},
+]
+
+TABLE_ROWS = [
+    {'title': "Algoritmlar va ma'lumotlar tuzilmasi", 'author': "T. Cormen",
+     'barcode': 'XIU000001248', 'status': 'success', 'status_label': 'Mavjud', 'copies': 5},
+    {'title': "O'tkan kunlar", 'author': "A. Qodiriy",
+     'barcode': 'XIU000000317', 'status': 'info', 'status_label': 'Ijarada', 'copies': 12},
+    {'title': "Iqtisodiyot nazariyasi", 'author': "N. Mankiw",
+     'barcode': 'XIU000002904', 'status': 'warning', 'status_label': 'Navbatda', 'copies': 3},
+    {'title': "Clean Architecture", 'author': "R. Martin",
+     'barcode': 'XIU000004471', 'status': 'danger', 'status_label': "Muddat o'tgan", 'copies': 1},
+]
+
+ICONS = [
+    'search', 'bell', 'user', 'users', 'menu', 'close', 'check', 'plus',
+    'minus', 'pencil', 'trash', 'book', 'library', 'barcode', 'cash', 'chart',
+    'clock', 'alert', 'inbox', 'cog', 'chevron-down', 'chevron-left',
+    'chevron-right', 'external', 'printer', 'logout',
+]
+
+STAFF_ROLES = (Roles.LIBRARIAN, Roles.ADMIN, Roles.EMPLOYEE)
+
+
+def design_system(request):
+    """Dizayn tizimi sahifasi — komponentlar ikki qiyofada.
+
+    Ochiq: dev muhitda hammaga, production'da faqat xodimga.
+    `design_styleguide` flagi o'chiq bo'lsa — 404.
+    """
+    if not flag_enabled('design_styleguide'):
+        raise Http404("Dizayn tizimi sahifasi o'chirilgan.")
+
+    if not settings.DEBUG and effective_role(request.user) not in STAFF_ROLES:
+        return render(request, '403.html', status=403)
+
+    return render(request, '_design/index.html', {
+        'palette': PALETTE,
+        'shells': SHELLS,
+        'table_rows': TABLE_ROWS,
+        'icons': ICONS,
+    })

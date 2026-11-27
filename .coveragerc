@@ -1,0 +1,19 @@
+[run]
+source = .
+omit =
+    */migrations/*
+    */__pycache__/*
+    venv/*
+    manage.py
+    core/wsgi.py
+    core/asgi.py
+    */tests.py
+    core/testing.py
+
+[report]
+precision = 1
+skip_covered = False
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
+    raise NotImplementedError

@@ -1,0 +1,8 @@
+{% comment %}
+  Holat belgisi.
+      {% include "ui/_badge.html" with text="Mavjud" variant="success" dot=1 %}
+  variant: neutral | brand | accent | success | warning | danger | info
+{% endcomment %}
+<span class="badge badge-{{ variant|default:'neutral' }}">
+  {% if dot %}<span class="dot dot-{{ variant|default:'neutral' }}"></span>{% endif %}{{ text }}
+</span>

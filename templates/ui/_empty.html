@@ -1,0 +1,10 @@
+{% comment %}
+  Bo'sh holat.
+      {% include "ui/_empty.html" with icon="inbox" title="Hali kitob yo'q" text="Birinchi kitobni qo'shing." %}
+{% endcomment %}
+<div class="empty">
+  {% if icon %}<div class="text-[color:var(--color-content-subtle)]">{% include "ui/_icon.html" with name=icon class="size-8" %}</div>{% endif %}
+  <p class="empty-title">{{ title|default:"Ma'lumot yo'q" }}</p>
+  {% if text %}<p class="empty-text">{{ text }}</p>{% endif %}
+  {% if action_url %}<a href="{{ action_url }}" class="btn btn-primary btn-sm mt-2">{{ action_label|default:"Qo'shish" }}</a>{% endif %}
+</div>

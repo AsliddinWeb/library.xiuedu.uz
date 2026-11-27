@@ -1,0 +1,42 @@
+{% comment %}
+  Ikonka (chiziqli, 24x24, currentColor).
+
+  Ishlatish:
+      {% include "ui/_icon.html" with name="search" %}
+      {% include "ui/_icon.html" with name="bell" class="size-5" %}
+
+  Yangi ikonka qo'shish: shu faylga `{% elif name == "..." %}` qo'shiladi.
+  Tashqi ikonka kutubxonasi ataylab ishlatilmaydi — faqat kerakli 20 ta ikonka
+  CSS/JS hajmini oshirmasdan shu yerda turadi.
+{% endcomment %}<svg class="{{ class|default:'size-4' }}" viewBox="0 0 24 24" fill="none"
+     stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true">
+{% if name == "search" %}<circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/>
+{% elif name == "bell" %}<path d="M6 11a6 6 0 1 1 12 0v3l1.5 2.5h-15L6 14v-3Z"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/>
+{% elif name == "user" %}<circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/>
+{% elif name == "users" %}<circle cx="9" cy="8.5" r="3"/><path d="M3 19c0-3 2.7-4.8 6-4.8s6 1.8 6 4.8"/><path d="M16 5.5a3 3 0 0 1 0 6"/><path d="M18 14.5c2 .6 3 2.2 3 4.5"/>
+{% elif name == "menu" %}<path d="M4 7h16M4 12h16M4 17h16"/>
+{% elif name == "close" %}<path d="M6 6l12 12M18 6 6 18"/>
+{% elif name == "check" %}<path d="m5 13 4 4L19 7"/>
+{% elif name == "plus" %}<path d="M12 5v14M5 12h14"/>
+{% elif name == "minus" %}<path d="M5 12h14"/>
+{% elif name == "pencil" %}<path d="M4 20h4L20 8l-4-4L4 16v4Z"/><path d="m14 6 4 4"/>
+{% elif name == "trash" %}<path d="M4 7h16"/><path d="M9 7V4.8h6V7"/><path d="m6 7 1 13h10l1-13"/>
+{% elif name == "book" %}<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v18H6.5A1.5 1.5 0 0 1 5 19.5v-15Z"/><path d="M9 3v18"/>
+{% elif name == "library" %}<path d="M4 20V6l4-1v15"/><path d="M10 20V5l4 1v14"/><path d="M16 20V7l4 1v12"/>
+{% elif name == "barcode" %}<path d="M4 6v12M7 6v12M10 6v9M13 6v12M16 6v9M20 6v12"/>
+{% elif name == "cash" %}<rect x="3" y="6.5" width="18" height="11" rx="2"/><circle cx="12" cy="12" r="2.4"/>
+{% elif name == "chart" %}<path d="M4 20h16"/><path d="M7 20v-6M12 20V7M17 20v-9"/>
+{% elif name == "clock" %}<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>
+{% elif name == "alert" %}<path d="M12 4.5 21 19.5H3L12 4.5Z"/><path d="M12 10v4"/><path d="M12 16.8v.2"/>
+{% elif name == "inbox" %}<path d="M3.5 12.5 6 6h12l2.5 6.5V18a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18v-5.5Z"/><path d="M3.5 12.5h5l1 2h5l1-2h5"/>
+{% elif name == "cog" %}<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/>
+{% elif name == "chevron-down" %}<path d="m6 9.5 6 6 6-6"/>
+{% elif name == "chevron-left" %}<path d="m14.5 6-6 6 6 6"/>
+{% elif name == "chevron-right" %}<path d="m9.5 6 6 6-6 6"/>
+{% elif name == "external" %}<path d="M14 5h5v5"/><path d="M19 5l-7 7"/><path d="M18 14v4.5A1.5 1.5 0 0 1 16.5 20h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>
+{% elif name == "printer" %}<path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="7" rx="1.5"/><path d="M7 16h10v4H7z"/>
+{% elif name == "logout" %}<path d="M15 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h8"/><path d="M18 12H10"/><path d="m15 9 3 3-3 3"/>
+{% else %}<circle cx="12" cy="12" r="8.5"/>
+{% endif %}
+</svg>

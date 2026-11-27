@@ -1,0 +1,32 @@
+{% comment %}
+  Modal (Alpine bilan). Ochish uchun tashqarida `x-data="{ open: false }"`.
+      <div x-data="{ open: false }">
+        <button class="btn btn-primary" @click="open = true">Ochish</button>
+        {% include "ui/_modal.html" with title="Tasdiqlash" body="Rostdan o'chirilsinmi?" confirm_label="O'chirish" %}
+      </div>
+{% endcomment %}
+<template x-teleport="body">
+  <div x-show="open" x-cloak>
+    <div class="overlay" @click="open = false"></div>
+    <div class="modal" role="dialog" aria-modal="true" @keydown.escape.window="open = false">
+      <div class="modal-panel" @click.outside="open = false">
+        <div class="card-head">
+          <h2 class="card-title">{{ title }}</h2>
+          <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="open = false" aria-label="Yopish">
+            {% include "ui/_icon.html" with name="close" class="size-4" %}
+          </button>
+        </div>
+        <div class="card-body">{% if body %}<p>{{ body }}</p>{% endif %}{% block modal_body %}{% endblock %}</div>
+        <div class="card-foot">
+          <button type="button" class="btn btn-secondary" @click="open = false">{{ cancel_label|default:"Bekor qilish" }}</button>
+          {% if confirm_url %}
+            <a href="{{ confirm_url }}" class="btn {{ confirm_class|default:'btn-primary' }}">{{ confirm_label|default:"Tasdiqlash" }}</a>
+          {% elif confirm_label %}
+            {# URL berilmagan: tugma faqat ko'rinish uchun (forma `submit`i yoki HTMX tashqaridan ulanadi) #}
+            <button type="submit" class="btn {{ confirm_class|default:'btn-primary' }}">{{ confirm_label }}</button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

@@ -1,0 +1,15 @@
+{% comment %}
+  Toast host — Django `messages` va JS `toast()` chaqiruvlari shu yerga tushadi.
+  JS'dan:  toast("Saqlandi", "success")
+  HTMX javobidan:  HX-Trigger: {"toast": {"text": "Saqlandi", "level": "success"}}
+{% endcomment %}
+<div id="toast-host" class="toast-host" aria-live="polite" aria-atomic="true">
+  {% for message in messages %}
+    <div class="toast {% if message.tags == 'success' %}toast-success{% elif message.tags == 'danger' %}toast-danger{% elif message.tags == 'warning' %}toast-warning{% endif %}">
+      <span class="flex-1">{{ message }}</span>
+      <button type="button" class="opacity-70 hover:opacity-100" onclick="this.parentElement.remove()" aria-label="Yopish">
+        {% include "ui/_icon.html" with name="close" class="size-4" %}
+      </button>
+    </div>
+  {% endfor %}
+</div>

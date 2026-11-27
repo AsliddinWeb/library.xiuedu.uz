@@ -27,7 +27,7 @@ DB_PORT=5432
 ## 2. DB, statik, tekshiruv
 
 ```bash
-python manage.py migrate                 # default rollar avtomatik seed
+python manage.py migrate                 # default rollar + pg_trgm/unaccent kengaytmalari
 python manage.py collectstatic --noinput # -> staticfiles/ (WhiteNoise)
 ./bin/css-build.sh                       # Tailwind app.css (yoki CI'da)
 python manage.py check --deploy          # 0 ogohlantirish bo'lishi kerak
@@ -103,10 +103,12 @@ HTTPS uchun **certbot** (Let's Encrypt) — `SECURE_SSL_REDIRECT` allaqachon yoq
 ## 5. Cron (davriy vazifa)
 
 ```cron
-0 1 * * *  /srv/library/venv/bin/python /srv/library/manage.py circulation_tick
+0 1 * * *  /srv/library/venv/bin/python /srv/library/manage.py run_jobs --schedule daily
 ```
 
-Jarima hisoblash, muddat-yaqin ogohlantirish, navbat muddati.
+Jarima hisoblash, muddat-yaqin ogohlantirish, navbat muddati. Har ishga tushish
+`audit.JobRun` jadvaliga yoziladi — admin panelda ko'rish mumkin
+(**Audit va vazifalar → Vazifalar jurnali**).
 
 ## 6. Yangilash (deploy)
 
@@ -123,5 +125,5 @@ systemctl restart library
 - [ ] `check --deploy` 0 ogohlantirish
 - [ ] `/protected-media/` nginx'da `internal`
 - [ ] HTTPS (certbot) + sertifikat avto-yangilanishi
-- [ ] cron `circulation_tick` o'rnatilgan
+- [ ] cron `run_jobs --schedule daily` o'rnatilgan
 - [ ] DB backup rejasi
