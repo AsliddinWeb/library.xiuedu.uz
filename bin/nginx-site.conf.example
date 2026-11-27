@@ -1,14 +1,24 @@
 # XIU Library — nginx konfiguratsiyasi (v3 uchun)
 # =============================================================================
-# Bu fayl XIU serveridagi MAVJUD konfiguratsiya asosida yozilgan
-# (gunicorn unix-socket orqali ishlaydi: /run/library.sock).
+# XIU serveridagi holat: gunicorn unix-socket orqali (/run/library.sock),
+# HTTPS esa oldindagi proxy'da (Nginx Proxy Manager) tugaydi.
 #
 # O'rnatish:
 #   sudo cp bin/nginx-site.conf.example /etc/nginx/sites-available/library.xiuedu.uz
 #   sudo nginx -t && sudo systemctl reload nginx
 #
-# v3 da UCHTA o'zgarish bor — pastda "O'ZGARDI" deb belgilangan.
+# v3 da uchta o'zgarish bor — pastda "O'ZGARDI" deb belgilangan.
 # =============================================================================
+
+# Oldindagi proxy yuborgan protokolni aniqlaydi:
+#   · proxy X-Forwarded-Proto yuborsa  -> o'shani ishlatamiz (https)
+#   · yubormasa                        -> shu nginx'ning o'z sxemasi (http)
+#
+# DIQQAT: `map` server blokidan TASHQARIDA turishi shart (http konteksti).
+map $http_x_forwarded_proto $xiu_forwarded_proto {
+    default $http_x_forwarded_proto;
+    ""      $scheme;
+}
 
 server {
     listen 80;
@@ -43,36 +53,40 @@ server {
     }
 
     location / {
-        include proxy_params;
         proxy_pass http://unix:/run/library.sock;
 
-        # MUHIM — oldinda proxy (Nginx Proxy Manager / Cloudflare) bo'lsa:
-        # TLS o'sha yerda tugaydi va bu nginx'ga oddiy HTTP keladi.
-        # `proxy_params` ichidagi `X-Forwarded-Proto $scheme` bu yerda "http"
-        # deb yuboradi -> Django saytni himoyalanmagan deb hisoblab, har so'rovni
-        # https'ga yo'naltiradi va "yo'naltirish halqasi" hosil bo'ladi.
-        # Quyidagi satr proxy yuborgan haqiqiy protokolni uzatadi:
-        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        # MUHIM: `include proxy_params;` ATAYLAB ishlatilmayapti.
+        # U X-Forwarded-Proto ni $scheme ("http") bilan o'rnatadi; ustiga yana
+        # bitta qo'shsak, nginx sarlavhani IKKI MARTA yuboradi va gunicorn
+        # bunday so'rovni "400 Bad Request" bilan rad etadi.
+        # Shuning uchun sarlavhalar shu yerda bir martadan yoziladi.
+        proxy_set_header Host              $http_host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $xiu_forwarded_proto;
+        proxy_set_header X-Forwarded-Host  $http_host;
+        proxy_redirect off;
+        proxy_read_timeout 60s;
     }
 }
 
 # =============================================================================
-# OLDINDA PROXY BO'LGAN HOLAT (XIU serveridagi joriy sozlama)
+# HTTPS
 # -----------------------------------------------------------------------------
-# Sertifikat Nginx Proxy Manager'da bo'lsa, bu fayldagi 443 bloki shart emas —
-# yuqoridagi `X-Forwarded-Proto` satri yetarli. Shundan keyin `.env` dagi
-# `USE_HTTPS=0` ni OLIB TASHLANG: Django endi so'rov https ekanini ko'radi,
+# Sertifikat oldindagi proxy'da bo'lsa, bu yerda 443 bloki shart emas —
+# yuqoridagi `map` + `X-Forwarded-Proto` yetarli. Shundan keyin `.env` dagi
+# `USE_HTTPS=0` ni olib tashlang: Django so'rov https ekanini ko'radi,
 # cookie'lar `Secure` bo'ladi va ortiqcha yo'naltirish bo'lmaydi.
 #
 #   sudo sed -i '/^USE_HTTPS=0$/d' .env && sudo systemctl restart library
 #
-# Tekshirish (https deb ko'rsatilgan so'rov 200 qaytarishi kerak):
+# Tekshirish — 200 qaytarishi kerak (301 emas):
 #   curl -I -H "Host: library.xiuedu.uz" -H "X-Forwarded-Proto: https" http://127.0.0.1/
-# =============================================================================
-
-# HTTPS ni certbot o'zi qo'shadi:
+#
+# Sertifikat to'g'ridan-to'g'ri shu nginx'da kerak bo'lsa:
 #   sudo certbot --nginx -d library.xiuedu.uz
 #
 # ESLATMA: nginx `www-data` nomidan ishlaydi va statik fayllarni o'qishi uchun
 # uy papkasiga kirish huquqi kerak. "403 Forbidden" chiqsa:
 #   chmod o+x /home/ubuntu /home/ubuntu/projects
+# =============================================================================

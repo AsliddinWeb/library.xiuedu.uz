@@ -244,13 +244,29 @@ Sertifikat tashqi proxy'da bo'lsa, serverdagi nginx'ga oddiy HTTP keladi.
 yuboradi va Django saytni himoyalanmagan deb hisoblab, cheksiz yo'naltirish
 hosil qiladi. Yechim — bitta satr:
 
+`include proxy_params;` ning **ustiga** yana bitta `X-Forwarded-Proto` qo'shish
+ishlamaydi: nginx sarlavhani ikki marta yuboradi va gunicorn bunday so'rovni
+`400 Bad Request` bilan rad etadi. Shuning uchun sarlavhalar bir martadan
+yoziladi va protokol `map` orqali aniqlanadi:
+
 ```nginx
+# server blokidan TASHQARIDA (http konteksti)
+map $http_x_forwarded_proto $xiu_forwarded_proto {
+    default $http_x_forwarded_proto;   # proxy yuborgan qiymat (https)
+    ""      $scheme;                   # proxy'siz — shu nginx sxemasi
+}
+
 location / {
-    include proxy_params;
     proxy_pass http://unix:/run/library.sock;
-    proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;   # <-- shu
+    proxy_set_header Host              $http_host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $xiu_forwarded_proto;
+    proxy_redirect off;
 }
 ```
+
+To'liq namuna: `bin/nginx-site.conf.example`.
 
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
