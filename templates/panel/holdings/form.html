@@ -1,0 +1,32 @@
+{% extends "panel/base.html" %}
+{% comment %}Fond tuzilmasi yozuvini tahrirlash (filial / tur / javon).{% endcomment %}
+
+{% block title %}{{ page_title }} — XIU Kutubxona{% endblock %}
+
+{% block panel_content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">{{ kind_label }}ni tahrirlash</h1>
+    <p class="page-sub">{{ object }}</p>
+  </div>
+  <a href="{% url 'panel:holdings' %}" class="btn btn-ghost btn-sm">Ro'yxatga qaytish</a>
+</div>
+
+<form method="post" class="card max-w-2xl">
+  {% csrf_token %}
+  <div class="card-body grid gap-4 sm:grid-cols-2">
+    {% for field in form %}
+      <div class="field {% if field.name == 'navigation_hint' or field.name == 'description' or field.name == 'address' %}sm:col-span-2{% endif %}">
+        <label class="label {% if field.field.required %}label-required{% endif %}" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
+        {% for error in field.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+  <div class="card-foot">
+    <a href="{% url 'panel:holdings' %}" class="btn btn-secondary">Bekor qilish</a>
+    <button type="submit" class="btn btn-primary">Saqlash</button>
+  </div>
+</form>
+{% endblock %}

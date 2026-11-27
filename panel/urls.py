@@ -30,6 +30,20 @@ urlpatterns = [
     path('authors/<int:pk>/edit/', views.author_edit, name='author_edit'),
     path('authors/<int:pk>/delete/', views.author_delete, name='author_delete'),
 
+    # Nusxalar (fond)
+    path('items/', views.item_list, name='items'),
+    path('items/<int:pk>/', views.item_detail, name='item_detail'),
+    path('items/<int:pk>/status/', views.item_status, name='item_status'),
+    path('books/<int:pk>/items/bulk/', views.item_bulk, name='item_bulk'),
+
+    # Fond tuzilmasi (filial / tur / javon)
+    path('holdings/', views.holdings_overview, name='holdings'),
+    path('holdings/<str:kind>/<int:pk>/edit/', views.holdings_edit, name='holdings_edit'),
+    path('holdings/<str:kind>/<int:pk>/toggle/', views.holdings_toggle, name='holdings_toggle'),
+
+    # Skaner uchun tezkor qidiruv
+    path('search/', views.quick_search, name='quick_search'),
+
     path('import/', views.import_books, name='import_books'),
 
     # Sirkulyatsiya

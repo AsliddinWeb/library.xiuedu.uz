@@ -1,110 +1,122 @@
 {% extends "panel/base.html" %}
+{% comment %}
+  Kataloglash formasi (P2-B) — bo'limlar `PanelBookForm.SECTIONS` dan keladi,
+  shuning uchun modelga yangi maydon qo'shilsa shablonni tahrirlash shart emas.
+{% endcomment %}
 
-{% block title %}{{ page_title }} — Kutubxonachi paneli{% endblock %}
+{% block title %}{{ page_title }} — XIU Kutubxona{% endblock %}
 
 {% block panel_content %}
-<div class="mb-5 flex items-center gap-3">
-    <a href="{% if book %}{% url 'panel:book_detail' book.pk %}{% else %}{% url 'panel:books' %}{% endif %}" class="rounded-lg p-2 text-navy-500 hover:bg-navy-50">
-        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
-    </a>
-    <h2 class="font-serif text-2xl font-semibold text-navy-900">{{ page_title }}</h2>
-</div>
+<form method="post" enctype="multipart/form-data" x-data="{ saving: false }"
+      @submit="saving = true">
+  {% csrf_token %}
 
-{% if form.errors %}
-<div class="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-100">Formada xatolik bor — maydonlarni tekshiring.</div>
-{% endif %}
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">{{ page_title }}</h1>
+      <p class="page-sub">
+        {% if book %}{{ book.items_count }} ta nusxa · oxirgi tahrir {{ book.updated_at|date:"d.m.Y H:i" }}
+        {% else %}Majburiy maydonlar: sarlavha va katalog. Qolganini keyin ham to'ldirsa bo'ladi.{% endif %}
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="{% if book %}{% url 'panel:book_detail' book.pk %}{% else %}{% url 'panel:books' %}{% endif %}"
+         class="btn btn-secondary">Bekor qilish</a>
+      <button type="submit" class="btn btn-primary" :disabled="saving">
+        {% include "ui/_icon.html" with name="check" class="size-4" %}
+        <span x-text="saving ? 'Saqlanmoqda...' : 'Saqlash'">Saqlash</span>
+      </button>
+    </div>
+  </div>
 
-<form method="post" enctype="multipart/form-data" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-    {% csrf_token %}
+  {% if form.errors %}
+    <div class="card card-body mb-4 border-l-4 border-l-[color:var(--color-danger-500)]">
+      <p class="font-medium text-[color:var(--color-danger-700)]">Formada xatolik bor</p>
+      <ul class="mt-1 list-inside list-disc text-sm text-[color:var(--color-content-muted)]">
+        {% for field in form %}
+          {% for error in field.errors %}<li>{{ field.label }}: {{ error }}</li>{% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+      </ul>
+    </div>
+  {% endif %}
 
-    {# Chap: asosiy #}
-    <div class="space-y-6 lg:col-span-2">
-        <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
-            <h3 class="font-serif text-base font-semibold text-navy-900">Asosiy ma'lumotlar</h3>
-            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div class="sm:col-span-2">
-                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Kitob nomi</label>
-                    {{ form.title }}
-                    {% for e in form.title.errors %}<p class="mt-1 text-xs text-red-600">{{ e }}</p>{% endfor %}
-                </div>
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Katalog</label>
-                    {{ form.category }}
-                    {% for e in form.category.errors %}<p class="mt-1 text-xs text-red-600">{{ e }}</p>{% endfor %}
-                </div>
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Chop etilgan yili</label>
-                    {{ form.published_year }}
-                </div>
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-navy-800">ISBN</label>
-                    {{ form.isbn }}
-                </div>
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Til</label>
-                    {{ form.language }}
-                </div>
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Sahifalar soni</label>
-                    {{ form.page_count }}
-                </div>
-            </div>
-            <div class="mt-4">
-                <label class="mb-1.5 block text-sm font-medium text-navy-800">Tavsif</label>
-                {{ form.description }}
-            </div>
+  <div class="grid gap-4 lg:grid-cols-3">
+    <div class="space-y-4 lg:col-span-2">
+      {% for section in form.sections %}
+        <div class="card">
+          <div class="card-head"><h2 class="card-title">{{ section.title }}</h2></div>
+          <div class="card-body grid gap-4 sm:grid-cols-2">
+            {% for item in section.fields %}
+              <div class="field {% if item.wide %}sm:col-span-2{% endif %}">
+                <label class="label {% if item.field.field.required %}label-required{% endif %}"
+                       for="{{ item.field.id_for_label }}">{{ item.field.label }}</label>
+
+                {% if item.field.name == 'authors' %}
+                  <div class="max-h-44 overflow-y-auto rounded-[var(--radius-sm)] border border-[color:var(--color-line)] p-2">
+                    {% for choice in item.field %}
+                      <label class="check-row py-0.5">{{ choice.tag }} {{ choice.choice_label }}</label>
+                    {% empty %}
+                      <p class="help">Muallif yo'q — avval "Mualliflar" bo'limidan qo'shing.</p>
+                    {% endfor %}
+                  </div>
+                {% elif item.field.name == 'is_textbook' or item.field.name == 'is_active' or item.field.name == 'download_allowed' %}
+                  <label class="check-row">{{ item.field }} <span class="help">{{ item.field.help_text }}</span></label>
+                {% else %}
+                  {{ item.field }}
+                {% endif %}
+
+                {% if item.field.help_text and item.field.name not in 'is_textbook,is_active,download_allowed' %}
+                  <p class="help">{{ item.field.help_text }}</p>
+                {% endif %}
+                {% for error in item.field.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+              </div>
+            {% endfor %}
+          </div>
         </div>
-
-        <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
-            <h3 class="font-serif text-base font-semibold text-navy-900">Mualliflar</h3>
-            <div class="mt-3 max-h-52 space-y-1.5 overflow-y-auto rounded-lg border border-navy-100 bg-cream/30 p-3">
-                {% for cb in form.authors %}
-                <label class="flex items-center gap-2.5 text-sm text-navy-700">
-                    {{ cb.tag }} <span>{{ cb.choice_label }}</span>
-                </label>
-                {% empty %}<p class="text-sm text-navy-400">Muallif yo'q — avval qo'shing.</p>{% endfor %}
-            </div>
-            {% for e in form.authors.errors %}<p class="mt-1 text-xs text-red-600">{{ e }}</p>{% endfor %}
-        </div>
+      {% endfor %}
     </div>
 
-    {# O'ng: fayllar + sozlamalar #}
-    <div class="space-y-6">
-        <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
-            <h3 class="font-serif text-base font-semibold text-navy-900">Fayllar</h3>
-            <div class="mt-4 space-y-4">
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Muqova rasmi</label>
-                    {% if book.cover_image %}<img src="{{ book.cover_image.url }}" class="mb-2 h-28 rounded-lg">{% endif %}
-                    {{ form.cover_image }}
-                </div>
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Elektron versiya (PDF)</label>
-                    {{ form.electronic_version }}
-                </div>
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Audio versiya</label>
-                    {{ form.audio_version }}
-                </div>
+    {# ---------------- O'ng ustun: muqova va yordam ---------------- #}
+    <div class="space-y-4">
+      <div class="card">
+        <div class="card-head"><h2 class="card-title">Muqova</h2></div>
+        <div class="card-body">
+          {% if book.cover_image %}
+            <img src="{{ book.cover_image.url }}" alt="{{ book.title }}"
+                 class="mx-auto max-h-56 rounded-[var(--radius-md)] shadow-[var(--shadow-sm)]">
+          {% else %}
+            <div class="flex h-48 items-center justify-center rounded-[var(--radius-md)] bg-[color:var(--color-surface-sunken)] text-[color:var(--color-content-subtle)]">
+              {% include "ui/_icon.html" with name="book" class="size-10" %}
             </div>
+          {% endif %}
+          <p class="help mt-3">Yangi muqovani "Fayllar va o'qish" bo'limidan yuklang.</p>
         </div>
+      </div>
 
-        <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
-            <h3 class="font-serif text-base font-semibold text-navy-900">Sozlamalar</h3>
-            <div class="mt-4 space-y-4">
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-navy-800">Foydalanish turi</label>
-                    {{ form.reading_mode }}
-                </div>
-                <label class="flex items-center gap-2.5 text-sm text-navy-700">{{ form.download_allowed }} Yuklab olishga ruxsat</label>
-                <label class="flex items-center gap-2.5 text-sm text-navy-700">{{ form.is_active }} Aktiv (saytda ko'rinadi)</label>
-            </div>
+      {% if book %}
+      <div class="card">
+        <div class="card-head"><h2 class="card-title">Fond</h2></div>
+        <div class="card-body space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-[color:var(--color-content-muted)]">Nusxalar</span><span>{{ book.items_count }}</span></div>
+          <div class="flex justify-between"><span class="text-[color:var(--color-content-muted)]">Mavjud</span><span>{{ book.available_count }}</span></div>
+          <div class="flex justify-between"><span class="text-[color:var(--color-content-muted)]">Ijaraga berilgan</span><span>{{ book.loan_count }}</span></div>
+          <a href="{% url 'panel:book_detail' book.pk %}" class="btn btn-secondary btn-sm btn-block mt-2">
+            Nusxalarni boshqarish
+          </a>
         </div>
+      </div>
+      {% endif %}
 
-        <div class="flex gap-3">
-            <button type="submit" class="flex-1 rounded-lg bg-navy-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800">Saqlash</button>
-            <a href="{% if book %}{% url 'panel:book_detail' book.pk %}{% else %}{% url 'panel:books' %}{% endif %}" class="rounded-lg border border-navy-200 px-6 py-2.5 text-sm font-semibold text-navy-700 transition hover:bg-navy-50">Bekor</a>
-        </div>
+      <div class="card card-body text-sm text-[color:var(--color-content-muted)]">
+        <p class="font-medium text-[color:var(--color-content)]">Kataloglash maslahati</p>
+        <ul class="mt-2 list-inside list-disc space-y-1">
+          <li>UDK kiritilsa, nusxa qo'shilganda chaqiruv raqami avtomatik hisoblanadi.</li>
+          <li>Nashriyot va turkum ro'yxatda bo'lmasa — shu yerda yozsangiz yaratiladi.</li>
+          <li>Mavzularni vergul bilan ajrating; ular fasetli qidiruvda ishlatiladi.</li>
+        </ul>
+      </div>
     </div>
+  </div>
 </form>
 {% endblock %}

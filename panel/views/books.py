@@ -34,7 +34,9 @@ def book_list(request):
     q = request.GET.get('q', '').strip()
     if q:
         books = books.filter(
-            Q(title__icontains=q) | Q(isbn__icontains=q) | Q(authors__full_name__icontains=q)
+            Q(title__icontains=q) | Q(subtitle__icontains=q) | Q(isbn__icontains=q) |
+            Q(udc__icontains=q) | Q(authors__full_name__icontains=q) |
+            Q(publisher__name__icontains=q) | Q(subjects__name__icontains=q)
         ).distinct()
 
     category = request.GET.get('category', '')
@@ -47,6 +49,17 @@ def book_list(request):
     if active in ('1', '0'):
         books = books.filter(is_active=(active == '1'))
 
+    # P2-B filtrlari: yozuv turi, darslik, fakultet
+    record_type = request.GET.get('record_type', '')
+    if record_type:
+        books = books.filter(record_type=record_type)
+    textbook = request.GET.get('textbook', '')
+    if textbook in ('1', '0'):
+        books = books.filter(is_textbook=(textbook == '1'))
+    faculty = request.GET.get('faculty', '').strip()
+    if faculty:
+        books = books.filter(faculty__icontains=faculty)
+
     sort = request.GET.get('sort', '-id')
     books = books.order_by(sort if sort in SORTS else '-id')
 
@@ -55,7 +68,9 @@ def book_list(request):
     ctx = {
         'active': 'books', 'page_title': 'Kitoblar', 'page_obj': page_obj,
         'q': q, 'category': category, 'mode': mode, 'active_filter': active, 'sort': sort,
+        'record_type': record_type, 'textbook': textbook, 'faculty': faculty,
         'categories': Genre.objects.all(), 'modes': Book.ReadingMode.choices,
+        'record_types': Book.RecordType.choices,
         'total': page_obj.paginator.count,
     }
     if getattr(request, 'htmx', False):
@@ -89,9 +104,19 @@ def book_edit(request, pk):
 @require_perm(Perms.CATALOG_VIEW)
 def book_detail(request, pk):
     book = get_object_or_404(
-        Book.objects.select_related('category').prefetch_related('authors'), pk=pk)
-    return render(request, 'panel/books/detail.html',
-                  {'book': book, 'active': 'books', 'page_title': book.title})
+        Book.objects
+        .select_related('category', 'publisher', 'series')
+        .prefetch_related('authors', 'subjects', 'contributor_set__author'),
+        pk=pk)
+
+    ctx = _copies_ctx(book)
+    ctx.update({
+        'active': 'books',
+        'page_title': book.title,
+        'breadcrumb': [{'label': "Kitoblar", 'url': '/panel/books/'},
+                       {'label': book.title[:40]}],
+    })
+    return render(request, 'panel/books/detail.html', ctx)
 
 
 @require_perm(Perms.CATALOG_DELETE)
@@ -107,8 +132,19 @@ def book_delete(request, pk):
 
 # ---------------- Nusxalar (HTMX) ----------------
 
+def _copies_ctx(book):
+    """Nusxalar bloki uchun umumiy kontekst (partiya amallari ham shu yerdan)."""
+    from holdings.models import ShelfLocation
+    return {
+        'book': book,
+        'item_statuses': Item.Status.choices,
+        'shelves': (ShelfLocation.objects.filter(is_active=True)
+                    .select_related('library').order_by('library', 'code')),
+    }
+
+
 def _render_copies(request, book):
-    return render(request, 'panel/books/_copies.html', {'book': book})
+    return render(request, 'panel/books/_copies.html', _copies_ctx(book))
 
 
 @require_POST

@@ -1,8 +1,10 @@
 {% comment %}
-  Kitob nusxalari (HTMX blok) — P2 dan keyin: shtrix-kod, holat, joylashuv.
-  Yangi dizayn tizimi komponentlari ishlatiladi.
+  Kitob nusxalari (HTMX blok).
+
+  P2-B: har nusxa o'z kartasiga bog'langan, bir nechtasini belgilab partiyada
+  holat o'zgartirish yoki boshqa javonga ko'chirish mumkin.
 {% endcomment %}
-<div id="copies">
+<div id="copies" x-data="{ selected: [], get any() { return this.selected.length > 0 } }">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <h3 class="card-title">
       Nusxalar
@@ -21,10 +23,49 @@
   </div>
 
   {% if book.item_set.all %}
+    {# --------- Partiya amallari (faqat biror nusxa belgilanganda) --------- #}
+    <form method="post" action="{% url 'panel:item_bulk' book.pk %}"
+          x-show="any" x-cloak
+          class="card card-body mt-3 flex flex-wrap items-end gap-3">
+      {% csrf_token %}
+      <input type="hidden" name="items" :value="selected.join(',')">
+      <p class="text-sm"><b x-text="selected.length"></b> ta nusxa belgilandi</p>
+
+      <div class="field w-48">
+        <label class="label">Amal</label>
+        <select name="action" class="select">
+          <option value="status">Holatni o'zgartirish</option>
+          <option value="move">Javonga ko'chirish</option>
+        </select>
+      </div>
+      <div class="field w-48">
+        <label class="label">Yangi holat</label>
+        <select name="status" class="select">
+          {% for value, label in item_statuses %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field w-56">
+        <label class="label">Javon</label>
+        <select name="shelf_location" class="select">
+          <option value="">—</option>
+          {% for shelf in shelves %}
+            <option value="{{ shelf.pk }}">{{ shelf.library.name }} · {{ shelf.code }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field flex-1">
+        <label class="label">Sabab</label>
+        <input name="reason" class="input" placeholder="Ixtiyoriy">
+      </div>
+      <button type="submit" class="btn btn-primary">Bajarish</button>
+      <button type="button" class="btn btn-ghost" @click="selected = []">Tozalash</button>
+    </form>
+
     <div class="table-wrap mt-3">
       <table class="table">
         <thead>
           <tr>
+            <th class="w-8"></th>
             <th>Shtrix-kod</th>
             <th>Inventar</th>
             <th>Turi</th>
@@ -36,10 +77,16 @@
         <tbody>
           {% for copy in book.item_set.all %}
           <tr>
-            <td class="font-mono text-xs">{{ copy.barcode|default:"—" }}</td>
+            <td>
+              <input type="checkbox" class="checkbox" value="{{ copy.pk }}" x-model="selected"
+                     aria-label="Nusxani belgilash">
+            </td>
+            <td class="font-mono text-xs">
+              <a href="{% url 'panel:item_detail' copy.pk %}" class="hover:underline">{{ copy.barcode|default:"—" }}</a>
+            </td>
             <td>{{ copy.inventory_number }}</td>
             <td class="text-[color:var(--color-content-muted)]">{{ copy.item_type.name|default:"—" }}</td>
-            <td class="text-[color:var(--color-content-muted)]">{{ copy.location_text }}</td>
+            <td class="text-[color:var(--color-content-muted)]">{{ copy.location_text|truncatechars:34 }}</td>
             <td>
               {% if copy.status == 'AVAILABLE' %}{% include "ui/_badge.html" with text="Mavjud" variant="success" dot=1 %}
               {% elif copy.status == 'ON_LOAN' %}{% include "ui/_badge.html" with text="Ijarada" variant="info" dot=1 %}
@@ -51,10 +98,12 @@
             </td>
             <td>
               <div class="table-actions">
+                <a href="{% url 'panel:item_detail' copy.pk %}" class="btn btn-ghost btn-icon btn-sm" aria-label="Nusxa kartasi">
+                  {% include "ui/_icon.html" with name="external" class="size-4" %}
+                </a>
                 {% if copy.status != 'WITHDRAWN' %}
                   <button hx-post="{% url 'panel:copy_toggle' copy.pk %}" hx-target="#copies" hx-swap="outerHTML"
-                          class="btn btn-ghost btn-sm"
-                          title="Mavjud / faqat zalda holatini almashtirish">
+                          class="btn btn-ghost btn-sm" title="Mavjud / faqat zalda">
                     {% if copy.status == 'AVAILABLE' %}Zalga{% else %}Bo'shatish{% endif %}
                   </button>
                   <button hx-post="{% url 'panel:copy_delete' copy.pk %}" hx-target="#copies" hx-swap="outerHTML"
@@ -62,8 +111,6 @@
                           class="btn btn-ghost btn-icon btn-sm" aria-label="Hisobdan chiqarish">
                     {% include "ui/_icon.html" with name="trash" class="size-4" %}
                   </button>
-                {% else %}
-                  <span class="help">{{ copy.withdrawn_on|default:"" }}</span>
                 {% endif %}
               </div>
             </td>

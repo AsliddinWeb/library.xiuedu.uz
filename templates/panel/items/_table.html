@@ -1,0 +1,51 @@
+{% if items %}
+<div class="table-wrap">
+  <table class="table table-zebra">
+    <thead>
+      <tr>
+        <th>Shtrix-kod</th>
+        <th>Kitob</th>
+        <th>Inventar</th>
+        <th>Turi</th>
+        <th>Joylashuvi</th>
+        <th>Holati</th>
+        <th class="table-num">Berilgan</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td class="font-mono text-xs">
+          <a href="{% url 'panel:item_detail' item.pk %}" class="hover:underline">{{ item.barcode|default:"—" }}</a>
+        </td>
+        <td class="font-medium">{{ item.book.title|truncatechars:38 }}</td>
+        <td>{{ item.inventory_number }}</td>
+        <td class="text-[color:var(--color-content-muted)]">{{ item.item_type.name|default:"—" }}</td>
+        <td class="text-[color:var(--color-content-muted)]">{{ item.location_text|truncatechars:38 }}</td>
+        <td>
+          {% if item.status == 'AVAILABLE' %}{% include "ui/_badge.html" with text="Mavjud" variant="success" dot=1 %}
+          {% elif item.status == 'ON_LOAN' %}{% include "ui/_badge.html" with text="Ijarada" variant="info" dot=1 %}
+          {% elif item.status == 'NOT_FOR_LOAN' %}{% include "ui/_badge.html" with text="Faqat zalda" variant="warning" dot=1 %}
+          {% elif item.status == 'WITHDRAWN' %}{% include "ui/_badge.html" with text="Chiqarilgan" variant="neutral" dot=1 %}
+          {% elif item.status == 'LOST' %}{% include "ui/_badge.html" with text="Yo'qolgan" variant="danger" dot=1 %}
+          {% elif item.status == 'DAMAGED' %}{% include "ui/_badge.html" with text="Shikastlangan" variant="danger" dot=1 %}
+          {% else %}{% include "ui/_badge.html" with text=item.get_status_display variant="neutral" dot=1 %}{% endif %}
+        </td>
+        <td class="table-num">{{ item.loan_count }}</td>
+        <td>
+          <div class="table-actions">
+            <a href="{% url 'panel:item_detail' item.pk %}" class="btn btn-ghost btn-icon btn-sm" aria-label="Ochish">
+              {% include "ui/_icon.html" with name="external" class="size-4" %}
+            </a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "ui/_pager.html" with page_obj=page_obj hx_get="/panel/items/" hx_target="#items-table" query=query %}
+{% else %}
+  {% include "ui/_empty.html" with icon="barcode" title="Nusxa topilmadi" text="Qidiruv shartlarini o'zgartiring." %}
+{% endif %}

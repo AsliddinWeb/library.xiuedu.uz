@@ -31,11 +31,17 @@
     {% include "ui/_icon.html" with name="book" class="size-4" %}<span>Kitoblar</span>
     
   </a>
+  <a href="/panel/items/" class="nav-link {% if '/panel/items/' in request.path %}nav-link-active{% endif %}">
+    {% include "ui/_icon.html" with name="barcode" class="size-4" %}<span>Nusxalar (fond)</span>
+  </a>
   <a href="/panel/genres/" class="nav-link {% if '/panel/genres/' in request.path %}nav-link-active{% endif %}">
     {% include "ui/_icon.html" with name="library" class="size-4" %}<span>Kataloglar</span>
   </a>
   <a href="/panel/authors/" class="nav-link {% if '/panel/authors/' in request.path %}nav-link-active{% endif %}">
     {% include "ui/_icon.html" with name="pencil" class="size-4" %}<span>Mualliflar</span>
+  </a>
+  <a href="/panel/holdings/" class="nav-link {% if '/panel/holdings/' in request.path %}nav-link-active{% endif %}">
+    {% include "ui/_icon.html" with name="cog" class="size-4" %}<span>Fond tuzilmasi</span>
   </a>
   <a href="/panel/import/" class="nav-link {% if '/panel/import/' in request.path %}nav-link-active{% endif %}">
     {% include "ui/_icon.html" with name="inbox" class="size-4" %}<span>Import</span>

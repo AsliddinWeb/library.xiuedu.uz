@@ -1,0 +1,62 @@
+{% extends "panel/base.html" %}
+{% comment %}Fond nusxalari ro'yxati — shtrix-kod bo'yicha qidiruv va filtrlar.{% endcomment %}
+
+{% block title %}Fond nusxalari — XIU Kutubxona{% endblock %}
+
+{% block panel_content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Fond nusxalari</h1>
+    <p class="page-sub">Jami {{ total }} ta nusxa. Skanerni shu sahifada ishlatsangiz ham bo'ladi —
+      shtrix-kodni yozsangiz nusxa darhol topiladi.</p>
+  </div>
+</div>
+
+<form class="card card-body mb-4 flex flex-wrap items-end gap-3"
+      hx-get="{% url 'panel:items' %}" hx-target="#items-table" hx-trigger="submit, change from:select"
+      hx-push-url="true">
+  <div class="field min-w-64 flex-1">
+    <label class="label">Qidiruv</label>
+    <label class="search">
+      <span class="text-[color:var(--color-content-subtle)]">{% include "ui/_icon.html" with name="barcode" class="size-4" %}</span>
+      <input type="search" name="q" value="{{ q }}" autofocus
+             placeholder="Shtrix-kod, inventar raqami yoki kitob nomi"
+             hx-get="{% url 'panel:items' %}" hx-target="#items-table"
+             hx-trigger="keyup changed delay:350ms" hx-include="closest form">
+    </label>
+  </div>
+  <div class="field w-44">
+    <label class="label">Holati</label>
+    <select name="status" class="select">
+      <option value="">Hammasi</option>
+      {% for value, label in statuses %}
+        <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field w-44">
+    <label class="label">Filial</label>
+    <select name="library" class="select">
+      <option value="">Hammasi</option>
+      {% for lib in libraries %}
+        <option value="{{ lib.pk }}" {% if library == lib.pk|stringformat:"s" %}selected{% endif %}>{{ lib.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field w-44">
+    <label class="label">Turi</label>
+    <select name="type" class="select">
+      <option value="">Hammasi</option>
+      {% for it in item_types %}
+        <option value="{{ it.pk }}" {% if type == it.pk|stringformat:"s" %}selected{% endif %}>{{ it.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="flex items-center gap-2">
+    <button type="submit" class="btn btn-secondary">Filtrlash</button>
+    {% if q or status or library or type %}<a href="{% url 'panel:items' %}" class="btn btn-ghost btn-sm">Tozalash</a>{% endif %}
+  </div>
+</form>
+
+<div id="items-table">{% include "panel/items/_table.html" %}</div>
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends "panel/base.html" %}
+{% comment %}
+  Nusxa kartasi: tahrirlash, holat amallari, ijara tarixi va holat jurnali.
+{% endcomment %}
+
+{% block title %}{{ item.barcode|default:item.inventory_number }} — nusxa{% endblock %}
+
+{% block panel_content %}
+<div x-data="{ statusOpen: false }">
+
+  <div class="page-head">
+    <div>
+      <h1 class="page-title font-mono">{{ item.barcode|default:item.inventory_number }}</h1>
+      <p class="page-sub">
+        <a href="{% url 'panel:book_detail' item.book_id %}" class="hover:underline">{{ item.book.title }}</a>
+        · {{ item.item_type.name|default:"turi belgilanmagan" }}
+      </p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <button class="btn btn-secondary btn-sm" @click="statusOpen = true">
+        {% include "ui/_icon.html" with name="clock" class="size-4" %} Holatni o'zgartirish
+      </button>
+      <a href="{% url 'panel:book_detail' item.book_id %}" class="btn btn-ghost btn-sm">Kitobga qaytish</a>
+    </div>
+  </div>
+
+  {# --------- Holat qatori --------- #}
+  <div class="card card-body mb-4 flex flex-wrap items-center gap-4">
+    <div>
+      <p class="help">Holati</p>
+      <p class="mt-1">
+        {% if item.status == 'AVAILABLE' %}{% include "ui/_badge.html" with text="Mavjud" variant="success" dot=1 %}
+        {% elif item.status == 'ON_LOAN' %}{% include "ui/_badge.html" with text="Ijarada" variant="info" dot=1 %}
+        {% elif item.status == 'NOT_FOR_LOAN' %}{% include "ui/_badge.html" with text="Faqat zalda" variant="warning" dot=1 %}
+        {% elif item.status == 'WITHDRAWN' %}{% include "ui/_badge.html" with text="Hisobdan chiqarilgan" variant="neutral" dot=1 %}
+        {% elif item.status == 'LOST' %}{% include "ui/_badge.html" with text="Yo'qolgan" variant="danger" dot=1 %}
+        {% elif item.status == 'DAMAGED' %}{% include "ui/_badge.html" with text="Shikastlangan" variant="danger" dot=1 %}
+        {% else %}{% include "ui/_badge.html" with text=item.get_status_display variant="neutral" dot=1 %}{% endif %}
+      </p>
+    </div>
+    <div class="border-l border-[color:var(--color-line)] pl-4">
+      <p class="help">Joylashuvi</p>
+      <p class="mt-1 text-sm">{{ item.location_text }}</p>
+    </div>
+    <div class="border-l border-[color:var(--color-line)] pl-4">
+      <p class="help">Berilgan</p>
+      <p class="mt-1 text-sm">{{ item.loan_count }} marta</p>
+    </div>
+    <div class="border-l border-[color:var(--color-line)] pl-4">
+      <p class="help">Oxirgi ko'rilgan</p>
+      <p class="mt-1 text-sm">{{ item.last_seen_at|default:"—" }}</p>
+    </div>
+    {% if active_loan %}
+      <div class="ml-auto rounded-[var(--radius-sm)] bg-[color:var(--color-info-50)] px-3 py-2 text-sm">
+        Hozir <b>{{ active_loan.borrower_name }}</b> da · muddat {{ active_loan.due_date }}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="grid gap-4 lg:grid-cols-3">
+    {# --------- Tahrirlash formasi --------- #}
+    <form method="post" class="space-y-4 lg:col-span-2">
+      {% csrf_token %}
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">Nusxa ma'lumotlari</h2>
+          <button type="submit" class="btn btn-primary btn-sm">Saqlash</button>
+        </div>
+        <div class="card-body grid gap-4 sm:grid-cols-2">
+          {% for field in form %}
+            <div class="field {% if field.name == 'condition_note' or field.name == 'not_for_loan_reason' %}sm:col-span-2{% endif %}">
+              <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
+              {% for error in field.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </form>
+
+    {# --------- O'ng: tarix --------- #}
+    <div class="space-y-4">
+      <div class="card">
+        <div class="card-head"><h2 class="card-title">Ijara tarixi</h2></div>
+        <div class="card-body space-y-2 text-sm">
+          {% for loan in loans %}
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <p>{{ loan.borrower_name }}</p>
+                <p class="help">{{ loan.borrowed_date|default:"—" }} → {{ loan.return_date|default:"hali qaytmagan" }}</p>
+              </div>
+              {% if not loan.return_date %}
+                {% include "ui/_badge.html" with text="Faol" variant="info" %}
+              {% endif %}
+            </div>
+          {% empty %}<p class="help">Bu nusxa hali berilmagan.</p>{% endfor %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2 class="card-title">Holat jurnali</h2></div>
+        <div class="card-body space-y-2 text-xs">
+          {% for log in logs %}
+            <div>
+              <div class="flex justify-between gap-2">
+                <span>{{ log.from_status|default:"—" }} → <b>{{ log.to_status }}</b></span>
+                <span class="whitespace-nowrap text-[color:var(--color-content-subtle)]">{{ log.changed_at|date:"d.m H:i" }}</span>
+              </div>
+              {% if log.reason %}<p class="text-[color:var(--color-content-subtle)]">{{ log.reason }}</p>{% endif %}
+            </div>
+          {% empty %}<p class="help">Jurnal bo'sh.</p>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# --------- Holat o'zgartirish modali --------- #}
+  <template x-teleport="body">
+    <div x-show="statusOpen" x-cloak>
+      <div class="overlay" @click="statusOpen = false"></div>
+      <div class="modal" role="dialog" aria-modal="true" @keydown.escape.window="statusOpen = false">
+        <form method="post" action="{% url 'panel:item_status' item.pk %}" class="modal-panel">
+          {% csrf_token %}
+          <div class="card-head">
+            <h2 class="card-title">Nusxa holatini o'zgartirish</h2>
+            <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="statusOpen = false" aria-label="Yopish">
+              {% include "ui/_icon.html" with name="close" class="size-4" %}
+            </button>
+          </div>
+          <div class="card-body space-y-3">
+            <div class="field">
+              <label class="label label-required">Yangi holat</label>
+              <select name="status" class="select" required>
+                {% for value, label in statuses %}
+                  <option value="{{ value }}" {% if item.status == value %}disabled{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="field">
+              <label class="label">Sabab</label>
+              <input name="reason" class="input" placeholder="Masalan: muqovasi yirtilgan">
+              <p class="help">Sabab holat jurnaliga va audit iziga yoziladi.</p>
+            </div>
+          </div>
+          <div class="card-foot">
+            <button type="button" class="btn btn-secondary" @click="statusOpen = false">Bekor qilish</button>
+            <button type="submit" class="btn btn-primary">O'zgartirish</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </template>
+</div>
+{% endblock %}

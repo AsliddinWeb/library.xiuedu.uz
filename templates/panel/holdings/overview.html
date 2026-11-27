@@ -1,0 +1,169 @@
+{% extends "panel/base.html" %}
+{% comment %}Fond tuzilmasi: filiallar, nusxa turlari, javonlar — bitta sahifada.{% endcomment %}
+
+{% block title %}Fond tuzilmasi — XIU Kutubxona{% endblock %}
+
+{% block panel_content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Fond tuzilmasi</h1>
+    <p class="page-sub">Filiallar, nusxa turlari va javonlar — nusxa qo'shganda shular tanlanadi.</p>
+  </div>
+</div>
+
+<div x-data="{ tab: 'library' }">
+  <div class="tabs mb-4">
+    <button class="tab" :class="tab === 'library' && 'tab-active'" @click="tab = 'library'">
+      Filiallar ({{ libraries|length }})
+    </button>
+    <button class="tab" :class="tab === 'type' && 'tab-active'" @click="tab = 'type'">
+      Nusxa turlari ({{ item_types|length }})
+    </button>
+    <button class="tab" :class="tab === 'shelf' && 'tab-active'" @click="tab = 'shelf'">
+      Javonlar ({{ shelves|length }})
+    </button>
+  </div>
+
+  {# ---------------- Filiallar ---------------- #}
+  <div x-show="tab === 'library'" class="grid gap-4 lg:grid-cols-3">
+    <div class="lg:col-span-2">
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Kod</th><th>Nomi</th><th>Turi</th><th class="table-num">Nusxa</th><th>Holat</th><th></th></tr></thead>
+          <tbody>
+            {% for lib in libraries %}
+            <tr>
+              <td class="font-mono text-xs">{{ lib.code }}</td>
+              <td class="font-medium">{{ lib.name }}</td>
+              <td class="text-[color:var(--color-content-muted)]">{{ lib.get_kind_display }}</td>
+              <td class="table-num">{{ lib.items_total }}</td>
+              <td>{% if lib.is_active %}{% include "ui/_badge.html" with text="Faol" variant="success" %}{% else %}{% include "ui/_badge.html" with text="Nofaol" variant="neutral" %}{% endif %}</td>
+              <td>
+                <div class="table-actions">
+                  <a href="{% url 'panel:holdings_edit' 'library' lib.pk %}" class="btn btn-ghost btn-icon btn-sm" aria-label="Tahrirlash">
+                    {% include "ui/_icon.html" with name="pencil" class="size-4" %}
+                  </a>
+                  <form method="post" action="{% url 'panel:holdings_toggle' 'library' lib.pk %}">{% csrf_token %}
+                    <button class="btn btn-ghost btn-sm">{% if lib.is_active %}O'chirish{% else %}Yoqish{% endif %}</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <form method="post" class="card">
+      {% csrf_token %}
+      <input type="hidden" name="form_kind" value="library">
+      <div class="card-head"><h2 class="card-title">Yangi filial</h2></div>
+      <div class="card-body space-y-3">
+        {% for field in forms.library %}
+          <div class="field">
+            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="card-foot"><button class="btn btn-primary btn-sm">Qo'shish</button></div>
+    </form>
+  </div>
+
+  {# ---------------- Nusxa turlari ---------------- #}
+  <div x-show="tab === 'type'" x-cloak class="grid gap-4 lg:grid-cols-3">
+    <div class="lg:col-span-2">
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Kod</th><th>Nomi</th><th>Uyga beriladi</th><th>Muddat</th><th class="table-num">Nusxa</th><th></th></tr></thead>
+          <tbody>
+            {% for it in item_types %}
+            <tr>
+              <td class="font-mono text-xs">{{ it.code }}</td>
+              <td class="font-medium">{{ it.name }}</td>
+              <td>{% if it.is_loanable %}{% include "ui/_badge.html" with text="Ha" variant="success" %}{% else %}{% include "ui/_badge.html" with text="Faqat zalda" variant="warning" %}{% endif %}</td>
+              <td>{% if it.default_loan_days %}{{ it.default_loan_days }} kun{% else %}<span class="help">toifadan</span>{% endif %}</td>
+              <td class="table-num">{{ it.items_total }}</td>
+              <td>
+                <div class="table-actions">
+                  <a href="{% url 'panel:holdings_edit' 'type' it.pk %}" class="btn btn-ghost btn-icon btn-sm" aria-label="Tahrirlash">
+                    {% include "ui/_icon.html" with name="pencil" class="size-4" %}
+                  </a>
+                  <form method="post" action="{% url 'panel:holdings_toggle' 'type' it.pk %}">{% csrf_token %}
+                    <button class="btn btn-ghost btn-sm">{% if it.is_active %}O'chirish{% else %}Yoqish{% endif %}</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <form method="post" class="card">
+      {% csrf_token %}
+      <input type="hidden" name="form_kind" value="type">
+      <div class="card-head"><h2 class="card-title">Yangi tur</h2></div>
+      <div class="card-body space-y-3">
+        {% for field in forms.type %}
+          <div class="field">
+            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
+            {% for error in field.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="card-foot"><button class="btn btn-primary btn-sm">Qo'shish</button></div>
+    </form>
+  </div>
+
+  {# ---------------- Javonlar ---------------- #}
+  <div x-show="tab === 'shelf'" x-cloak class="grid gap-4 lg:grid-cols-3">
+    <div class="lg:col-span-2">
+      <div class="table-wrap">
+        <table class="table table-zebra">
+          <thead><tr><th>Kod</th><th>Filial</th><th>Yo'nalish</th><th class="table-num">Nusxa</th><th></th></tr></thead>
+          <tbody>
+            {% for shelf in shelves %}
+            <tr>
+              <td class="font-mono text-xs">{{ shelf.code }}</td>
+              <td>{{ shelf.library.name }}</td>
+              <td class="text-[color:var(--color-content-muted)]">{{ shelf.directions }}</td>
+              <td class="table-num">{{ shelf.items_total }}</td>
+              <td>
+                <div class="table-actions">
+                  <a href="{% url 'panel:holdings_edit' 'shelf' shelf.pk %}" class="btn btn-ghost btn-icon btn-sm" aria-label="Tahrirlash">
+                    {% include "ui/_icon.html" with name="pencil" class="size-4" %}
+                  </a>
+                  <form method="post" action="{% url 'panel:holdings_toggle' 'shelf' shelf.pk %}">{% csrf_token %}
+                    <button class="btn btn-ghost btn-sm">{% if shelf.is_active %}O'chirish{% else %}Yoqish{% endif %}</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <form method="post" class="card">
+      {% csrf_token %}
+      <input type="hidden" name="form_kind" value="shelf">
+      <div class="card-head"><h2 class="card-title">Yangi javon</h2></div>
+      <div class="card-body space-y-3">
+        {% for field in forms.shelf %}
+          <div class="field">
+            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
+            {% for error in field.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="card-foot"><button class="btn btn-primary btn-sm">Qo'shish</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}
