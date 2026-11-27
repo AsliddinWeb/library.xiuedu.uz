@@ -29,13 +29,28 @@ DATABASES = {
 }
 
 # Xavfsizlik sozlamalari (HTTPS orqasida ishlaydi)
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# HTTPS. Standart holatda YOQILGAN — production sayt sertifikat bilan ishlashi kerak.
+#
+# MUHIM: sertifikat hali o'rnatilmagan bo'lsa (nginx faqat 80-portni tinglaydi),
+# bu sozlama saytni ISHLAMAY QO'YADI: Django har so'rovni https'ga yo'naltiradi,
+# brauzer esa 443-portga ulana olmaydi. Shunday holatda vaqtincha:
+#
+#     echo "USE_HTTPS=0" >> .env && sudo systemctl restart library
+#
+# va imkon qadar tezroq sertifikat o'rnating:
+#
+#     sudo certbot --nginx -d library.xiuedu.uz
+#
+# Sertifikat o'rnatilgach `USE_HTTPS` satrini .env dan olib tashlang.
+USE_HTTPS = os.getenv('USE_HTTPS', '1').strip().lower() not in ('0', 'false', 'no', 'off')
+
+SECURE_SSL_REDIRECT = USE_HTTPS
+SESSION_COOKIE_SECURE = USE_HTTPS
+CSRF_COOKIE_SECURE = USE_HTTPS
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_HSTS_SECONDS = 31536000  # 1 yil
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+SECURE_HSTS_SECONDS = 31536000 if USE_HTTPS else 0  # 1 yil
+SECURE_HSTS_INCLUDE_SUBDOMAINS = USE_HTTPS
+SECURE_HSTS_PRELOAD = USE_HTTPS
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 

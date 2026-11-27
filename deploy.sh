@@ -251,15 +251,36 @@ step "Sayt javob beryaptimi"
 # =============================================================================
 if [[ $DO_HEALTH -eq 1 ]]; then
     for attempt in 1 2 3 4 5; do
-        CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
-                 -H "Host: $HEALTH_HOST" "$HEALTH_URL" || true)"
-        if [[ "$CODE" =~ ^(200|301|302)$ ]]; then
-            ok "HTTP $CODE — sayt ishlayapti"
+        # Yo'naltirishlar kuzatiladi (-L): "301 -> https" degan javobni
+        # muvaffaqiyat deb hisoblab qo'ymaslik uchun — sertifikat bo'lmasa
+        # brauzer o'sha yerda to'xtab qoladi.
+        READ="$(curl -sSL -k -o /dev/null --max-redirs 3 --max-time 10 \
+                -H "Host: $HEALTH_HOST" \
+                -w '%{http_code} %{num_redirects} %{url_effective}' \
+                "$HEALTH_URL" 2>/dev/null || true)"
+        CODE="${READ%% *}"
+        REDIRECTS="$(printf '%s' "$READ" | awk '{print $2}')"
+        FINAL_URL="$(printf '%s' "$READ" | awk '{print $3}')"
+
+        if [[ "$CODE" == "200" ]]; then
+            if [[ "${REDIRECTS:-0}" -gt 0 ]]; then
+                ok "HTTP 200 — sayt ishlayapti (yo'naltirish: $FINAL_URL)"
+            else
+                ok "HTTP 200 — sayt ishlayapti"
+            fi
             break
         fi
         if [[ $attempt -eq 5 ]]; then
             echo "Sayt javob bermadi (oxirgi kod: ${CODE:-javobsiz})"
             echo "  Tekshirilgan manzil: $HEALTH_URL (Host: $HEALTH_HOST)"
+            if [[ "${FINAL_URL:-}" == https://* ]]; then
+                echo
+                echo "  Sayt https'ga yo'naltirdi, lekin javob kelmadi."
+                echo "  Sertifikat o'rnatilganmi? Agar yo'q bo'lsa:"
+                echo "    sudo certbot --nginx -d $HEALTH_HOST"
+                echo "  Yoki vaqtincha yo'naltirishni o'chiring:"
+                echo "    echo \"USE_HTTPS=0\" >> .env && sudo systemctl restart $SERVICE"
+            fi
             echo "  Boshqa manzil kerak bo'lsa:"
             echo "    LIBRARY_HEALTH_URL=http://127.0.0.1:8001/ ./deploy.sh --no-backup --no-pull"
             echo "  Gunicorn holati: systemctl status $SERVICE --no-pager -n 20"
