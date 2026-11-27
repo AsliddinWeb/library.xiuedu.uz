@@ -223,16 +223,27 @@ ok "check --deploy o'tdi"
 # =============================================================================
 step "Xizmatni qayta ishga tushirish"
 # =============================================================================
-if systemctl list-unit-files 2>/dev/null | grep -q "^${SERVICE}.service"; then
+# Xizmat mavjudligini `systemctl cat` bilan aniqlaymiz: u unit fayl qayerda
+# bo'lishidan (va `list-unit-files` chiqishi qanday formatda bo'lishidan)
+# qat'i nazar ishlaydi.
+if systemctl cat "${SERVICE}.service" >/dev/null 2>&1; then
     as_root systemctl restart "$SERVICE"
     sleep 2
     if as_root systemctl is-active --quiet "$SERVICE"; then
         ok "$SERVICE qayta ishga tushdi"
     else
-        echo "$SERVICE ishga tushmadi"; exit 1
+        echo "$SERVICE ishga tushmadi"
+        as_root systemctl status "$SERVICE" --no-pager -n 20 || true
+        exit 1
     fi
 else
-    warn "systemd xizmati '$SERVICE' topilmadi — qo'lda qayta ishga tushiring"
+    # Xizmat topilmadi — bu JIDDIY: eski kod yangi baza bilan ishlab qoladi.
+    printf '%s    ╳ systemd xizmati "%s" topilmadi!%s\n' "$RED" "$SERVICE" "$OFF"
+    echo "      Yangi kod YUKLANMADI — eski jarayon ishlashda davom etmoqda."
+    echo "      Xizmat nomini toping va qayta urinib ko'ring:"
+    echo "        systemctl list-units --type=service | grep -i librar"
+    echo "        LIBRARY_SERVICE=<nom> ./deploy.sh --no-backup --no-pull"
+    exit 1
 fi
 
 # =============================================================================
