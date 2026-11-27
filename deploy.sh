@@ -107,6 +107,31 @@ if [[ "$DJANGO_ENV_VALUE" != "production" ]]; then
     warn ".env dagi DJANGO_ENV='$DJANGO_ENV_VALUE' (production emas!)"
 fi
 
+# --- .env to'liqligini OLDINDAN tekshirish ---------------------------------
+# Bu tekshiruv zaxira va pip'dan OLDIN turadi: yetishmayotgan qiymat uchun
+# deploy yarim yo'lda to'xtab qolmasin.
+MISSING=()
+[[ -n "$(env_value SECRET_KEY)" ]] || MISSING+=("SECRET_KEY")
+[[ -n "$(env_value DB_NAME)" ]]    || MISSING+=("DB_NAME")
+[[ -n "$(env_value DB_USER)" ]]    || MISSING+=("DB_USER")
+
+if [[ ${#MISSING[@]} -gt 0 ]]; then
+    printf '\n%s╳ .env TO%sLIQ EMAS%s\n' "$RED" "'" "$OFF"
+    echo "  Yetishmayapti: ${MISSING[*]}"
+    echo
+    if printf '%s\n' "${MISSING[@]}" | grep -q '^SECRET_KEY$'; then
+        echo "  SECRET_KEY ni generatsiya qilib .env ga qo'shish:"
+        echo "    echo \"SECRET_KEY=\$($PY -c 'import secrets; print(secrets.token_urlsafe(64))')\" >> .env"
+        echo
+        echo "  ESLATMA: yangi kalit bilan mavjud sessiyalar bekor bo'ladi —"
+        echo "  foydalanuvchilar qayta kirishi kerak bo'ladi (bir martalik)."
+        echo
+    fi
+    echo "  Keyin qaytadan: ./deploy.sh"
+    exit 1
+fi
+ok ".env to'liq (SECRET_KEY, DB sozlamalari bor)"
+
 OLD_COMMIT="$(git rev-parse --short HEAD)"
 ok "Joriy versiya: $OLD_COMMIT"
 

@@ -170,6 +170,45 @@ LIBRARY_HEALTH_URL=http://127.0.0.1:8001/ LIBRARY_HEALTH_HOST=library.xiuedu.uz 
 
 ---
 
+## 2-B. Birinchi deploy'da uchraydigan xatolar
+
+### `SECRET_KEY muhit o'zgaruvchisi production'da o'rnatilishi shart`
+
+v2 da `SECRET_KEY` ning standart qiymati bor edi; v3 da production'da u **majburiy**
+(standart kalit bilan ishlash xavfsiz emas). `.env` ga qo'shing:
+
+```bash
+cd ~/projects/library.xiuedu.uz
+echo "SECRET_KEY=$(venv/bin/python -c 'import secrets; print(secrets.token_urlsafe(64))')" >> .env
+```
+
+Yangi kalit bilan mavjud sessiyalar bekor bo'ladi — foydalanuvchilar bir marta
+qayta kirishadi. Eski kalitni git'dagi fayldan qayta ishlatmang: u ochiq
+repozitoriyda turgan, ya'ni sir emas.
+
+`./deploy.sh` endi buni **oldindan** tekshiradi: zaxira va `pip install` dan
+oldin to'xtaydi va generatsiya buyrug'ini ko'rsatadi.
+
+### `FATAL: password authentication failed` yoki `role ... does not exist`
+
+`.env` dagi `DB_PASSWORD` yo'q yoki noto'g'ri. Parolni yangilash:
+
+```bash
+sudo -u postgres psql -c "ALTER ROLE library_user PASSWORD 'yangi-parol';"
+echo "DB_PASSWORD=yangi-parol" >> .env
+```
+
+### Statik fayllar 404 yoki eski CSS
+
+nginx `/static/` ni `staticfiles/` ga ko'rsatishi kerak (namuna:
+`bin/nginx-site.conf.example`). Uy papkasi huquqi ham tekshiring:
+
+```bash
+chmod o+x /home/ubuntu /home/ubuntu/projects
+```
+
+---
+
 ## 3. Xatolik bo'lsa
 
 ```bash
