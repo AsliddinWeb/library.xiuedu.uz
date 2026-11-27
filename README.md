@@ -123,8 +123,14 @@ make lint     # ruff linter
 
 ## Production deploy
 
-To'liq yo'riqnoma: [`DEPLOY.md`](DEPLOY.md)
-(gunicorn + nginx + WhiteNoise + raqamli kitoblar uchun `X-Accel-Redirect` himoyasi).
+Serverda **Docker kerak emas** — tizim PostgreSQL'i, gunicorn va nginx.
 
-Asosiy: `DJANGO_ENV=production`, `SECRET_KEY` majburiy, `collectstatic`,
-`python manage.py check --deploy`.
+```bash
+sudo ./bin/server-setup.sh     # bir marta: paketlar, baza, .env, systemd, nginx, cron
+./deploy.sh                    # har safar: zaxira -> pull -> migrate -> statik -> restart
+```
+
+To'liq yo'riqnoma: [`DEPLOY.md`](DEPLOY.md).
+
+> Dizayn o'zgarsa, **lokalda `make css` ishlatib natijani commit qiling** —
+> serverda Tailwind build qilinmaydi, `static/css/app.css` git orqali boradi.
