@@ -37,7 +37,7 @@ def _student_dashboard(request):
     base_qs = (Book.objects.select_related('category').prefetch_related('authors')
                .filter(is_active=True, category__is_active=True))
 
-    popular_books = (base_qs.annotate(rental_count=Count('copy__rental'))
+    popular_books = (base_qs.annotate(rental_count=Count('item__rental'))
                      .order_by('-rating_count', '-rental_count', '-view_count')[:12])
 
     one_month_ago = now() - timedelta(days=30)

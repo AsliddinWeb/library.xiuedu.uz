@@ -71,7 +71,7 @@ def analytics(request):
     viewed = list(Book.objects.filter(view_count__gt=0).order_by('-view_count')[:8])
     viewed_chart = {'labels': [b.title[:24] for b in viewed], 'data': [b.view_count for b in viewed]}
 
-    rented = list(Book.objects.annotate(rc=Count('copy__rental')).filter(rc__gt=0).order_by('-rc')[:8])
+    rented = list(Book.objects.annotate(rc=Count('item__rental')).filter(rc__gt=0).order_by('-rc')[:8])
     rented_chart = {'labels': [b.title[:24] for b in rented], 'data': [b.rc for b in rented]}
 
     active_patrons = list(Patron.objects.annotate(rc=Count('loans')).filter(rc__gt=0)

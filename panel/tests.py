@@ -172,3 +172,49 @@ class ManualPatronTests(TestCase):
         self.assertEqual(patron.full_name, "Yangi nom")
         log = ActionLog.objects.filter(action=ActionLog.Action.PATRON_EDIT).first()
         self.assertIn('full_name', log.changes)
+
+
+class PanelSmokeTests(TestCase):
+    """Panelning barcha asosiy sahifasi ochilishi kerak.
+
+    Bu testlar P2'da topilgan xatoni (Book -> Item teskari bog'lanish nomi
+    o'zgargach `/panel/books/` ishlamay qolgan edi) qaytib kelmasligi uchun.
+    """
+
+    def setUp(self):
+        from book_app.services import create_items
+        from core.testing import make_book
+
+        self.librarian = make_librarian(password='x')
+        self.client.login(username=self.librarian.username, password='x')
+        self.book = make_book("Panel kitobi")
+        create_items(self.book, 2)
+
+    def test_all_panel_pages_open(self):
+        urls = [
+            '/panel/', '/panel/books/', f'/panel/books/{self.book.pk}/',
+            '/panel/genres/', '/panel/authors/', '/panel/import/',
+            '/panel/requests/', '/panel/rentals/', '/panel/reservations/', '/panel/fines/',
+            '/panel/members/', '/panel/reviews/', '/panel/analytics/', '/panel/settings/',
+        ]
+        for url in urls:
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 200)
+
+    def test_book_list_shows_copy_counts(self):
+        response = self.client.get('/panel/books/')
+        self.assertContains(response, "Panel kitobi")
+
+    def test_copy_add_and_withdraw(self):
+        from book_app.models import Item
+
+        response = self.client.post(f'/panel/books/{self.book.pk}/copies/add/', {'quantity': 3})
+        self.assertEqual(response.status_code, 200)
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.items_count, 5)
+
+        item = Item.objects.filter(book=self.book).first()
+        self.client.post(f'/panel/copies/{item.pk}/delete/', {'reason': 'Sinov'})
+
+        item.refresh_from_db()
+        self.assertEqual(item.status, Item.Status.WITHDRAWN)

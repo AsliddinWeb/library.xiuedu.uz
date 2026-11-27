@@ -53,9 +53,9 @@ def make_book(title=None, *, genre=None, authors=(), copies=0, **kwargs):
 
 
 def make_copies(book, count=1, available=True):
-    from book_app.models import Copy
+    from book_app.models import Item
     return [
-        Copy.objects.create(book=book, inventory_number=f"INV-{_uniq()}", is_available=available)
+        Item.objects.create(book=book, inventory_number=f"INV-{_uniq()}", is_available=available)
         for _ in range(count)
     ]
 

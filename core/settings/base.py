@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'user_app',
     'dashboard_app',
     'book_app',
+    'holdings',
     'circulation',
     'reading',
     'engagement',
@@ -229,14 +230,50 @@ UNFOLD = {
                     {
                         "title": _("Nusxalar"),
                         "icon": "library_books",
-                        "link": reverse_lazy("admin:book_app_copy_changelist"),
+                        "link": reverse_lazy("admin:book_app_item_changelist"),
                         "badge": "core.unfold_badges.available_copies",
+                    },
+                    {
+                        "title": _("Nashriyotlar"),
+                        "icon": "domain",
+                        "link": reverse_lazy("admin:book_app_publisher_changelist"),
+                    },
+                    {
+                        "title": _("Mavzular"),
+                        "icon": "sell",
+                        "link": reverse_lazy("admin:book_app_subject_changelist"),
                     },
                     {
                         "title": _("Ijaralar"),
                         "icon": "receipt_long",
                         "link": reverse_lazy("admin:book_app_rental_changelist"),
                         "badge": "core.unfold_badges.active_rentals",
+                    },
+                ],
+            },
+            {
+                "title": _("Fond tuzilmasi"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Filiallar"),
+                        "icon": "account_balance",
+                        "link": reverse_lazy("admin:holdings_library_changelist"),
+                    },
+                    {
+                        "title": _("Nusxa turlari"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:holdings_itemtype_changelist"),
+                    },
+                    {
+                        "title": _("Javonlar"),
+                        "icon": "shelves",
+                        "link": reverse_lazy("admin:holdings_shelflocation_changelist"),
+                    },
+                    {
+                        "title": _("Nusxa jurnali"),
+                        "icon": "history",
+                        "link": reverse_lazy("admin:book_app_itemstatuslog_changelist"),
                     },
                 ],
             },

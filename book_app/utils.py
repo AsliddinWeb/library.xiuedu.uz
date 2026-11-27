@@ -1,24 +1,16 @@
-from .models import Copy, Rental
+"""Kitob yordamchilari (eski API — yangi kod `book_app.services` ni ishlatadi)."""
+from .models import Rental
 
 
-def add_copies(book, quantity):
+def add_copies(book, quantity, **kwargs):
+    """Kitobga N ta nusxa qo'shadi.
+
+    Mantiq `book_app.services.create_items` ichida: shtrix-kod, inventar raqami,
+    filial, nusxa turi va jurnal — hammasi o'sha yerda.
     """
-    Kitob uchun yangi nusxalar qo'shish va `inventory_number`ni kitobga nisbatan unik qilish.
-    """
-    # Mavjud eng katta inventar raqamini olish
-    last_copy = Copy.objects.filter(book=book).order_by("-inventory_number").first()
+    from .services import create_items
+    return create_items(book, quantity, **kwargs)
 
-    if last_copy and last_copy.inventory_number.isdigit():
-        start_number = int(last_copy.inventory_number) + 1
-    else:
-        start_number = 1  # Agar nusxalar yo'q bo'lsa, 1-dan boshlash
-
-    # Yangi nusxalarni yaratish
-    new_copies = [
-        Copy(book=book, inventory_number=f"INV-{start_number + i}", is_available=True)
-        for i in range(quantity)
-    ]
-    Copy.objects.bulk_create(new_copies)
 
 def is_book_borrowed_by_patron(patron, book):
     """Kitob shu a'zoda ijaradami (qaytarilmaganmi)."""

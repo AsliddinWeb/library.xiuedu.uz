@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Author, Book, Copy, Genre, Rental
+from .models import Author, Book, Genre, Item, Rental
 
 
 class AuthorForm(forms.ModelForm):
@@ -47,7 +47,7 @@ class BookForm(forms.ModelForm):
 
 class CopyForm(forms.ModelForm):
     class Meta:
-        model = Copy
+        model = Item
         fields = ['book', 'inventory_number', 'is_available']
         widgets = {
             'book': forms.Select(attrs={'class': 'form-control'}),

@@ -1,36 +1,78 @@
-{% load static %}
+{% comment %}
+  Kitob nusxalari (HTMX blok) — P2 dan keyin: shtrix-kod, holat, joylashuv.
+  Yangi dizayn tizimi komponentlari ishlatiladi.
+{% endcomment %}
 <div id="copies">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <h3 class="font-serif text-base font-semibold text-navy-900">Nusxalar
-            <span class="ml-1 text-sm font-normal text-navy-400">({{ book.copy_set.count }})</span>
-        </h3>
-        <form hx-post="{% url 'panel:copy_add' book.pk %}" hx-target="#copies" hx-swap="outerHTML" class="flex items-center gap-2">
-            <input type="number" name="quantity" value="1" min="1" max="50"
-                   class="w-20 rounded-lg border border-navy-200 bg-cream/40 px-3 py-1.5 text-sm focus:border-gold-400 focus:ring-2 focus:ring-gold-200 focus:outline-none">
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-navy-900 px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-navy-800">
-                <svg class="h-4 w-4 text-gold-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
-                Qo'shish
-            </button>
-        </form>
-    </div>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h3 class="card-title">
+      Nusxalar
+      <span class="help ml-1">{{ book.items_count }} ta · {{ book.available_count }} mavjud</span>
+    </h3>
+    <form hx-post="{% url 'panel:copy_add' book.pk %}" hx-target="#copies" hx-swap="outerHTML"
+          class="flex items-end gap-2">
+      <div class="field w-24">
+        <label class="label">Soni</label>
+        <input type="number" name="quantity" value="1" min="1" max="50" class="input">
+      </div>
+      <button type="submit" class="btn btn-primary">
+        {% include "ui/_icon.html" with name="plus" class="size-4" %} Nusxa qo'shish
+      </button>
+    </form>
+  </div>
 
-    <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {% for copy in book.copy_set.all %}
-        <div class="flex items-center justify-between gap-2 rounded-lg border border-navy-100 px-3 py-2 text-sm">
-            <span class="font-medium text-navy-800">{{ copy.inventory_number }}</span>
-            <div class="flex items-center gap-1">
-                <button hx-post="{% url 'panel:copy_toggle' copy.pk %}" hx-target="#copies" hx-swap="outerHTML"
-                        class="rounded-full px-2.5 py-0.5 text-xs font-medium transition {% if copy.is_available %}bg-emerald-50 text-emerald-700 hover:bg-emerald-100{% else %}bg-red-50 text-red-600 hover:bg-red-100{% endif %}">
-                    {% if copy.is_available %}Mavjud{% else %}Band{% endif %}
-                </button>
-                <button hx-post="{% url 'panel:copy_delete' copy.pk %}" hx-target="#copies" hx-swap="outerHTML"
-                        class="rounded-lg p-1 text-red-400 transition hover:bg-red-50 hover:text-red-600" title="O'chirish">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                </button>
-            </div>
-        </div>
-        {% empty %}
-        <p class="col-span-2 rounded-lg border border-dashed border-navy-200 px-4 py-6 text-center text-sm text-navy-400">Nusxa yo'q. Yuqoridan qo'shing.</p>
-        {% endfor %}
+  {% if book.item_set.all %}
+    <div class="table-wrap mt-3">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Shtrix-kod</th>
+            <th>Inventar</th>
+            <th>Turi</th>
+            <th>Joylashuvi</th>
+            <th>Holati</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for copy in book.item_set.all %}
+          <tr>
+            <td class="font-mono text-xs">{{ copy.barcode|default:"—" }}</td>
+            <td>{{ copy.inventory_number }}</td>
+            <td class="text-[color:var(--color-content-muted)]">{{ copy.item_type.name|default:"—" }}</td>
+            <td class="text-[color:var(--color-content-muted)]">{{ copy.location_text }}</td>
+            <td>
+              {% if copy.status == 'AVAILABLE' %}{% include "ui/_badge.html" with text="Mavjud" variant="success" dot=1 %}
+              {% elif copy.status == 'ON_LOAN' %}{% include "ui/_badge.html" with text="Ijarada" variant="info" dot=1 %}
+              {% elif copy.status == 'NOT_FOR_LOAN' %}{% include "ui/_badge.html" with text="Faqat zalda" variant="warning" dot=1 %}
+              {% elif copy.status == 'WITHDRAWN' %}{% include "ui/_badge.html" with text="Chiqarilgan" variant="neutral" dot=1 %}
+              {% elif copy.status == 'LOST' %}{% include "ui/_badge.html" with text="Yo'qolgan" variant="danger" dot=1 %}
+              {% elif copy.status == 'DAMAGED' %}{% include "ui/_badge.html" with text="Shikastlangan" variant="danger" dot=1 %}
+              {% else %}{% include "ui/_badge.html" with text=copy.get_status_display variant="neutral" dot=1 %}{% endif %}
+            </td>
+            <td>
+              <div class="table-actions">
+                {% if copy.status != 'WITHDRAWN' %}
+                  <button hx-post="{% url 'panel:copy_toggle' copy.pk %}" hx-target="#copies" hx-swap="outerHTML"
+                          class="btn btn-ghost btn-sm"
+                          title="Mavjud / faqat zalda holatini almashtirish">
+                    {% if copy.status == 'AVAILABLE' %}Zalga{% else %}Bo'shatish{% endif %}
+                  </button>
+                  <button hx-post="{% url 'panel:copy_delete' copy.pk %}" hx-target="#copies" hx-swap="outerHTML"
+                          hx-confirm="Nusxa hisobdan chiqarilsinmi? Bu amal fond harakatiga yoziladi."
+                          class="btn btn-ghost btn-icon btn-sm" aria-label="Hisobdan chiqarish">
+                    {% include "ui/_icon.html" with name="trash" class="size-4" %}
+                  </button>
+                {% else %}
+                  <span class="help">{{ copy.withdrawn_on|default:"" }}</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+  {% else %}
+    {% include "ui/_empty.html" with icon="library" title="Nusxa yo'q" text="Yuqoridagi forma orqali nusxa qo'shing — shtrix-kod avtomatik beriladi." %}
+  {% endif %}
 </div>

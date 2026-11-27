@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from book_app.models import Book, Copy, Genre
+from book_app.models import Book, Genre, Item
 from circulation import services as circ
 from circulation.models import RentalRequest
 from core.testing import make_employee, make_student
@@ -25,7 +25,7 @@ class EventNotificationTests(TestCase):
     def setUp(self):
         genre = Genre.objects.create(name='G')
         self.book = Book.objects.create(title='B', category=genre)
-        Copy.objects.create(book=self.book, inventory_number='1', is_available=True)
+        Item.objects.create(book=self.book, inventory_number='1', is_available=True)
 
     def test_approve_request_notifies_patron(self):
         patron = get_or_create_patron(make_student(username='talaba-n'))

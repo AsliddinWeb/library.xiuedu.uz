@@ -12,7 +12,7 @@ from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.utils.timezone import now
 
-from book_app.models import Book, Copy, Genre, Rental
+from book_app.models import Book, Genre, Item, Rental
 from core.testing import make_employee, make_librarian, make_student
 from user_app.models import PatronCategory, User
 from user_app.roles import Roles
@@ -49,7 +49,7 @@ class RentalFlowTests(TestCase):
     def setUp(self):
         genre = Genre.objects.create(name='G')
         self.book = Book.objects.create(title='B', category=genre)
-        self.copy = Copy.objects.create(book=self.book, inventory_number='1', is_available=True)
+        self.copy = Item.objects.create(book=self.book, inventory_number='1', is_available=True)
         self.p1 = get_or_create_patron(make_student(username='s1'))
         self.p2 = get_or_create_patron(make_student(username='s2'))
 
@@ -120,7 +120,7 @@ class RentalFlowTests(TestCase):
         services.approve_request(req)
 
         other = Book.objects.create(title='B2', category=self.book.category)
-        Copy.objects.create(book=other, inventory_number='2', is_available=True)
+        Item.objects.create(book=other, inventory_number='2', is_available=True)
         self.p1.refresh_from_db()
 
         req2, msg = services.create_rental_request(self.p1, other)
@@ -172,7 +172,7 @@ class FineTests(TestCase):
 
         genre = Genre.objects.create(name='G')
         self.book = Book.objects.create(title='B', category=genre)
-        self.copy = Copy.objects.create(book=self.book, inventory_number='1', is_available=False)
+        self.copy = Item.objects.create(book=self.book, inventory_number='1', is_available=False)
         self.patron = get_or_create_patron(User.objects.create(username='s', user_type='STUDENT'))
 
     def _overdue_rental(self, days=3):
@@ -225,7 +225,7 @@ class LibrarianPermissionTests(TestCase):
     def setUp(self):
         genre = Genre.objects.create(name='G')
         self.book = Book.objects.create(title='B', category=genre)
-        Copy.objects.create(book=self.book, inventory_number='1', is_available=True)
+        Item.objects.create(book=self.book, inventory_number='1', is_available=True)
         self.patron = get_or_create_patron(make_student(username='talaba-9'))
         self.req, _ = services.create_rental_request(self.patron, self.book)
 

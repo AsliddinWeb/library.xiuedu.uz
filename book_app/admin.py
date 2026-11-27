@@ -3,7 +3,18 @@ from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 
-from .models import Author, Book, Copy, Genre, Rental
+from .models import (
+    Author,
+    Book,
+    Contributor,
+    Genre,
+    Item,
+    ItemStatusLog,
+    Publisher,
+    Rental,
+    Series,
+    Subject,
+)
 
 
 @admin.register(Author)
@@ -26,10 +37,19 @@ class GenreAdmin(ModelAdmin):
     list_filter = ("is_active",)
 
 
-class CopyInline(TabularInline):
-    model = Copy
+class ContributorInline(TabularInline):
+    """Mualliflar endi rol bilan biriktiriladi (M2M o'rniga through-model)."""
+    model = Contributor
     extra = 1
-    fields = ("inventory_number", "is_available")
+    fields = ("author", "role", "order")
+    autocomplete_fields = ("author",)
+
+
+class ItemInline(TabularInline):
+    model = Item
+    extra = 1
+    fields = ("barcode", "inventory_number", "item_type", "library", "shelf_location", "status")
+    show_change_link = True
 
 
 @admin.register(Book)
@@ -37,21 +57,35 @@ class BookAdmin(ModelAdmin):
     list_display = ("cover_thumb", "title", "category", "published_year",
                     "mode_badge", "rating_display", "is_active")
     list_display_links = ("cover_thumb", "title")
-    search_fields = ("title", "isbn")
-    list_filter = ("reading_mode", "is_active", "language", "category")
+    search_fields = ("title", "subtitle", "isbn", "udc", "authors__full_name")
+    list_filter = ("record_type", "reading_mode", "is_active", "is_textbook",
+                   "language", "category")
     autocomplete_fields = ("category",)
-    filter_horizontal = ("authors",)
     prepopulated_fields = {"slug": ("title",)}
-    readonly_fields = ("view_count", "avg_rating", "rating_count", "published_date", "cover_preview")
+    readonly_fields = ("view_count", "loan_count", "items_count", "available_count",
+                       "avg_rating", "rating_count", "published_date", "cover_preview")
     list_per_page = 25
-    inlines = [CopyInline]
+    inlines = [ContributorInline, ItemInline]
 
     fieldsets = (
-        ("Asosiy", {"fields": ("title", "slug", "authors", "category", "published_year", "language", "isbn")}),
-        ("Tavsif va muqova", {"fields": ("description", "cover_image", "cover_preview", "page_count")}),
-        ("Raqamli versiyalar", {"fields": ("electronic_version", "audio_version", "reading_mode", "download_allowed")}),
-        ("Holat va statistika", {"fields": ("is_active", "view_count", "avg_rating", "rating_count")}),
+        ("Asosiy", {"fields": ("record_type", "title", "subtitle", "parallel_title", "slug",
+                               "category", "subjects")}),
+        ("Nashr", {"fields": ("publisher", "place_of_publication", "published_year",
+                              "edition_statement", "series", "series_number", "page_count")}),
+        ("Identifikatorlar va klassifikatsiya", {
+            "fields": ("isbn", "issn", "doi", "udc", "bbk", "author_sign"),
+        }),
+        ("Mazmun", {"fields": ("description", "annotation", "contents_note", "target_audience",
+                               "language", "original_language")}),
+        ("Universitet", {"fields": ("faculty", "department", "is_textbook")}),
+        ("Muqova", {"fields": ("cover_image", "cover_preview")}),
+        ("Raqamli versiyalar", {"fields": ("electronic_version", "audio_version",
+                                           "reading_mode", "download_allowed")}),
+        ("Holat va statistika", {"fields": ("is_active", "view_count", "loan_count",
+                                            "items_count", "available_count",
+                                            "avg_rating", "rating_count")}),
     )
+    filter_horizontal = ("subjects",)
 
     @display(description="")
     def cover_thumb(self, obj):
@@ -76,16 +110,76 @@ class BookAdmin(ModelAdmin):
         return f"★ {obj.avg_rating} ({obj.rating_count})"
 
 
-@admin.register(Copy)
-class CopyAdmin(ModelAdmin):
-    list_display = ("book", "inventory_number", "availability")
-    search_fields = ("inventory_number", "book__title")
-    list_filter = ("is_available",)
+@admin.register(Item)
+class ItemAdmin(ModelAdmin):
+    list_display = ("barcode", "book", "inventory_number", "item_type", "library",
+                    "shelf_location", "status_badge")
+    list_display_links = ("barcode", "book")
+    search_fields = ("barcode", "inventory_number", "book__title", "call_number")
+    list_filter = ("status", "item_type", "library", "condition", "acquisition_source")
     autocomplete_fields = ("book",)
+    list_select_related = ("book", "item_type", "library", "shelf_location")
+    readonly_fields = ("is_available", "loan_count", "created_at", "updated_at")
+    list_per_page = 50
 
-    @display(description="Holati", label={"Mavjud": "success", "Band": "danger"})
-    def availability(self, obj):
-        return "Mavjud" if obj.is_available else "Band"
+    fieldsets = (
+        ("Identifikatsiya", {"fields": ("book", "barcode", "inventory_number", "call_number",
+                                        "volume_number", "copy_number")}),
+        ("Joylashuv", {"fields": ("library", "item_type", "shelf_location")}),
+        ("Holat", {"fields": ("status", "is_available", "not_for_loan_reason",
+                              "condition", "condition_note")}),
+        ("Qabul va moliya", {"fields": ("acquired_on", "acquisition_source", "price",
+                                        "replacement_price")}),
+        ("Hisob", {"fields": ("last_seen_at", "loan_count", "withdrawn_on",
+                              "created_at", "updated_at")}),
+    )
+
+    @display(description="Holati", label={
+        "Mavjud": "success", "Ijarada": "info", "Ushlab turilgan": "warning",
+        "Yo'lda": "warning", "Qayta ishlashda": "info", "Shikastlangan": "danger",
+        "Yo'qolgan": "danger", "Hisobdan chiqarilgan": "danger", "Faqat zalda": "info",
+    })
+    def status_badge(self, obj):
+        return obj.get_status_display()
+
+
+@admin.register(ItemStatusLog)
+class ItemStatusLogAdmin(ModelAdmin):
+    list_display = ("changed_at", "item", "from_status", "to_status", "reason", "changed_by")
+    list_filter = ("to_status", "changed_at")
+    search_fields = ("item__barcode", "item__inventory_number", "reason", "document_no")
+    list_select_related = ("item", "changed_by")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(Publisher)
+class PublisherAdmin(ModelAdmin):
+    list_display = ("name", "city", "books_count")
+    search_fields = ("name", "city")
+
+    @display(description="Kitoblar")
+    def books_count(self, obj):
+        return obj.books.count()
+
+
+@admin.register(Series)
+class SeriesAdmin(ModelAdmin):
+    list_display = ("name", "issn", "publisher")
+    search_fields = ("name", "issn")
+    autocomplete_fields = ("publisher",)
+
+
+@admin.register(Subject)
+class SubjectAdmin(ModelAdmin):
+    list_display = ("name", "kind", "code", "parent", "books_count")
+    list_filter = ("kind",)
+    search_fields = ("name", "code")
+    autocomplete_fields = ("parent",)
 
 
 @admin.register(Rental)

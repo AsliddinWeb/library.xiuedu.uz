@@ -35,8 +35,8 @@ def genre_count(request):
 
 def available_copies(request):
     """Hozir mavjud (band bo'lmagan) nusxalar soni."""
-    from book_app.models import Copy
-    return _safe(lambda: Copy.objects.filter(is_available=True).count())
+    from book_app.models import Item
+    return _safe(lambda: Item.objects.filter(is_available=True).count())
 
 
 def active_rentals(request):

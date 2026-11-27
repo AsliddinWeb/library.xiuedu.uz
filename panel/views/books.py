@@ -5,14 +5,14 @@ import requests as http
 from django.contrib import messages
 from django.core.files import File
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.db.models import F, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.text import slugify
 from django.views.decorators.http import require_POST
 
-from book_app.models import Author, Book, Copy, Genre
-from book_app.utils import add_copies
+from book_app.models import Author, Book, Genre, Item
+from book_app.services import change_item_status, create_items, withdraw_item
 from user_app.permissions import Perms, require_perm
 
 from ..forms import PanelBookForm
@@ -22,12 +22,14 @@ SORTS = {'title', '-title', '-created_at', 'created_at', '-view_count', 'view_co
 
 @require_perm(Perms.CATALOG_VIEW)
 def book_list(request):
+    # Nusxa sonlari `Book.items_count` / `available_count` da saqlanadi —
+    # har ro'yxatda COUNT qilinmaydi (P2 denormalizatsiyasi).
     books = (Book.objects
              .select_related('category')
              .prefetch_related('authors')
              .annotate(
-                 copies_total=Count('copy', distinct=True),
-                 copies_avail=Count('copy', filter=Q(copy__is_available=True), distinct=True)))
+                 copies_total=F('items_count'),
+                 copies_avail=F('available_count')))
 
     q = request.GET.get('q', '').strip()
     if q:
@@ -117,29 +119,42 @@ def copy_add(request, pk):
         qty = int(request.POST.get('quantity', 1))
     except (TypeError, ValueError):
         qty = 1
-    add_copies(book, max(1, min(qty, 50)))
+    create_items(book, max(1, min(qty, 50)), created_by=request.user)
     return _render_copies(request, book)
 
 
 @require_POST
 @require_perm(Perms.ITEMS_MANAGE)
 def copy_toggle(request, pk):
-    copy = get_object_or_404(Copy, pk=pk)
-    copy.is_available = not copy.is_available
-    copy.save(update_fields=['is_available'])
-    return _render_copies(request, copy.book)
+    """Nusxani "mavjud" va "faqat zalda" holatlari orasida almashtiradi.
+
+    Ijaradagi nusxa bu yerdan o'zgartirilmaydi — u qaytarilganda o'zi bo'shaydi.
+    """
+    item = get_object_or_404(Item, pk=pk)
+    if item.status == Item.Status.ON_LOAN:
+        messages.error(request, "Ijaradagi nusxaning holatini bu yerdan o'zgartirib bo'lmaydi.")
+        return _render_copies(request, item.book)
+
+    new_status = (Item.Status.NOT_FOR_LOAN if item.status == Item.Status.AVAILABLE
+                  else Item.Status.AVAILABLE)
+    change_item_status(item, new_status, reason="Panelda qo'lda o'zgartirildi", by=request.user)
+    return _render_copies(request, item.book)
 
 
 @require_POST
-@require_perm(Perms.ITEMS_MANAGE)
+@require_perm(Perms.ITEMS_WITHDRAW)
 def copy_delete(request, pk):
-    copy = get_object_or_404(Copy, pk=pk)
-    book = copy.book
-    # faol ijaradagi nusxani o'chirmaymiz
-    if copy.rental_set.filter(return_date__isnull=True).exists():
-        messages.error(request, "Faol ijaradagi nusxani o'chirib bo'lmaydi.")
+    """Nusxani hisobdan chiqaradi (jismonan o'chirmaydi — fond tarixi saqlanadi)."""
+    item = get_object_or_404(Item, pk=pk)
+    book = item.book
+
+    if item.rental_set.filter(return_date__isnull=True).exists():
+        messages.error(request, "Faol ijaradagi nusxani hisobdan chiqarib bo'lmaydi.")
+    elif item.status == Item.Status.WITHDRAWN:
+        messages.info(request, "Bu nusxa allaqachon hisobdan chiqarilgan.")
     else:
-        copy.delete()
+        withdraw_item(item, reason=request.POST.get('reason', "Panel orqali"), by=request.user)
+        messages.success(request, f"{item.barcode} hisobdan chiqarildi.")
     return _render_copies(request, book)
 
 

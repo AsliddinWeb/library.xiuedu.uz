@@ -14,7 +14,7 @@ from datetime import timedelta
 from django.db import transaction
 from django.utils.timezone import now
 
-from book_app.models import Copy, Rental
+from book_app.models import Item, Rental
 
 from .models import Fine, LibrarySettings, RentalRequest, Reservation
 
@@ -59,7 +59,8 @@ def hold_limit_for(patron):
 # --- So'rovlar (queries) --------------------------------------------------
 
 def available_copies(book):
-    return Copy.objects.filter(book=book, is_available=True).count()
+    """Hozir ijaraga berilishi mumkin bo'lgan nusxalar soni."""
+    return Item.objects.filter(book=book, status=Item.Status.AVAILABLE).count()
 
 
 def patron_active_rental(patron, book):
@@ -193,9 +194,9 @@ def approve_request(req, librarian=None):
     if req.status != RentalRequest.Status.PENDING:
         return None, "Bu so'rov allaqachon hal qilingan."
 
-    copy = (Copy.objects
+    copy = (Item.objects
             .select_for_update()
-            .filter(book=req.book, is_available=True)
+            .filter(book=req.book, status=Item.Status.AVAILABLE)
             .first())
     if copy is None:
         return None, "Mavjud nusxa yo'q. Tasdiqlab bo'lmaydi."
@@ -209,8 +210,10 @@ def approve_request(req, librarian=None):
         borrowed_date=today,
         due_date=today + timedelta(days=loan_days_for(req.patron)),
     )
-    copy.is_available = False
-    copy.save(update_fields=['is_available'])
+    # Nusxa holati yagona joydan o'zgaradi: jurnal + audit + ko'rsatkichlar
+    from book_app.services import change_item_status
+    change_item_status(copy, Item.Status.ON_LOAN,
+                       reason=f"Ijaraga berildi — {rental.borrower_name}", by=librarian)
 
     req.status = RentalRequest.Status.APPROVED
     req.rental = rental
@@ -259,8 +262,11 @@ def return_rental(rental):
     rental.save(update_fields=['return_date'])
 
     copy = rental.copy
-    copy.is_available = True
-    copy.save(update_fields=['is_available'])
+    from book_app.services import change_item_status
+    change_item_status(copy, Item.Status.AVAILABLE,
+                       reason=f"Qaytarildi — {rental.borrower_name}")
+    copy.loan_count = (copy.loan_count or 0) + 1
+    copy.save(update_fields=['loan_count'])
 
     recalc_patron_counters(rental.patron)
 
