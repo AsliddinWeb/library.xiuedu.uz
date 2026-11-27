@@ -1,0 +1,42 @@
+{% comment %}OPAC kitob kartasi — muqova, holat, mualliflar.{% endcomment %}
+<a href="{% url 'book_app:student_book_detail' book.pk %}"
+   class="card card-hover flex gap-4 p-4">
+  <div class="h-28 w-20 flex-none overflow-hidden rounded-[var(--radius-sm)] bg-[color:var(--color-surface-sunken)]">
+    {% if book.cover_image %}
+      <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" loading="lazy"
+           class="h-full w-full object-cover">
+    {% else %}
+      <div class="flex h-full items-center justify-center text-[color:var(--color-content-subtle)]">
+        {% include "ui/_icon.html" with name="book" class="size-7" %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="min-w-0 flex-1">
+    <p class="font-display text-base leading-snug">{{ book.title|truncatechars:62 }}</p>
+    <p class="help mt-1 truncate">
+      {% for author in book.authors.all %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+    </p>
+
+    <div class="mt-2 flex flex-wrap items-center gap-1.5">
+      {% if book.electronic_version or book.audio_version %}
+        {% include "ui/_badge.html" with text="Onlayn" variant="brand" %}
+      {% endif %}
+      {% if book.available_count %}
+        {% include "ui/_badge.html" with text="Mavjud" variant="success" dot=1 %}
+      {% elif book.items_count %}
+        {% include "ui/_badge.html" with text="Band" variant="warning" dot=1 %}
+      {% endif %}
+      {% if book.published_year %}
+        <span class="help">{{ book.published_year }}</span>
+      {% endif %}
+    </div>
+
+    {% if book.avg_rating %}
+      <p class="mt-2 text-sm">
+        <span class="text-[color:var(--color-accent)]">★</span>
+        {{ book.avg_rating }} <span class="help">({{ book.rating_count }})</span>
+      </p>
+    {% endif %}
+  </div>
+</a>

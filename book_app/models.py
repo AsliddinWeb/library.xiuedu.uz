@@ -1,3 +1,5 @@
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 from django.db.models import Q
 
@@ -219,8 +221,12 @@ class Book(models.Model):
     # --- Import va qidiruv ---
     marc_raw = models.TextField(blank=True, verbose_name="MARC yozuvi (import)",
                                 help_text="Z39.50/MARC import qilinganda asl yozuv saqlanadi.")
-    search_text = models.TextField(blank=True, verbose_name="Qidiruv matni",
-                                   help_text="Lotin/kirill variantlari bilan — P5 qidiruvi uchun.")
+    search_text = models.TextField(
+        blank=True, verbose_name="Qidiruv matni",
+        help_text="Kirill va lotin yozuv bir ko'rinishga keltirilgan matn "
+                  "(sarlavha, mualliflar, mavzular, nashriyot). Avtomatik to'ladi.")
+    search_vector = SearchVectorField(
+        null=True, blank=True, editable=False, verbose_name="Qidiruv vektori")
 
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="Kitob yaratilgan sana")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Kitob yangilangan sana")
@@ -229,6 +235,13 @@ class Book(models.Model):
         verbose_name = "Kitob"
         verbose_name_plural = "Kitoblar"
         ordering = ['-id']
+        indexes = [
+            # To'liq matnli qidiruv (so'z bo'yicha, reyting bilan)
+            GinIndex(fields=['search_vector'], name='book_search_vector_gin'),
+            # Trigram — xato yozilgan so'zni ham topadi ("algaritm" -> "Algoritmlar")
+            GinIndex(name='book_search_text_trgm', fields=['search_text'],
+                     opclasses=['gin_trgm_ops']),
+        ]
 
     def __str__(self):
         return self.title

@@ -1,0 +1,142 @@
+{% extends "layouts/opac.html" %}
+{% comment %}
+  OPAC katalogi — qidiruv va fasetli filtrlar.
+  Qidiruv kirill/lotin farqini bilmaydi va xato yozilgan so'zni ham topadi
+  (`book_app/search.py`).
+{% endcomment %}
+
+{% block title %}Katalog — XIU Kutubxona{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+
+  {# ---------------- Qidiruv ---------------- #}
+  <div class="mx-auto max-w-3xl text-center">
+    <h1 class="font-display text-3xl sm:text-4xl">Katalog</h1>
+    <p class="page-sub mt-2">
+      {{ total }} ta yozuv · kirill yoki lotin — farqi yo'q, xato yozsangiz ham topiladi
+    </p>
+
+    <label class="search mt-6 h-14 text-base">
+      <span class="text-[color:var(--color-content-subtle)]">
+        {% include "ui/_icon.html" with name="search" class="size-5" %}
+      </span>
+      <input type="search" name="q" value="{{ query }}" autocomplete="off" autofocus
+             placeholder="Kitob nomi, muallif, mavzu yoki ISBN..."
+             hx-get="{% url 'book_app:student_book_list' %}"
+             hx-target="#results" hx-include="#facets"
+             hx-trigger="input changed delay:350ms, search"
+             hx-push-url="true" hx-indicator="#search-indicator">
+      <span id="search-indicator" class="htmx-indicator text-xs text-[color:var(--color-content-subtle)]">
+        qidirilmoqda…
+      </span>
+    </label>
+  </div>
+
+  <div class="mt-8 grid gap-6 lg:grid-cols-[16rem_1fr]">
+
+    {# ---------------- Fasetlar ---------------- #}
+    <aside id="facets" class="space-y-5">
+      <div class="flex items-center justify-between">
+        <p class="text-sm font-semibold">Filtrlar</p>
+        {% if has_filters %}
+          <a href="{% url 'book_app:student_book_list' %}{% if query %}?q={{ query }}{% endif %}"
+             class="text-xs text-[color:var(--color-content-muted)] hover:underline">Tozalash</a>
+        {% endif %}
+      </div>
+
+      {% include "opac/_facet_select.html" with name="sort" label="Saralash" options=sorts current=sort plain=1 %}
+
+      <div class="field">
+        <label class="label">Turi</label>
+        <select name="format" class="select"
+                hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
+                hx-include="[name='q'],#facets" hx-trigger="change" hx-push-url="true">
+          <option value="">Hammasi</option>
+          {% for value, label in formats.items %}
+            <option value="{{ value }}" {% if applied.format == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <label class="check-row">
+        <input type="checkbox" name="available" value="1" class="checkbox"
+               {% if applied.available %}checked{% endif %}
+               hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
+               hx-include="[name='q'],#facets" hx-trigger="change" hx-push-url="true">
+        Faqat hozir mavjudlari
+      </label>
+
+      {% if categories %}
+      <div class="field">
+        <label class="label">Katalog</label>
+        <select name="category" class="select"
+                hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
+                hx-include="[name='q'],#facets" hx-trigger="change" hx-push-url="true">
+          <option value="">Hammasi</option>
+          {% for c in categories %}
+            <option value="{{ c.id }}" {% if applied.category == c.id|stringformat:'s' %}selected{% endif %}>
+              {{ c.name }} ({{ c.n }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
+      {% if subjects %}
+      <div class="field">
+        <label class="label">Mavzu</label>
+        <select name="subject" class="select"
+                hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
+                hx-include="[name='q'],#facets" hx-trigger="change" hx-push-url="true">
+          <option value="">Hammasi</option>
+          {% for s in subjects %}
+            <option value="{{ s.id }}" {% if applied.subject == s.id|stringformat:'s' %}selected{% endif %}>
+              {{ s.name }} ({{ s.n }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
+      {% if languages %}
+      <div class="field">
+        <label class="label">Til</label>
+        <select name="language" class="select"
+                hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
+                hx-include="[name='q'],#facets" hx-trigger="change" hx-push-url="true">
+          <option value="">Hammasi</option>
+          {% for row in languages %}
+            <option value="{{ row.language }}" {% if applied.language == row.language %}selected{% endif %}>
+              {{ row.language|default:"—" }} ({{ row.n }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
+      <div class="field">
+        <label class="label">Nashr yili</label>
+        <div class="flex items-center gap-2">
+          <input type="number" name="year_from" value="{{ applied.year_from|default:'' }}"
+                 placeholder="dan" class="input" min="1800" max="2100"
+                 hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
+                 hx-include="[name='q'],#facets" hx-trigger="change, keyup changed delay:600ms"
+                 hx-push-url="true">
+          <span class="text-[color:var(--color-content-subtle)]">—</span>
+          <input type="number" name="year_to" value="{{ applied.year_to|default:'' }}"
+                 placeholder="gacha" class="input" min="1800" max="2100"
+                 hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
+                 hx-include="[name='q'],#facets" hx-trigger="change, keyup changed delay:600ms"
+                 hx-push-url="true">
+        </div>
+      </div>
+    </aside>
+
+    {# ---------------- Natijalar ---------------- #}
+    <div id="results">
+      {% include "opac/_results.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}

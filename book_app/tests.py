@@ -291,3 +291,243 @@ class SeedItemsCommandTests(TestCase):
         count = Item.objects.count()
         self.call('seed_items', dry_run=True, verbosity=0)
         self.assertEqual(Item.objects.count(), count)
+
+
+# =============================================================================
+#  P5 — Transliteratsiya va qidiruv
+# =============================================================================
+
+class TransliterationTests(TestCase):
+    """Kirill va lotin yozuv bir ko'rinishga kelishi kerak."""
+
+    def test_fold_matches_both_scripts(self):
+        from book_app.translit import fold
+
+        pairs = [
+            ("Ўткан кунлар", "O'tkan kunlar"),
+            ("Алгоритмлар", "Algoritmlar"),
+            ("Чўлпон", "Cho'lpon"),
+            ("Ғафур Ғулом", "G'afur G'ulom"),
+            ("Машина ўрганиш", "Mashina o'rganish"),
+            ("Ҳаёт", "Hayot"),
+        ]
+        for cyrillic, latin in pairs:
+            with self.subTest(cyrillic=cyrillic):
+                self.assertEqual(fold(cyrillic), fold(latin))
+
+    def test_fold_handles_k_q_confusion(self):
+        """Eski kirill yozuvlarda "к" ham k, ham q o'rnida ishlatilgan."""
+        from book_app.translit import fold
+        self.assertEqual(fold("Кодирий"), fold("Qodiriy"))
+
+    def test_apostrophe_variants_are_unified(self):
+        from book_app.translit import fold
+        self.assertEqual(fold("O‘tkan"), fold("O'tkan"))
+        self.assertEqual(fold("Oʻtkan"), fold("O`tkan"))
+
+    def test_normalize_strips_punctuation(self):
+        from book_app.translit import normalize
+        self.assertEqual(normalize("Algoritmlar: asoslari!"), "algoritmlar asoslari")
+
+    def test_to_cyrillic(self):
+        from book_app.translit import to_cyrillic
+        self.assertEqual(to_cyrillic("kitob"), "китоб")
+
+    def test_empty_input(self):
+        from book_app.translit import fold, normalize, to_cyrillic, to_latin
+        for func in (fold, normalize, to_cyrillic, to_latin):
+            self.assertEqual(func(""), "")
+            self.assertEqual(func(None), "")
+
+
+class SearchIndexTests(TestCase):
+    """Indeks avtomatik to'ladi va yangilanadi."""
+
+    def test_index_built_on_save(self):
+        book = make_book("Algoritmlar asoslari")
+        book.refresh_from_db()
+        self.assertIn("algoritmlar", book.search_text)
+
+    def test_index_includes_author(self):
+        book = make_book("O'tkan kunlar")
+        author = Author.objects.create(full_name="Abdulla Qodiriy")
+        Contributor.objects.create(book=book, author=author)
+
+        book.refresh_from_db()
+        self.assertIn("kodiriy", book.search_text)   # fold: q -> k
+
+    def test_index_includes_subject_and_publisher(self):
+        from book_app.models import Publisher
+
+        publisher = Publisher.objects.create(name="Yangi asr avlodi")
+        subject = Subject.objects.create(name="Dasturlash")
+        book = make_book("Python", publisher=publisher)
+        book.subjects.add(subject)
+
+        book.refresh_from_db()
+        self.assertIn("dasturlash", book.search_text)
+        self.assertIn("yangi asr", book.search_text)
+
+    def test_index_updates_when_title_changes(self):
+        book = make_book("Eski sarlavha")
+        book.title = "Butunlay boshqa nom"
+        book.save()
+
+        book.refresh_from_db()
+        # Indeks `fold()` dan o'tgan: "boshqa" -> "boshka" (q va k birlashtiriladi)
+        self.assertIn("butunlay boshka", book.search_text)
+        self.assertNotIn("eski sarlavha", book.search_text)
+
+    def test_rebuild_command(self):
+        from django.core.management import call_command
+
+        book = make_book("Indekssiz kitob")
+        Book.objects.filter(pk=book.pk).update(search_text='')
+
+        call_command('rebuild_search', verbosity=0)
+        book.refresh_from_db()
+        self.assertIn("indekssiz", book.search_text)
+
+
+class SearchQueryTests(TestCase):
+    """Qidiruvning o'zi: kirill, xato yozuv, muallif, mavzu."""
+
+    def setUp(self):
+        self.algo = make_book("Algoritmlar asoslari")
+        self.ml = make_book("Mashina o'rganish")
+        self.novel = make_book("O'tkan kunlar")
+        Contributor.objects.create(
+            book=self.novel, author=Author.objects.create(full_name="Abdulla Qodiriy"))
+
+    def _titles(self, query):
+        from book_app.search import search_books
+        return [book.title for book in search_books(Book.objects.all(), query)]
+
+    def test_exact_match(self):
+        self.assertIn("Algoritmlar asoslari", self._titles("algoritmlar"))
+
+    def test_cyrillic_query_finds_latin_record(self):
+        """Talaba kirillda yozadi — lotincha yozuv topilishi kerak."""
+        self.assertIn("Mashina o'rganish", self._titles("Машина"))
+
+    def test_latin_query_finds_record_written_in_cyrillic(self):
+        cyrillic_book = make_book("Ўткан кунлар")
+        self.assertIn("Ўткан кунлар", self._titles("o'tkan"))
+        self.assertIsNotNone(cyrillic_book.pk)
+
+    def test_typo_is_forgiven(self):
+        self.assertIn("Algoritmlar asoslari", self._titles("algaritm"))
+
+    def test_search_by_author(self):
+        titles = self._titles("qodiriy")
+        self.assertIn("O'tkan kunlar", titles)
+
+    def test_author_found_by_cyrillic_spelling(self):
+        self.assertIn("O'tkan kunlar", self._titles("Кодирий"))
+
+    def test_empty_query_returns_everything(self):
+        from book_app.search import search_books
+        self.assertEqual(search_books(Book.objects.all(), "").count(),
+                         Book.objects.count())
+
+    def test_nonsense_returns_nothing(self):
+        self.assertEqual(self._titles("zzzqqqxxx"), [])
+
+    def test_suggest_limits_results(self):
+        from book_app.search import suggest
+        self.assertLessEqual(len(list(suggest(Book.objects.all(), "a", limit=2))), 2)
+
+
+class OpacCatalogViewTests(TestCase):
+    """OPAC katalogi: qidiruv, fasetlar, HTMX."""
+
+    def assertShows(self, response, text):
+        """Sahifada ko'rinishini tekshiradi (apostrof HTML-escape qilinadi)."""
+        from django.utils.html import escape
+        self.assertContains(response, escape(text))
+
+    def assertHides(self, response, text):
+        from django.utils.html import escape
+        self.assertNotContains(response, escape(text))
+
+    def setUp(self):
+        self.user = make_student(username='talaba-opac', password='x')
+        self.client.login(username=self.user.username, password='x')
+
+        self.digital = make_book("Raqamli kitob", electronic_version='ebooks/x.pdf')
+        self.paper = make_book("Qog'oz kitob")
+        create_items(self.paper, 2)
+        self.hidden = make_book("Nofaol kitob", is_active=False)
+
+    def test_requires_login(self):
+        self.client.logout()
+        self.assertEqual(self.client.get('/books/').status_code, 302)
+
+    def test_lists_active_books_only(self):
+        response = self.client.get('/books/')
+        self.assertShows(response, "Raqamli kitob")
+        self.assertHides(response, "Nofaol kitob")
+
+    def test_search_finds_by_cyrillic(self):
+        make_book("Mashina o'rganish")
+        response = self.client.get('/books/', {'q': 'Машина'})
+        self.assertShows(response, "Mashina o'rganish")
+
+    def test_search_forgives_typo(self):
+        make_book("Algoritmlar asoslari")
+        response = self.client.get('/books/', {'q': 'algaritm'})
+        self.assertShows(response, "Algoritmlar asoslari")
+
+    def test_format_facet_digital(self):
+        response = self.client.get('/books/', {'format': 'digital'})
+        self.assertShows(response, "Raqamli kitob")
+        self.assertHides(response, "Qog'oz kitob")
+
+    def test_format_facet_physical(self):
+        response = self.client.get('/books/', {'format': 'physical'})
+        self.assertShows(response, "Qog'oz kitob")
+        self.assertHides(response, "Raqamli kitob")
+
+    def test_available_facet(self):
+        from book_app.models import Item
+        from book_app.services import change_item_status
+
+        response = self.client.get('/books/', {'available': '1'})
+        self.assertShows(response, "Qog'oz kitob")
+
+        for item in Item.objects.filter(book=self.paper):
+            change_item_status(item, Item.Status.ON_LOAN, reason="Sinov")
+
+        response = self.client.get('/books/', {'available': '1'})
+        self.assertHides(response, "Qog'oz kitob")
+
+    def test_year_range_facet(self):
+        make_book("Eski nashr", published_year=1990)
+        make_book("Yangi nashr", published_year=2024)
+
+        response = self.client.get('/books/', {'year_from': '2000'})
+        self.assertShows(response, "Yangi nashr")
+        self.assertHides(response, "Eski nashr")
+
+    def test_category_facet(self):
+        from core.testing import make_genre
+        genre = make_genre("Ilmiy-opac")
+        make_book("Ilmiy kitob", genre=genre)
+
+        response = self.client.get('/books/', {'category': genre.pk})
+        self.assertShows(response, "Ilmiy kitob")
+        self.assertHides(response, "Raqamli kitob")
+
+    def test_sorting_by_title(self):
+        response = self.client.get('/books/', {'sort': 'title'})
+        self.assertEqual(response.status_code, 200)
+
+    def test_htmx_returns_partial(self):
+        response = self.client.get('/books/', {'q': 'kitob'}, HTTP_HX_REQUEST='true')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "<!doctype html>")
+        self.assertShows(response, "Raqamli kitob")
+
+    def test_empty_result_message(self):
+        response = self.client.get('/books/', {'q': 'zzzqqqxxx'})
+        self.assertShows(response, "topilmadi")

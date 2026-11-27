@@ -1,0 +1,26 @@
+{% comment %}Qidiruv natijalari (HTMX target).{% endcomment %}
+<div class="mb-4 flex items-center justify-between gap-3">
+  <p class="text-sm text-[color:var(--color-content-muted)]">
+    {% if query %}
+      «{{ query }}» bo'yicha <b>{{ total }}</b> ta natija
+    {% else %}
+      <b>{{ total }}</b> ta yozuv
+    {% endif %}
+  </p>
+</div>
+
+{% if books %}
+  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    {% for book in books %}
+      {% include "opac/_book_card.html" with book=book %}
+    {% endfor %}
+  </div>
+
+  {% include "ui/_pager.html" with page_obj=page_obj hx_get="/books/" hx_target="#results" query=query_string %}
+{% else %}
+  {% if query %}
+    {% include "ui/_empty.html" with icon="search" title="Hech narsa topilmadi" text="Boshqacha yozib ko'ring yoki filtrlarni tozalang. Qidiruv kirill va lotin yozuvni ham, kichik xatolarni ham tushunadi." %}
+  {% else %}
+    {% include "ui/_empty.html" with icon="library" title="Yozuv yo'q" text="Tanlangan filtrlarga mos kitob topilmadi." %}
+  {% endif %}
+{% endif %}

@@ -18,7 +18,12 @@ from .models import ActionLog
 logger = logging.getLogger('audit')
 
 # Hech qachon audit yozuviga tushmaydigan maydonlar
-SENSITIVE_FIELDS = {'password', 'secret', 'token', 'search_vector'}
+SENSITIVE_FIELDS = {'password', 'secret', 'token'}
+
+#: Hosilaviy (avtomatik hisoblanadigan) maydonlar — audit uchun shovqin.
+#: Masalan qidiruv indeksi kitob saqlanganda o'z-o'zidan yangilanadi;
+#: jurnalda "search_text o'zgardi" deb turishi hech kimga kerak emas.
+DERIVED_FIELDS = {'search_text', 'search_vector'}
 
 
 def _is_auto_timestamp(field):
@@ -42,7 +47,8 @@ def snapshot(instance, fields=None):
 
     data = {}
     for field in selected:
-        if field.name in SENSITIVE_FIELDS or _is_auto_timestamp(field):
+        if (field.name in SENSITIVE_FIELDS or field.name in DERIVED_FIELDS
+                or _is_auto_timestamp(field)):
             continue
         try:
             value = (getattr(instance, f'{field.name}_id', None) if field.is_relation
