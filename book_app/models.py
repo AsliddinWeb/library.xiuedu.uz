@@ -225,6 +225,10 @@ class Book(models.Model):
         blank=True, verbose_name="Qidiruv matni",
         help_text="Kirill va lotin yozuv bir ko'rinishga keltirilgan matn "
                   "(sarlavha, mualliflar, mavzular, nashriyot). Avtomatik to'ladi.")
+    search_title = models.TextField(
+        blank=True, verbose_name="Qidiruv: sarlavha",
+        help_text="Faqat sarlavhalar (normallashgan) — sarlavhada mos kelgan "
+                  "kitob natijalarda yuqoriroq turishi uchun.")
     search_vector = SearchVectorField(
         null=True, blank=True, editable=False, verbose_name="Qidiruv vektori")
 
@@ -240,6 +244,8 @@ class Book(models.Model):
             GinIndex(fields=['search_vector'], name='book_search_vector_gin'),
             # Trigram — xato yozilgan so'zni ham topadi ("algaritm" -> "Algoritmlar")
             GinIndex(name='book_search_text_trgm', fields=['search_text'],
+                     opclasses=['gin_trgm_ops']),
+            GinIndex(name='book_search_title_trgm', fields=['search_title'],
                      opclasses=['gin_trgm_ops']),
         ]
 

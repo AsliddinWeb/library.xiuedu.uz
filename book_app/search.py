@@ -66,17 +66,29 @@ def build_search_text(book) -> str:
     return fold(" ".join(str(part) for part in parts if part))
 
 
+def build_search_title(book) -> str:
+    """Faqat sarlavhalar — reytingda ustunlik berish uchun alohida saqlanadi."""
+    return fold(" ".join(str(part) for part in
+                         (book.title, book.subtitle, book.parallel_title) if part))
+
+
 def update_search_text(book, save=True):
     """Bitta kitobning qidiruv matnini qayta hisoblaydi."""
     book.search_text = build_search_text(book)[:4000]
+    book.search_title = build_search_title(book)[:1000]
     if save:
-        type(book).objects.filter(pk=book.pk).update(search_text=book.search_text)
+        type(book).objects.filter(pk=book.pk).update(
+            search_text=book.search_text, search_title=book.search_title)
         refresh_search_vector(book.pk)
     return book.search_text
 
 
 def refresh_search_vector(book_id=None):
-    """`search_vector` ni `search_text` dan qayta quradi.
+    """`search_vector` ni qayta quradi — sarlavha OG'IRROQ vazn bilan.
+
+    `setweight` tufayli sarlavhada uchragan so'z reytingda mavzu yoki
+    nashriyotda uchragandan yuqori turadi ("huquq" so'rovida "Davlat va huquq
+    nazariyasi" birinchi, kategoriyasi "huquq" bo'lgan boshqa kitob keyin).
 
     FTS vektori SQL darajasida yangilanadi — minglab yozuv uchun tez.
     """
@@ -85,7 +97,9 @@ def refresh_search_vector(book_id=None):
 
     from .models import Book
     qs = Book.objects.all() if book_id is None else Book.objects.filter(pk=book_id)
-    return qs.update(search_vector=SearchVector('search_text', config='simple'))
+    return qs.update(
+        search_vector=(SearchVector('search_title', config='simple', weight='A') +
+                       SearchVector('search_text', config='simple', weight='D')))
 
 
 def rebuild_all(batch_size=500, stdout=None):
@@ -99,15 +113,16 @@ def rebuild_all(batch_size=500, stdout=None):
     updated, bucket = 0, []
     for book in books.iterator(chunk_size=batch_size):
         book.search_text = build_search_text(book)[:4000]
+        book.search_title = build_search_title(book)[:1000]
         bucket.append(book)
         if len(bucket) >= batch_size:
-            Book.objects.bulk_update(bucket, ['search_text'])
+            Book.objects.bulk_update(bucket, ['search_text', 'search_title'])
             updated += len(bucket)
             bucket = []
             if stdout:
                 stdout.write(f"  ... {updated}", ending='\r')
     if bucket:
-        Book.objects.bulk_update(bucket, ['search_text'])
+        Book.objects.bulk_update(bucket, ['search_text', 'search_title'])
         updated += len(bucket)
 
     refresh_search_vector()
@@ -137,6 +152,7 @@ def search_books(queryset, query: str):
     return (queryset
             .annotate(
                 rank=SearchRank(F('search_vector'), search_query),
+                title_similarity=TrigramWordSimilarity(text, 'search_title'),
                 similarity=TrigramWordSimilarity(text, 'search_text'),
             )
             .filter(
@@ -144,7 +160,11 @@ def search_books(queryset, query: str):
                 Q(similarity__gte=WORD_SIMILARITY_THRESHOLD) |
                 Q(search_text__icontains=text)
             )
-            .order_by('-rank', '-similarity', '-view_count'))
+            # Saralash tartibi:
+            #   1) FTS reytingi — sarlavha vazni og'irroq (setweight A/D)
+            #   2) sarlavhaga trigram o'xshashligi — xato yozilgan so'rovda hal qiladi
+            #   3) umumiy o'xshashlik, keyin ommaboplik
+            .order_by('-rank', '-title_similarity', '-similarity', '-view_count'))
 
 
 def suggest(queryset, query: str, limit=8):

@@ -433,6 +433,25 @@ class SearchQueryTests(TestCase):
     def test_nonsense_returns_nothing(self):
         self.assertEqual(self._titles("zzzqqqxxx"), [])
 
+    def test_title_match_ranks_above_other_fields(self):
+        """Sarlavhada mos kelgan kitob — kategoriya/mavzuda mos kelgandan yuqori."""
+        from core.testing import make_genre
+
+        make_book("Qadimgi sivilizatsiya", genre=make_genre("Huquq"))
+        make_book("Davlat va huquq nazariyasi")
+
+        titles = self._titles("huquq")
+        self.assertEqual(titles[0], "Davlat va huquq nazariyasi")
+
+    def test_title_similarity_decides_for_typos(self):
+        """Xato yozuvda ham sarlavhadagi moslik ustun turadi."""
+        from core.testing import make_genre
+
+        make_book("Ion-atom to'qnashuvi", genre=make_genre("Fizika"))
+        make_book("Fizika kursi")
+
+        self.assertEqual(self._titles("fizka")[0], "Fizika kursi")
+
     def test_suggest_limits_results(self):
         from book_app.search import suggest
         self.assertLessEqual(len(list(suggest(Book.objects.all(), "a", limit=2))), 2)

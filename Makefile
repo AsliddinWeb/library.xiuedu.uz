@@ -34,10 +34,10 @@ deploy-check: ## Production tekshiruvi
 	DJANGO_ENV=production $(MANAGE) check --deploy
 
 test: ## Barcha testlar
-	$(MANAGE) test --shuffle
+	$(MANAGE) test --shuffle --noinput
 
 cov: ## Testlar + qamrov hisoboti
-	$(PY) -m coverage run manage.py test && $(PY) -m coverage report -m
+	$(PY) -m coverage run manage.py test --noinput && $(PY) -m coverage report -m
 
 lint: ## ruff linter
 	venv/bin/ruff check .

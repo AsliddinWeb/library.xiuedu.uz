@@ -23,7 +23,7 @@ SENSITIVE_FIELDS = {'password', 'secret', 'token'}
 #: Hosilaviy (avtomatik hisoblanadigan) maydonlar — audit uchun shovqin.
 #: Masalan qidiruv indeksi kitob saqlanganda o'z-o'zidan yangilanadi;
 #: jurnalda "search_text o'zgardi" deb turishi hech kimga kerak emas.
-DERIVED_FIELDS = {'search_text', 'search_vector'}
+DERIVED_FIELDS = {'search_text', 'search_title', 'search_vector'}
 
 
 def _is_auto_timestamp(field):
