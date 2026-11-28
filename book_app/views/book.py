@@ -1,7 +1,8 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, render
 
-from ..models import Book, Item
+from ..models import Book, Item, Rental
 
 
 @login_required
@@ -32,6 +33,9 @@ def student_book_detail(request, pk):
     context['items'] = (book.item_set
                         .select_related('item_type', 'library', 'shelf_location')
                         .exclude(status=Item.Status.WITHDRAWN)
+                        .prefetch_related(Prefetch(
+                            'rental_set', to_attr='open_rentals',
+                            queryset=Rental.objects.filter(return_date__isnull=True)))
                         .order_by('library__name', 'inventory_number'))
 
     # O'xshash kitoblar: avval mavzu bo'yicha, yetmasa katalog bo'yicha
@@ -49,6 +53,10 @@ def student_book_detail(request, pk):
                           .select_related('category').prefetch_related('authors')
                           .order_by('-rating_count', '-view_count')[:6])
 
+    context['course_items'] = (book.course_items
+                               .filter(reserve__is_active=True)
+                               .select_related('reserve__teacher')
+                               .order_by('reserve__course_name'))
     context['citation'] = gost(book)
     return render(request, "opac/book_detail.html", context)
 

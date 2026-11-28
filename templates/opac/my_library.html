@@ -1,0 +1,114 @@
+{% extends "layouts/opac.html" %}
+{% comment %}
+  "Mening kutubxonam" — sevimlilar, ro'yxatlar, o'qish tarixi va o'z sharhlari.
+{% endcomment %}
+
+{% block title %}Kutubxonam — XIU Kutubxona{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8" x-data="{ tab: 'favorites' }">
+
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Mening kutubxonam</h1>
+      <p class="page-sub">Sevimlilar, ro'yxatlar, o'qish tarixi va sharhlaringiz.</p>
+    </div>
+    <a href="{% url 'book_app:student_book_list' %}" class="btn btn-secondary">Katalog</a>
+  </div>
+
+  <div class="tabs">
+    <button class="tab" :class="tab === 'favorites' && 'tab-active'" @click="tab = 'favorites'">
+      Sevimlilar{% if favorites %} <span class="badge badge-neutral ml-1">{{ favorites|length }}</span>{% endif %}
+    </button>
+    <button class="tab" :class="tab === 'lists' && 'tab-active'" @click="tab = 'lists'">
+      Ro'yxatlarim{% if my_shelves %} <span class="badge badge-neutral ml-1">{{ my_shelves|length }}</span>{% endif %}
+    </button>
+    <button class="tab" :class="tab === 'history' && 'tab-active'" @click="tab = 'history'">O'qish tarixi</button>
+    <button class="tab" :class="tab === 'reviews' && 'tab-active'" @click="tab = 'reviews'">
+      Sharhlarim{% if my_reviews %} <span class="badge badge-neutral ml-1">{{ my_reviews|length }}</span>{% endif %}
+    </button>
+  </div>
+
+  {# --------- Sevimlilar --------- #}
+  <div x-show="tab === 'favorites'" class="mt-5">
+    {% if favorites %}
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {% for favorite in favorites %}
+          {% include "opac/_book_card.html" with book=favorite.book %}
+        {% endfor %}
+      </div>
+    {% else %}
+      {% include "ui/_empty.html" with icon="book" title="Sevimli kitob yo'q" text="Kitob sahifasidagi yurak tugmasini bosing — kitob shu yerga tushadi." action_url="/books/" action_label="Katalogga o'tish" %}
+    {% endif %}
+  </div>
+
+  {# --------- Ro'yxatlar --------- #}
+  <div x-show="tab === 'lists'" x-cloak class="mt-5">
+    <div class="flex flex-wrap justify-end gap-2">
+      <a href="{% url 'engagement:shelf_list' %}" class="btn btn-ghost btn-sm">Barcha ro'yxatlar</a>
+      <a href="{% url 'engagement:shelf_create' %}" class="btn btn-secondary btn-sm">Yangi ro'yxat</a>
+    </div>
+    {% if my_shelves %}
+      <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {% for shelf in my_shelves %}{% include "opac/_shelf_card.html" %}{% endfor %}
+      </div>
+    {% else %}
+      {% include "ui/_empty.html" with icon="inbox" title="Hali ro'yxatingiz yo'q" text="Kitoblarni mavzu yoki ish bo'yicha to'plab qo'ying." %}
+    {% endif %}
+  </div>
+
+  {# --------- O'qish tarixi --------- #}
+  <div x-show="tab === 'history'" x-cloak class="mt-5">
+    {% if history %}
+      <div class="table-wrap">
+        <table class="table table-zebra">
+          <thead><tr><th>Kitob</th><th>Ochilgan vaqt</th></tr></thead>
+          <tbody>
+            {% for entry in history %}
+            <tr>
+              <td class="font-medium">
+                <a href="{% url 'book_app:student_book_detail' entry.book_id %}" class="hover:underline">
+                  {{ entry.book.title|truncatechars:64 }}
+                </a>
+              </td>
+              <td>{{ entry.opened_at|date:"d.m.Y H:i" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {% include "ui/_empty.html" with icon="clock" title="Tarix bo'sh" text="Onlayn o'qigan yoki tinglagan kitoblaringiz shu yerda ko'rinadi." %}
+    {% endif %}
+  </div>
+
+  {# --------- Sharhlar --------- #}
+  <div x-show="tab === 'reviews'" x-cloak class="mt-5">
+    {% if my_reviews %}
+      <div class="space-y-2">
+        {% for review in my_reviews %}
+          <div class="card card-body flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <a href="{% url 'book_app:student_book_detail' review.book_id %}" class="font-medium hover:underline">
+                {{ review.book.title }}
+              </a>
+              <p class="mt-1 text-sm">
+                <span class="text-[color:var(--color-accent)]">★</span> {{ review.rating }} / 5
+                <span class="help">· {{ review.created_at|date:"d.m.Y" }}</span>
+              </p>
+              {% if review.text %}<p class="help mt-1">{{ review.text|truncatechars:160 }}</p>{% endif %}
+            </div>
+            {% if review.is_approved %}
+              {% include "ui/_badge.html" with text="Tasdiqlangan" variant="success" dot=1 %}
+            {% else %}
+              {% include "ui/_badge.html" with text="Moderatsiyada" variant="warning" dot=1 %}
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      {% include "ui/_empty.html" with icon="inbox" title="Sharh yozmagansiz" text="Kitob sahifasida baho va fikr qoldirishingiz mumkin." %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

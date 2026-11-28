@@ -119,7 +119,7 @@ def my_rentals(request):
             ('history', 'Tarix', 0),
         ],
     }
-    return render(request, 'circulation/my_rentals.html', ctx)
+    return render(request, 'opac/my_rentals.html', ctx)
 
 
 # ===================================================== Kutubxonachi paneli

@@ -1,0 +1,172 @@
+{% extends "layouts/opac.html" %}
+{% comment %}
+  "Mening ijaralarim" — joriy ijaralar, so'rovlar, navbatlar, jarimalar, tarix.
+  Talaba ham, xodim ham bir xil sahifani ko'radi (ikkalasi ham a'zo).
+{% endcomment %}
+
+{% block title %}Ijaralarim — XIU Kutubxona{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8" x-data="{ tab: 'active' }">
+
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Mening ijaralarim</h1>
+      {% if patron %}
+        <p class="page-sub">
+          <span class="font-mono">{{ patron.card_number }}</span> · {{ patron.category.name }}
+          · muddat {{ patron.category.default_loan_days }} kun
+          · limit {{ patron.category.loan_limit }} ta
+        </p>
+      {% endif %}
+    </div>
+    <a href="{% url 'book_app:student_book_list' %}" class="btn btn-secondary">Katalog</a>
+  </div>
+
+  {% if fines %}
+    <div class="card card-body mb-4 border-l-4 border-l-[color:var(--color-danger-500)]">
+      <p class="font-medium text-[color:var(--color-danger-700)]">To'lanmagan jarima bor</p>
+      <p class="help mt-1">
+        {% if patron.balance %}Qarz: {{ patron.balance|floatformat:0 }} so'm. {% endif %}
+        Kutubxonaga murojaat qiling — qarz chegaradan oshsa yangi kitob berilmaydi.
+      </p>
+    </div>
+  {% endif %}
+
+  {# --------- Tablar --------- #}
+  <div class="tabs">
+    {% for key, label, count in tabs %}
+      <button class="tab" :class="tab === '{{ key }}' && 'tab-active'" @click="tab = '{{ key }}'">
+        {{ label }}{% if count %} <span class="badge badge-neutral ml-1">{{ count }}</span>{% endif %}
+      </button>
+    {% endfor %}
+  </div>
+
+  {# --------- Joriy ijaralar --------- #}
+  <div x-show="tab === 'active'" class="mt-5">
+    {% if active_rentals %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Kitob</th><th>Nusxa</th><th>Olingan</th><th>Qaytarish</th><th>Holat</th></tr></thead>
+          <tbody>
+            {% for rental in active_rentals %}
+            <tr>
+              <td class="font-medium">
+                <a href="{% url 'book_app:student_book_detail' rental.copy.book_id %}" class="hover:underline">
+                  {{ rental.copy.book.title|truncatechars:46 }}
+                </a>
+              </td>
+              <td class="font-mono text-xs">{{ rental.copy.barcode|default:rental.copy.inventory_number }}</td>
+              <td>{{ rental.borrowed_date|default:"—" }}</td>
+              <td>{{ rental.due_date|default:"—" }}</td>
+              <td>
+                {% if rental.is_overdue %}
+                  {% include "ui/_badge.html" with text="Muddat o'tgan" variant="danger" dot=1 %}
+                {% else %}
+                  {% include "ui/_badge.html" with text="Ijarada" variant="info" dot=1 %}
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {% include "ui/_empty.html" with icon="book" title="Joriy ijara yo'q" text="Katalogdan kitob tanlab, ijaraga so'rang." action_url="/books/" action_label="Katalogga o'tish" %}
+    {% endif %}
+  </div>
+
+  {# --------- So'rovlar --------- #}
+  <div x-show="tab === 'requests'" x-cloak class="mt-5">
+    {% if pending_requests %}
+      <div class="space-y-2">
+        {% for request_item in pending_requests %}
+          <div class="card card-body flex items-center justify-between gap-3">
+            <div>
+              <p class="font-medium">{{ request_item.book.title }}</p>
+              <p class="help mt-0.5">{{ request_item.created_at|date:"d.m.Y H:i" }} da yuborilgan</p>
+            </div>
+            {% include "ui/_badge.html" with text="Kutilmoqda" variant="warning" dot=1 %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      {% include "ui/_empty.html" with icon="inbox" title="So'rov yo'q" text="Yuborilgan va hali hal qilinmagan so'rovlar shu yerda ko'rinadi." %}
+    {% endif %}
+  </div>
+
+  {# --------- Navbatlar --------- #}
+  <div x-show="tab === 'reservations'" x-cloak class="mt-5">
+    {% if reservations %}
+      <div class="space-y-2">
+        {% for reservation in reservations %}
+          <div class="card card-body flex items-center justify-between gap-3">
+            <div>
+              <p class="font-medium">{{ reservation.book.title }}</p>
+              <p class="help mt-0.5">
+                {% if reservation.status == 'AVAILABLE' %}
+                  Bo'shadi — {{ reservation.hold_until|date:"d.m.Y" }} gacha olib keting
+                {% else %}
+                  Navbatga yozilgan: {{ reservation.created_at|date:"d.m.Y" }}
+                {% endif %}
+              </p>
+            </div>
+            {% if reservation.status == 'AVAILABLE' %}
+              {% include "ui/_badge.html" with text="Sizni kutmoqda" variant="success" dot=1 %}
+            {% else %}
+              {% include "ui/_badge.html" with text="Navbatda" variant="info" dot=1 %}
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      {% include "ui/_empty.html" with icon="clock" title="Navbat yo'q" text="Band kitobga navbatga yozilsangiz, bo'shaganda xabar olasiz." %}
+    {% endif %}
+  </div>
+
+  {# --------- Jarimalar --------- #}
+  <div x-show="tab === 'fines'" x-cloak class="mt-5">
+    {% if fines %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Kitob</th><th>Kechikish</th><th class="table-num">Summa</th><th>Holat</th></tr></thead>
+          <tbody>
+            {% for fine in fines %}
+            <tr>
+              <td>{{ fine.rental.copy.book.title|truncatechars:42 }}</td>
+              <td>{{ fine.days_overdue }} kun</td>
+              <td class="table-num">{{ fine.amount|floatformat:0 }} so'm</td>
+              <td>{% include "ui/_badge.html" with text="To'lanmagan" variant="danger" dot=1 %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {% include "ui/_empty.html" with icon="cash" title="Jarima yo'q" text="Kitoblarni o'z vaqtida qaytarsangiz jarima bo'lmaydi." %}
+    {% endif %}
+  </div>
+
+  {# --------- Tarix --------- #}
+  <div x-show="tab === 'history'" x-cloak class="mt-5">
+    {% if rental_history %}
+      <div class="table-wrap">
+        <table class="table table-zebra">
+          <thead><tr><th>Kitob</th><th>Olingan</th><th>Qaytarilgan</th></tr></thead>
+          <tbody>
+            {% for rental in rental_history %}
+            <tr>
+              <td>{{ rental.copy.book.title|truncatechars:46 }}</td>
+              <td>{{ rental.borrowed_date|default:"—" }}</td>
+              <td>{{ rental.return_date }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {% include "ui/_empty.html" with icon="clock" title="Tarix bo'sh" text="Qaytarilgan kitoblar shu yerda saqlanadi." %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

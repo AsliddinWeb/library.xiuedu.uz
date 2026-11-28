@@ -1,0 +1,19 @@
+{% comment %}Ro'yxat kartasi. `show_owner` — boshqalarning ro'yxatida muallifi ko'rinadi.{% endcomment %}
+<a href="{{ shelf.get_absolute_url }}" class="card card-hover flex flex-col gap-2 p-4">
+  <div class="flex items-start justify-between gap-3">
+    <p class="font-display text-base leading-snug">{{ shelf.name }}</p>
+    {% if shelf.is_official %}
+      {% include "ui/_badge.html" with text="Kutubxona tanlovi" variant="accent" %}
+    {% elif shelf.visibility == 'PUBLIC' %}
+      {% include "ui/_badge.html" with text="Ochiq" variant="info" %}
+    {% elif shelf.visibility == 'STAFF' %}
+      {% include "ui/_badge.html" with text="Xodimlarga" variant="warning" %}
+    {% else %}
+      {% include "ui/_badge.html" with text="Shaxsiy" variant="neutral" %}
+    {% endif %}
+  </div>
+  {% if shelf.description %}<p class="help">{{ shelf.description|truncatechars:110 }}</p>{% endif %}
+  <p class="help mt-auto">
+    {{ shelf.books_count }} ta kitob{% if show_owner %} · {{ shelf.owner.get_full_name }}{% endif %}
+  </p>
+</a>

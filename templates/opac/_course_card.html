@@ -1,0 +1,18 @@
+{% comment %}Fan ro'yxati kartasi.{% endcomment %}
+<a href="{{ reserve.get_absolute_url }}" class="card card-hover flex flex-col gap-2 p-4">
+  <div class="flex items-start justify-between gap-3">
+    <p class="font-display text-base leading-snug">{{ reserve.course_name }}</p>
+    {% if not reserve.is_active %}
+      {% include "ui/_badge.html" with text="Yopilgan" variant="neutral" %}
+    {% elif reserve.semester %}
+      <span class="badge badge-info">{{ reserve.semester }}-semestr</span>
+    {% endif %}
+  </div>
+  <p class="help">
+    {% if reserve.teacher %}{{ reserve.teacher.get_full_name }}{% else %}O'qituvchi ko'rsatilmagan{% endif %}
+  </p>
+  <p class="help">{{ reserve.faculty|default:"Barcha fakultetlar" }}</p>
+  <p class="help mt-auto">
+    {{ reserve.books_count }} ta adabiyot{% if reserve.required_count %} · {{ reserve.required_count }} tasi asosiy{% endif %}
+  </p>
+</a>

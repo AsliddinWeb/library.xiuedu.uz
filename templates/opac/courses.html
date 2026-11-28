@@ -1,0 +1,85 @@
+{% extends "layouts/opac.html" %}
+{% comment %}Fan adabiyoti: talaba fanini topadi, o'qituvchi o'z ro'yxatini boshqaradi.{% endcomment %}
+
+{% block title %}Fan adabiyoti — XIU Kutubxona{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Fan adabiyoti</h1>
+      <p class="page-sub">Fanni tanlang — o'qituvchi tavsiya qilgan kitoblar va ular fondda bor-yo'qligi ko'rinadi.</p>
+    </div>
+    {% if can_create %}
+      <a href="{% url 'book_app:course_create' %}" class="btn btn-primary">
+        {% include "ui/_icon.html" with name="plus" class="size-4" %}
+        Fan qo'shish
+      </a>
+    {% endif %}
+  </div>
+
+  <form method="get" class="card card-body mt-5 grid gap-3 sm:grid-cols-[1fr_16rem_10rem_auto] sm:items-end">
+    <div class="field">
+      <label class="label" for="course-q">Fan yoki o'qituvchi</label>
+      <input id="course-q" type="search" name="q" value="{{ query }}" class="input" placeholder="Masalan: iqtisodiyot">
+    </div>
+    <div class="field">
+      <label class="label" for="course-faculty">Fakultet</label>
+      <select id="course-faculty" name="faculty" class="select">
+        <option value="">Hammasi</option>
+        {% for name in faculties %}
+          <option value="{{ name }}" {% if faculty == name %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label class="label" for="course-semester">Semestr</label>
+      <select id="course-semester" name="semester" class="select">
+        <option value="">Hammasi</option>
+        {% for number in semesters %}
+          <option value="{{ number }}" {% if semester == number %}selected{% endif %}>{{ number }}-semestr</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-secondary">Qidirish</button>
+  </form>
+
+  {% if own_reserves %}
+    <section class="mt-8">
+      <h2 class="font-display text-xl">Siz tuzgan ro'yxatlar</h2>
+      <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {% for reserve in own_reserves %}{% include "opac/_course_card.html" %}{% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  {% if student_reserves %}
+    <section class="mt-8">
+      <h2 class="font-display text-xl">Sizning fanlaringiz</h2>
+      <p class="page-sub">Fakultetingiz va semestringiz bo'yicha.</p>
+      <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {% for reserve in student_reserves %}{% include "opac/_course_card.html" %}{% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="mt-8">
+    <div class="flex items-end justify-between gap-3">
+      <h2 class="font-display text-xl">{% if filtered %}Natijalar{% else %}Barcha fanlar{% endif %}</h2>
+      {% if filtered %}<a href="{% url 'book_app:course_list' %}" class="btn btn-ghost btn-sm">Tozalash</a>{% endif %}
+    </div>
+    {% if page_obj.object_list %}
+      <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {% for reserve in page_obj %}{% include "opac/_course_card.html" %}{% endfor %}
+      </div>
+      {% include "ui/_pager.html" with page_obj=page_obj query=query_string %}
+    {% else %}
+      {% if filtered %}
+        {% include "ui/_empty.html" with icon="search" title="Mos fan topilmadi" text="Boshqa so'z yoki filtr bilan urinib ko'ring." %}
+      {% else %}
+        {% include "ui/_empty.html" with icon="book" title="Hali fan ro'yxati yo'q" text="O'qituvchilar adabiyot biriktirgach, shu yerda ko'rinadi." %}
+      {% endif %}
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

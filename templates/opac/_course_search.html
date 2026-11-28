@@ -1,0 +1,32 @@
+{% comment %}Fan ro'yxatiga qo'shish uchun qidiruv natijalari (HTMX target).{% endcomment %}
+<div id="course-search-results">
+  {% if results %}
+    <div class="mt-3 divide-y divide-[color:var(--color-line)]">
+      {% for book in results %}
+        <div class="flex flex-wrap items-center justify-between gap-3 py-3">
+          <div class="w-full min-w-0 sm:w-auto sm:flex-1">
+            <p class="font-medium">{{ book.title|truncatechars:90 }}</p>
+            <p class="help">
+              {% for author in book.authors.all %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+              {% if book.published_year %} · {{ book.published_year }}{% endif %}
+            </p>
+          </div>
+          {% if book.in_list %}
+            {% include "ui/_badge.html" with text="Ro'yxatda" variant="success" dot=1 %}
+          {% else %}
+            <form method="post" action="{% url 'book_app:course_add_book' reserve.pk book.pk %}" class="flex items-center gap-2">
+              {% csrf_token %}
+              <input type="hidden" name="book_q" value="{{ book_query }}">
+              <select name="importance" class="select w-40" aria-label="Adabiyot turi">
+                {% for value, label in importance_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+              </select>
+              <button type="submit" class="btn btn-primary btn-sm">Qo'shish</button>
+            </form>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% elif book_query %}
+    <p class="help mt-3">«{{ book_query }}» bo'yicha kitob topilmadi.</p>
+  {% endif %}
+</div>

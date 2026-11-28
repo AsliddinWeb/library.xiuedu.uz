@@ -80,9 +80,23 @@
       {% endif %}
     {% endif %}
 
-    {# --------- Sevimli --------- #}
+    {# --------- Sevimli va ro'yxatlar --------- #}
     {% if user.is_authenticated %}
-      <span class="ml-auto">{% include "engagement/partials/_favorite_button.html" %}</span>
+      <div class="ml-auto flex items-center gap-2">
+        {% include "engagement/partials/_favorite_button.html" %}
+        <div x-data="{ open: false }" class="relative" @keydown.escape="open = false">
+          <button type="button" class="btn btn-secondary" @click="open = !open" :aria-expanded="open"
+                  hx-get="{% url 'engagement:shelf_picker' book.pk %}"
+                  hx-target="#shelf-picker" hx-swap="outerHTML" hx-trigger="click once">
+            {% include "ui/_icon.html" with name="plus" class="size-4" %}
+            Ro'yxatga
+          </button>
+          <div x-show="open" x-cloak @click.outside="open = false"
+               class="card absolute right-0 z-20 mt-2 w-72 overflow-hidden shadow-[var(--shadow-md)]">
+            <div id="shelf-picker"><p class="help px-3 py-3">Yuklanmoqda...</p></div>
+          </div>
+        </div>
+      </div>
     {% endif %}
   </div>
 

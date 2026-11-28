@@ -47,6 +47,10 @@
     {% include "ui/_icon.html" with name="inbox" class="size-4" %}<span>Import</span>
   </a>
 
+  <a href="{% url 'book_app:course_list' %}" class="nav-link">
+    {% include "ui/_icon.html" with name="external" class="size-4" %}<span>Fan adabiyoti</span>
+  </a>
+
   <p class="nav-group-title">Sirkulyatsiya</p>
   <a href="/panel/requests/" class="nav-link {% if '/panel/requests/' in request.path %}nav-link-active{% endif %}">
     {% include "ui/_icon.html" with name="inbox" class="size-4" %}<span>So'rovlar</span>

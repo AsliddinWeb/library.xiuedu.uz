@@ -1,9 +1,9 @@
 from django.contrib import admin
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 
 from . import services
-from .models import Favorite, Review
+from .models import Favorite, Review, Shelf, ShelfItem
 
 
 @admin.register(Review)
@@ -34,3 +34,18 @@ class FavoriteAdmin(ModelAdmin):
     list_display = ("user", "book", "created_at")
     search_fields = ("user__username", "book__title")
     autocomplete_fields = ("user", "book")
+
+
+class ShelfItemInline(TabularInline):
+    model = ShelfItem
+    extra = 0
+    autocomplete_fields = ("book",)
+
+
+@admin.register(Shelf)
+class ShelfAdmin(ModelAdmin):
+    list_display = ("name", "owner", "visibility", "is_official", "updated_at")
+    list_filter = ("visibility", "is_official")
+    search_fields = ("name", "owner__username")
+    autocomplete_fields = ("owner",)
+    inlines = [ShelfItemInline]

@@ -83,6 +83,20 @@ def resolve_category_code(user) -> str:
     return PatronCategory.Code.STUDENT
 
 
+def is_teacher(user) -> bool:
+    """Professor-o'qituvchimi — a'zo toifasi bo'yicha (fan adabiyotini u tuzadi).
+
+    A'zolik hali ochilmagan bo'lsa HEMIS lavozimidan aniqlanadi.
+    """
+    if user is None or not user.is_authenticated:
+        return False
+    if user.user_type != User.UserType.EMPLOYE:
+        return False
+    patron = Patron.objects.filter(user=user).select_related('category').first()
+    code = patron.category.code if patron else resolve_category_code(user)
+    return code == PatronCategory.Code.TEACHER
+
+
 def get_category(code) -> PatronCategory:
     """Toifani kod bo'yicha oladi; bo'lmasa standart qiymatlar bilan yaratadi."""
     category, _ = PatronCategory.objects.get_or_create(

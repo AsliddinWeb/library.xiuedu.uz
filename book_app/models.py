@@ -1,9 +1,13 @@
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
+from django.urls import reverse
 
 from user_app.models import StudentProfile
+
+from .translit import fold
 
 
 class Author(models.Model):
@@ -508,3 +512,95 @@ class Rental(models.Model):
     def is_overdue(self):
         from django.utils.timezone import now
         return self.return_date is None and self.due_date is not None and self.due_date < now().date()
+
+
+# =============================================================================
+#  FAN ADABIYOTI (Koha "course reserves")
+# =============================================================================
+
+class CourseReserve(models.Model):
+    """Bitta fan uchun tavsiya etilgan adabiyotlar ro'yxati.
+
+    O'qituvchi silabusdagi kitoblarni biriktiradi, talaba fanini tanlab
+    qaysi kitob kerakligini va u fonddami-yo'qmi ko'radi.
+
+    `faculty`/`semester` bo'sh bo'lsa — fan hamma uchun. Qiymatlar HEMIS'dagi
+    talaba ma'lumoti bilan solishtiriladi ("Sizning fanlaringiz").
+    """
+    course_name = models.CharField(max_length=200, verbose_name="Fan nomi")
+    course_code = models.CharField(max_length=40, blank=True, verbose_name="Fan kodi")
+    faculty = models.CharField(max_length=100, blank=True, db_index=True,
+                               verbose_name="Fakultet")
+    department = models.CharField(max_length=150, blank=True, verbose_name="Kafedra")
+    semester = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(12)],
+        verbose_name="Semestr")
+    description = models.TextField(blank=True, verbose_name="Izoh")
+
+    teacher = models.ForeignKey(
+        'user_app.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='course_reserves', verbose_name="O'qituvchi")
+    created_by = models.ForeignKey(
+        'user_app.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='+', verbose_name="Kim yaratgan")
+    books = models.ManyToManyField(Book, through='CourseReserveItem',
+                                   related_name='course_reserves', blank=True)
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name="Faol")
+
+    # Kirill/lotin yozuvga befarq qidiruv uchun (save() to'ldiradi)
+    search_text = models.TextField(blank=True, editable=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Fan adabiyoti"
+        verbose_name_plural = "Fan adabiyotlari"
+        ordering = ['course_name', 'semester']
+
+    def __str__(self):
+        return self.course_name
+
+    def save(self, *args, **kwargs):
+        teacher = self.teacher.get_full_name() if self.teacher_id else ''
+        self.search_text = fold(' '.join(filter(None, [
+            self.course_name, self.course_code, self.faculty, self.department, teacher])))
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None:
+            kwargs['update_fields'] = {*update_fields, 'search_text'}
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('book_app:course_detail', args=[self.pk])
+
+
+class CourseReserveItem(models.Model):
+    """Fan ro'yxatidagi bitta adabiyot."""
+
+    class Importance(models.TextChoices):
+        REQUIRED = 'REQUIRED', "Asosiy"
+        RECOMMENDED = 'RECOMMENDED', "Qo'shimcha"
+
+    reserve = models.ForeignKey(CourseReserve, on_delete=models.CASCADE, related_name='items')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='course_items')
+    importance = models.CharField(
+        max_length=12, choices=Importance.choices, default=Importance.REQUIRED,
+        verbose_name="Turi")
+    note = models.CharField(
+        max_length=255, blank=True, verbose_name="Izoh",
+        help_text="Masalan: 3–5-boblar")
+    order = models.PositiveIntegerField(default=0, verbose_name="Tartib")
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Fan ro'yxatidagi kitob"
+        verbose_name_plural = "Fan ro'yxatidagi kitoblar"
+        # Teskari alifbo: 'REQUIRED' 'RECOMMENDED'dan keyin keladi — asosiylar yuqorida
+        ordering = ['-importance', 'order', 'added_at']
+        constraints = [
+            models.UniqueConstraint(fields=['reserve', 'book'], name='uniq_book_per_course'),
+        ]
+
+    def __str__(self):
+        return f"{self.reserve.course_name}: {self.book.title}"

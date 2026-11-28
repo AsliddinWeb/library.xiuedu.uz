@@ -1,0 +1,35 @@
+{% comment %}Kitob sahifasidagi "Ro'yxatga" menyusi ichi (HTMX bilan o'zini almashtiradi).{% endcomment %}
+<div id="shelf-picker">
+  {% if picker_message %}
+    <p class="px-3 py-2 text-sm {% if picker_ok %}text-[color:var(--color-success-700)]{% else %}text-[color:var(--color-danger-700)]{% endif %}">
+      {{ picker_message }}
+    </p>
+  {% endif %}
+
+  <div class="max-h-60 overflow-y-auto">
+    {% for shelf in shelves %}
+      <button type="button" class="nav-item w-full justify-between text-left"
+              hx-post="{% url 'engagement:shelf_toggle' book.pk shelf.slug %}"
+              hx-target="#shelf-picker" hx-swap="outerHTML"
+              aria-pressed="{% if shelf.has_book %}true{% else %}false{% endif %}">
+        <span class="min-w-0 truncate">{{ shelf.name }}</span>
+        {% if shelf.has_book %}
+          <span class="text-[color:var(--color-success-700)]">{% include "ui/_icon.html" with name="check" class="size-4" %}</span>
+        {% else %}
+          <span class="text-[color:var(--color-content-subtle)]">{% include "ui/_icon.html" with name="plus" class="size-4" %}</span>
+        {% endif %}
+      </button>
+    {% empty %}
+      <p class="help px-3 py-2">Hali ro'yxatingiz yo'q — pastda birinchisini oching.</p>
+    {% endfor %}
+  </div>
+
+  <form class="flex gap-2 border-t border-[color:var(--color-line)] p-3"
+        hx-post="{% url 'engagement:shelf_quick_add' book.pk %}"
+        hx-target="#shelf-picker" hx-swap="outerHTML">
+    <input type="text" name="name" class="input" maxlength="120" required
+           placeholder="Yangi ro'yxat" aria-label="Yangi ro'yxat nomi">
+    <button type="submit" class="btn btn-primary btn-sm">Qo'shish</button>
+  </form>
+  <a href="{% url 'engagement:shelf_list' %}" class="nav-item border-t border-[color:var(--color-line)]">Barcha ro'yxatlarim</a>
+</div>

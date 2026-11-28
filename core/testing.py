@@ -97,6 +97,17 @@ def make_librarian(username=None, **kwargs):
     return make_employee(username, role=Roles.LIBRARIAN, **kwargs)
 
 
+def make_teacher(username=None, **kwargs):
+    """Professor-o'qituvchi: xodim + a'zo toifasi `PROF_OQITUVCHI`."""
+    from user_app.models import PatronCategory
+    from user_app.services import get_category, get_or_create_patron
+    user = make_employee(username, **kwargs)
+    patron = get_or_create_patron(user)
+    patron.category = get_category(PatronCategory.Code.TEACHER)
+    patron.save(update_fields=['category'])
+    return user
+
+
 # --- Ijara ---
 
 def make_rental(student, copy, *, days=14, borrowed_days_ago=0):

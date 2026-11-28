@@ -5,6 +5,7 @@ Asosiy e'tibor: nusxa (`Item`) holat mashinasi, shtrix-kod, fond ko'rsatkichlari
 va hissadorlar (rol bilan).
 """
 from django.test import TestCase
+from django.urls import reverse
 
 from audit.models import ActionLog
 from core.testing import (
@@ -13,11 +14,24 @@ from core.testing import (
     make_genre,
     make_librarian,
     make_student,
+    make_teacher,
 )
 from holdings.models import ItemType, Library, ShelfLocation
-from user_app.services import get_or_create_patron
+from user_app.models import PatronCategory, StudentProfile
+from user_app.services import get_category, get_or_create_patron
 
-from .models import Author, Book, Contributor, Item, ItemStatusLog, Publisher, Series, Subject
+from . import courses
+from .models import (
+    Author,
+    Book,
+    Contributor,
+    CourseReserve,
+    Item,
+    ItemStatusLog,
+    Publisher,
+    Series,
+    Subject,
+)
 from .services import (
     change_item_status,
     create_items,
@@ -594,6 +608,14 @@ class CitationTests(TestCase):
         book = make_book("Anonim asar", published_year=2020)
         self.assertTrue(gost(book).startswith("Anonim asar"))
 
+    def test_citation_has_no_double_period(self):
+        from book_app.citation import gost
+        book = make_book("Sahifali asar", published_year=2021, page_count=320,
+                         isbn="9789943010101")
+        text = gost(book)
+        self.assertNotIn("..", text)
+        self.assertIn("320 b. — ISBN 9789943010101.", text)
+
     def test_citation_truncates_many_authors(self):
         from book_app.citation import gost
         book = make_book("Jamoaviy ish")
@@ -620,6 +642,15 @@ class BookDetailPageTests(TestCase):
     def test_shows_shelf_location(self):
         response = self.client.get(f'/books/{self.book.pk}/')
         self.assertContains(response, "Asosiy fond")
+
+    def test_loaned_item_shows_return_date(self):
+        from datetime import date
+
+        from book_app.models import Rental
+        Rental.objects.create(copy=self.items[0], due_date=date(2031, 3, 5),
+                              patron=get_or_create_patron(self.user))
+        response = self.client.get(f'/books/{self.book.pk}/')
+        self.assertContains(response, "Qaytarish muddati: 05.03.2031")
 
     def test_withdrawn_items_hidden(self):
         from book_app.services import withdraw_item
@@ -696,3 +727,202 @@ class ReaderCabinetTests(TestCase):
         self.client.login(username=user.username, password='x')
         response = self.client.get('/dashboard/')
         self.assertContains(response, "muddati o")   # "muddati o'tgan"
+
+
+class CourseReserveTests(TestCase):
+    """Fan adabiyoti: kim yaratadi, kim ko'radi, kim tahrirlaydi."""
+
+    def assertShows(self, response, text):
+        from django.utils.html import escape
+        self.assertContains(response, escape(text))
+
+    def assertHides(self, response, text):
+        from django.utils.html import escape
+        self.assertNotContains(response, escape(text))
+
+    def setUp(self):
+        self.teacher = make_teacher(first_name='Anvar', second_name='Karimov')
+        self.other_teacher = make_teacher()
+        self.librarian = make_librarian()
+        self.staff = make_employee()
+        self.student = make_student()
+        StudentProfile.objects.filter(user=self.student).update(
+            faculty="Iqtisodiyot fakulteti", semester="3-semestr")
+        self.book = make_book("Iqtisodiyot nazariyasi darsligi")
+        self.reserve = self._reserve("Iqtisodiyot nazariyasi",
+                                     faculty="Iqtisodiyot fakulteti", semester=3)
+        courses.add_book(self.reserve, self.book)
+
+    def _reserve(self, name, **fields):
+        fields.setdefault('teacher', self.teacher)
+        return CourseReserve.objects.create(course_name=name, **fields)
+
+    def _url(self, name, *args):
+        return reverse(f'book_app:{name}', args=args)
+
+    # --- Huquqlar ---
+
+    def test_who_can_create(self):
+        self.assertTrue(courses.can_create_reserve(self.teacher))
+        self.assertTrue(courses.can_create_reserve(self.librarian))
+        self.assertFalse(courses.can_create_reserve(self.staff))
+        self.assertFalse(courses.can_create_reserve(self.student))
+
+    def test_student_cannot_open_create_page(self):
+        self.client.force_login(self.student)
+        self.assertEqual(self.client.get(self._url('course_create')).status_code, 403)
+
+    def test_teacher_creates_for_self_only(self):
+        self.client.force_login(self.teacher)
+        response = self.client.post(self._url('course_create'), {
+            'course_name': "Makroiqtisodiyot", 'teacher': self.other_teacher.pk, 'is_active': 'on'})
+        reserve = CourseReserve.objects.get(course_name="Makroiqtisodiyot")
+        self.assertRedirects(response, reserve.get_absolute_url())
+        self.assertEqual((reserve.teacher, reserve.created_by), (self.teacher, self.teacher))
+
+    def test_librarian_assigns_teacher(self):
+        self.client.force_login(self.librarian)
+        self.client.post(self._url('course_create'), {
+            'course_name': "Statistika", 'teacher': self.other_teacher.pk, 'is_active': 'on'})
+        reserve = CourseReserve.objects.get(course_name="Statistika")
+        self.assertEqual((reserve.teacher, reserve.created_by),
+                         (self.other_teacher, self.librarian))
+        self.assertTrue(courses.can_edit_reserve(self.other_teacher, reserve))
+
+    def test_librarian_cannot_assign_non_teacher(self):
+        self.client.force_login(self.librarian)
+        response = self.client.post(self._url('course_create'), {
+            'course_name': "Statistika", 'teacher': self.student.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(CourseReserve.objects.filter(course_name="Statistika").exists())
+
+    def test_semester_out_of_range_rejected(self):
+        self.client.force_login(self.teacher)
+        response = self.client.post(self._url('course_edit', self.reserve.pk), {
+            'course_name': "Buzuq", 'semester': 40})
+        self.assertEqual(response.status_code, 200)
+        self.reserve.refresh_from_db()
+        self.assertEqual(self.reserve.course_name, "Iqtisodiyot nazariyasi")
+
+    def test_only_owner_or_librarian_edits(self):
+        self.assertTrue(courses.can_edit_reserve(self.teacher, self.reserve))
+        self.assertTrue(courses.can_edit_reserve(self.librarian, self.reserve))
+        for user in (self.other_teacher, self.staff, self.student):
+            self.client.force_login(user)
+            for name, args in (('course_edit', [self.reserve.pk]),
+                               ('course_delete', [self.reserve.pk]),
+                               ('course_add_book', [self.reserve.pk, self.book.pk]),
+                               ('course_remove_book', [self.reserve.pk, self.book.pk]),
+                               ('course_update_item', [self.reserve.pk, self.book.pk])):
+                with self.subTest(user=user.username, view=name):
+                    self.assertEqual(self.client.post(self._url(name, *args)).status_code, 404)
+        self.assertEqual(self.reserve.items.count(), 1)
+
+    def test_former_teacher_loses_edit_right(self):
+        patron = self.teacher.patron
+        patron.category = get_category(PatronCategory.Code.STAFF)
+        patron.save(update_fields=['category'])
+        self.assertFalse(courses.can_edit_reserve(self.teacher, self.reserve))
+
+    # --- Kitoblar ---
+
+    def test_add_update_remove_book(self):
+        extra = make_book("Qo'shimcha o'qish")
+        self.client.force_login(self.teacher)
+        response = self.client.post(
+            self._url('course_add_book', self.reserve.pk, extra.pk),
+            {'importance': 'RECOMMENDED', 'book_q': "qoshimcha"})
+        self.assertIn('book_q=qoshimcha', response.url)
+        item = self.reserve.items.get(book=extra)
+        self.assertEqual(item.importance, 'RECOMMENDED')
+
+        self.client.post(self._url('course_update_item', self.reserve.pk, extra.pk),
+                         {'importance': 'REQUIRED', 'note': "1-bob"})
+        item.refresh_from_db()
+        self.assertEqual((item.importance, item.note), ('REQUIRED', "1-bob"))
+
+        self.client.post(self._url('course_remove_book', self.reserve.pk, extra.pk))
+        self.assertFalse(self.reserve.items.filter(book=extra).exists())
+
+    def test_duplicate_and_bad_importance(self):
+        self.assertFalse(courses.add_book(self.reserve, self.book)[0])
+        extra = make_book()
+        courses.add_book(self.reserve, extra, importance='BUZUQ')
+        self.assertEqual(self.reserve.items.get(book=extra).importance, 'REQUIRED')
+
+    def test_required_books_listed_first(self):
+        optional, required = make_book("Ixtiyoriy"), make_book("Majburiy")
+        courses.add_book(self.reserve, optional, importance='RECOMMENDED')
+        courses.add_book(self.reserve, required)
+        self.assertEqual([i.book for i in self.reserve.items.all()],
+                         [self.book, required, optional])
+
+    def test_live_search_marks_books_already_added(self):
+        self.client.force_login(self.teacher)
+        response = self.client.get(self._url('course_book_search', self.reserve.pk),
+                                   {'book_q': "nazariyasi"})
+        self.assertContains(response, "Ro'yxatda")
+
+    # --- Ko'rinish va qidiruv ---
+
+    def test_detail_for_student(self):
+        self.client.force_login(self.student)
+        response = self.client.get(self.reserve.get_absolute_url())
+        self.assertShows(response, "Asosiy adabiyotlar")
+        self.assertShows(response, "Iqtisodiyot nazariyasi darsligi")
+        self.assertNotContains(response, 'id="add-book"')
+
+    def test_inactive_hidden_from_students(self):
+        self.reserve.is_active = False
+        self.reserve.save(update_fields=['is_active'])
+        self.client.force_login(self.student)
+        self.assertEqual(self.client.get(self.reserve.get_absolute_url()).status_code, 404)
+        self.client.force_login(self.teacher)
+        self.assertEqual(self.client.get(self.reserve.get_absolute_url()).status_code, 200)
+
+    def test_empty_course_not_published(self):
+        empty = self._reserve("Bo'sh fan")
+        self.assertNotIn(empty, courses.published_reserves())
+        self.assertIn(empty, courses.own_reserves(self.teacher))
+
+    def test_search_by_cyrillic_and_teacher_name(self):
+        for query in ("Иқтисодиёт", "karimov", "nazariyasi karimov"):
+            with self.subTest(query):
+                found = courses.filter_reserves(courses.published_reserves(), query)
+                self.assertIn(self.reserve, found)
+        self.assertFalse(courses.filter_reserves(courses.published_reserves(), "fizika"))
+
+    def test_partial_save_keeps_search_text_fresh(self):
+        self.reserve.course_name = "Menejment"
+        self.reserve.save(update_fields=['course_name'])
+        self.assertIn(self.reserve,
+                      courses.filter_reserves(CourseReserve.objects.all(), "menejment"))
+
+    def test_student_sees_matching_courses_only(self):
+        matching = list(courses.reserves_for_student(self.student))
+        self.assertEqual(matching, [self.reserve])
+
+        foreign = self._reserve("Pedagogika", faculty="Pedagogika fakulteti", semester=3)
+        later = self._reserve("Diplom oldi", faculty="Iqtisodiyot fakulteti", semester=8)
+        general = self._reserve("Hamma uchun")
+        for reserve in (foreign, later, general):
+            courses.add_book(reserve, self.book)
+        self.assertEqual(list(courses.reserves_for_student(self.student)), [self.reserve])
+
+        self.client.force_login(self.student)
+        self.assertShows(self.client.get(self._url('course_list')), "Sizning fanlaringiz")
+
+    def test_list_filters(self):
+        other = self._reserve("Pedagogika", faculty="Pedagogika fakulteti")
+        courses.add_book(other, self.book)
+        self.client.force_login(self.student)
+        response = self.client.get(self._url('course_list'),
+                                   {'faculty': "Iqtisodiyot fakulteti"})
+        self.assertShows(response, "Iqtisodiyot nazariyasi")
+        self.assertNotIn(other, response.context['page_obj'].object_list)
+
+    def test_book_page_shows_courses(self):
+        self.client.force_login(self.student)
+        response = self.client.get(f'/books/{self.book.pk}/')
+        self.assertShows(response, "Fan adabiyoti sifatida")
+        self.assertContains(response, self.reserve.get_absolute_url())

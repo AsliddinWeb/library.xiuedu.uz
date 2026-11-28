@@ -1,0 +1,48 @@
+{% extends "layouts/opac.html" %}
+{% comment %}Ro'yxatlar: o'ziniki, kutubxona tanlovi va boshqa ochiq ro'yxatlar.{% endcomment %}
+
+{% block title %}Ro'yxatlar — XIU Kutubxona{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Ro'yxatlar</h1>
+      <p class="page-sub">Kitoblarni mavzu yoki ish bo'yicha to'plang va adabiyotlar ro'yxatini bir bosishda ko'chiring.</p>
+    </div>
+    <a href="{% url 'engagement:shelf_create' %}" class="btn btn-primary">
+      {% include "ui/_icon.html" with name="plus" class="size-4" %}
+      Yangi ro'yxat
+    </a>
+  </div>
+
+  {% if official_shelves %}
+    <section class="mt-8">
+      <h2 class="font-display text-xl">Kutubxona tanlovi</h2>
+      <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {% for shelf in official_shelves %}{% include "opac/_shelf_card.html" %}{% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="mt-8">
+    <h2 class="font-display text-xl">Mening ro'yxatlarim</h2>
+    {% if my_shelves %}
+      <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {% for shelf in my_shelves %}{% include "opac/_shelf_card.html" %}{% endfor %}
+      </div>
+    {% else %}
+      {% include "ui/_empty.html" with icon="inbox" title="Hali ro'yxatingiz yo'q" text="Ro'yxat oching yoki kitob sahifasidagi «Ro'yxatga» tugmasini bosing." %}
+    {% endif %}
+  </section>
+
+  {% if other_shelves %}
+    <section class="mt-10">
+      <h2 class="font-display text-xl">Boshqalarning ochiq ro'yxatlari</h2>
+      <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {% for shelf in other_shelves %}{% include "opac/_shelf_card.html" with show_owner=1 %}{% endfor %}
+      </div>
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

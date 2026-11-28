@@ -1,0 +1,124 @@
+{% extends "layouts/opac.html" %}
+
+{% block title %}{{ reserve.course_name }} — Fan adabiyoti{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+  <nav class="breadcrumb mb-6">
+    <a href="{% url 'book_app:course_list' %}">Fan adabiyoti</a>
+    <span>/</span>
+    <span>{{ reserve.course_name }}</span>
+  </nav>
+
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">{{ reserve.course_name }}</h1>
+      <p class="page-sub">
+        {% if reserve.course_code %}<span class="font-mono">{{ reserve.course_code }}</span> · {% endif %}
+        {% if reserve.teacher %}{{ reserve.teacher.get_full_name }} · {% endif %}
+        {{ reserve.faculty|default:"Barcha fakultetlar" }}
+        {% if reserve.department %} · {{ reserve.department }}{% endif %}
+        {% if reserve.semester %} · {{ reserve.semester }}-semestr{% endif %}
+      </p>
+      {% if reserve.description %}<p class="mt-2 max-w-2xl text-sm">{{ reserve.description|linebreaksbr }}</p>{% endif %}
+    </div>
+    {% if can_edit %}
+      <div class="flex gap-2">
+        <a href="{% url 'book_app:course_edit' reserve.pk %}" class="btn btn-secondary btn-sm">Tahrirlash</a>
+        <form method="post" action="{% url 'book_app:course_delete' reserve.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-ghost btn-sm text-[color:var(--color-danger-700)]"
+                  data-confirm="«{{ reserve.course_name }}» ro'yxati o'chirilsinmi? Kitoblarning o'zi o'chmaydi.">
+            O'chirish
+          </button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if not reserve.is_active %}
+    <div class="card card-body mt-4 border-l-4 border-l-[color:var(--color-warning-500)]">
+      <p class="text-sm">Ro'yxat yopilgan — talabalarga ko'rinmaydi.</p>
+    </div>
+  {% endif %}
+
+  {# ======================= Kitob qo'shish ======================= #}
+  {% if can_edit %}
+    <section id="add-book" class="card card-body mt-6">
+      <form method="get" action="{{ reserve.get_absolute_url }}#add-book">
+        <label class="search">
+          <span class="text-[color:var(--color-content-subtle)]">{% include "ui/_icon.html" with name="search" class="size-4" %}</span>
+          <input type="search" name="book_q" value="{{ book_query }}" autocomplete="off"
+                 placeholder="Kitob qo'shish: nomi, muallifi yoki ISBN..." aria-label="Qo'shiladigan kitobni qidirish"
+                 hx-get="{% url 'book_app:course_book_search' reserve.pk %}"
+                 hx-target="#course-search-results" hx-swap="outerHTML"
+                 hx-trigger="input changed delay:350ms, search">
+        </label>
+      </form>
+      {% include "opac/_course_search.html" %}
+    </section>
+  {% endif %}
+
+  {# ======================= Adabiyotlar ======================= #}
+  {% for title, group in groups %}
+    <section class="mt-8">
+      <h2 class="font-display text-xl">{{ title }}</h2>
+      <div class="mt-4 space-y-3">
+        {% for item in group %}
+          <div class="card card-body" x-data="{ editing: false }">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="w-full min-w-0 sm:w-auto sm:flex-1">
+                <a href="{% url 'book_app:student_book_detail' item.book_id %}" class="font-display text-base hover:underline">
+                  {{ item.book.title }}
+                </a>
+                <p class="help mt-0.5">
+                  {% for author in item.book.authors.all %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+                  {% if item.book.published_year %} · {{ item.book.published_year }}{% endif %}
+                </p>
+                {% if item.note %}<p class="mt-1 text-sm">{{ item.note }}</p>{% endif %}
+              </div>
+              <div class="flex items-center gap-2">
+                {% include "opac/_availability.html" with book=item.book %}
+                {% if item.book.electronic_version %}
+                  <a href="{% url 'reading:read' item.book_id %}" class="btn btn-secondary btn-sm">O'qish</a>
+                {% endif %}
+                {% if can_edit %}
+                  <button type="button" class="btn btn-ghost btn-icon btn-sm" @click="editing = !editing" aria-label="Tahrirlash">
+                    {% include "ui/_icon.html" with name="pencil" class="size-4" %}
+                  </button>
+                  <form method="post" action="{% url 'book_app:course_remove_book' reserve.pk item.book_id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-ghost btn-icon btn-sm" aria-label="Ro'yxatdan olib tashlash">
+                      {% include "ui/_icon.html" with name="trash" class="size-4" %}
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+            {% if can_edit %}
+              <form method="post" action="{% url 'book_app:course_update_item' reserve.pk item.book_id %}"
+                    x-show="editing" x-cloak class="mt-3 flex flex-wrap gap-2">
+                {% csrf_token %}
+                <select name="importance" class="select w-40" aria-label="Adabiyot turi">
+                  {% for value, label in importance_choices %}
+                    <option value="{{ value }}" {% if item.importance == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+                <input type="text" name="note" value="{{ item.note }}" maxlength="255" class="input flex-1"
+                       placeholder="Masalan: 3–5-boblar" aria-label="Izoh">
+                <button type="submit" class="btn btn-primary btn-sm">Saqlash</button>
+              </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% empty %}
+    <div class="mt-6">
+      {% include "ui/_empty.html" with icon="book" title="Hali adabiyot biriktirilmagan" text="Ro'yxatga kitob qo'shilgach, shu yerda ko'rinadi." %}
+    </div>
+  {% endfor %}
+
+  {% include "opac/_citations.html" %}
+</div>
+{% endblock %}

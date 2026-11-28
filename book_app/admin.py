@@ -7,6 +7,8 @@ from .models import (
     Author,
     Book,
     Contributor,
+    CourseReserve,
+    CourseReserveItem,
     Genre,
     Item,
     ItemStatusLog,
@@ -196,3 +198,24 @@ class RentalAdmin(ModelAdmin):
         if obj.return_date:
             return "Qaytarilgan"
         return "Muddati o'tgan" if obj.is_overdue else "Faol"
+
+
+class CourseReserveItemInline(TabularInline):
+    model = CourseReserveItem
+    extra = 0
+    autocomplete_fields = ("book",)
+
+
+@admin.register(CourseReserve)
+class CourseReserveAdmin(ModelAdmin):
+    list_display = ("course_name", "teacher", "faculty", "semester", "is_active")
+    list_filter = ("is_active", "semester")
+    search_fields = ("course_name", "course_code", "search_text")
+    autocomplete_fields = ("teacher",)
+    exclude = ("created_by",)
+    inlines = [CourseReserveItemInline]
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)

@@ -72,4 +72,5 @@ def gost(book) -> str:
     if book.isbn:
         parts.append(f"ISBN {book.isbn}")
 
-    return ". — ".join(parts) + "."
+    # "384 b." yoki "G. V." kabi nuqta bilan tugagan qism ".." bo'lib qolmasin
+    return ". — ".join(part.rstrip(".") for part in parts) + "."
