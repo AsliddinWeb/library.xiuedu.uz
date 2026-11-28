@@ -8,6 +8,7 @@ Tokensiz o'rnatishda administrator uni panelning o'zidan
 from django.conf import settings
 
 from audit.models import JobRun
+from core import background
 from core.jobs import job
 
 from .hemis import sync
@@ -18,5 +19,5 @@ from .hemis import sync
 def hemis_sync():
     record = JobRun.objects.filter(name=sync.JOB_NAME, status=JobRun.Status.RUNNING).first()
     # Jarayon belgisi panelda ko'rinadi va uzoq yuklash «uzilgan» deb yopilmaydi
-    progress = sync.reporter(record) if record else (lambda stats: None)
+    progress = background.reporter(record) if record else (lambda stats: None)
     return sync.run(settings.HEMIS_API_TOKEN, progress=progress)

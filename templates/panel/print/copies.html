@@ -1,0 +1,41 @@
+{% extends "panel/print/base.html" %}
+{% block title %}Kitob yorliqlari{% endblock %}
+{% block heading %}Kitob yorliqlari{% endblock %}
+
+{% block notes %}
+  {% if not chosen %}
+    <div class="notice notice-info"><p>Nima chop etilishi tanlanmagan. <a href="{% url 'panel:labels' %}" class="underline">Tanlov sahifasiga qayting</a>.</p></div>
+  {% elif not count and not without_barcode %}
+    <div class="notice notice-info"><p>Bu shartlarga mos nusxa topilmadi.</p></div>
+  {% endif %}
+  {% if missing %}<div class="notice notice-warning"><p>Topilmadi ({{ missing|length }} ta): {{ missing|slice:":30"|join:", " }}</p></div>{% endif %}
+  {% if without_barcode %}
+    <form method="post" action="{% url 'panel:labels_barcodes' %}" class="notice notice-warning items-center">
+      {% csrf_token %}
+      {% for name, value in criteria.items %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
+      <input type="hidden" name="paper" value="{{ paper.code }}">
+      <p class="min-w-0 flex-1">{{ without_barcode }} ta nusxada shtrix-kod yo'q, ular chop etilmaydi.</p>
+      <button type="submit" class="btn btn-secondary btn-sm">Shtrix-kod berish</button>
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block sheets %}
+  {% for sheet in sheets %}
+    <section class="sheet">
+      {% for entry in sheet %}
+        {% if entry %}
+          <div class="sticker">
+            <p class="sticker-head">XIU Kutubxona</p>
+            <p class="sticker-title">{{ entry.item.book.title }}</p>
+            {{ entry.svg }}
+            <p class="sticker-code">{{ entry.item.barcode }}</p>
+            <p class="sticker-foot"><span>{{ entry.item.inventory_number }}</span>{% if entry.shelf %}<b>{{ entry.shelf }}</b>{% endif %}</p>
+          </div>
+        {% else %}
+          <div class="sticker sticker-blank"></div>
+        {% endif %}
+      {% endfor %}
+    </section>
+  {% endfor %}
+{% endblock %}

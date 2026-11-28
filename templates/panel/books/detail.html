@@ -64,7 +64,7 @@
       {% endif %}
       {% if book.description %}<p class="mt-4 border-t border-[color:var(--color-line)] pt-3 text-sm leading-6 text-[color:var(--color-content-muted)]">{{ book.description|linebreaksbr }}</p>{% endif %}
       <div class="mt-3 flex flex-wrap gap-3 text-sm">
-        {% if book.electronic_version %}<span class="inline-flex items-center gap-1.5 text-[color:var(--color-success-700)]">{% include "ui/_icon.html" with name="book-open" class="size-4" %} Elektron nusxa bor</span>{% endif %}
+        {% if book.has_ebook %}<span class="inline-flex items-center gap-1.5 text-[color:var(--color-success-700)]">{% include "ui/_icon.html" with name="book-open" class="size-4" %} Elektron nusxa bor{% if not book.electronic_version %} (birinchi ochilganda yuklanadi){% endif %}</span>{% endif %}
         {% if book.audio_version %}<span class="inline-flex items-center gap-1.5 text-[color:var(--color-success-700)]">{% include "ui/_icon.html" with name="headphones" class="size-4" %} Audio nusxa bor</span>{% endif %}
       </div>
     </section>

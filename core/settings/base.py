@@ -143,6 +143,14 @@ AUTO_JOBS_HOUR = 6          # Toshkent vaqti; shundan oldin ishga tushmaydi
 HEMIS_API_URL = os.getenv('HEMIS_API_URL') or 'https://student.xiuedu.uz/rest'
 HEMIS_API_TOKEN = os.getenv('HEMIS_API_TOKEN', '').strip()
 
+# ---------------------------------------------------------------------------
+# Universitet kitoblar bazasi (arm-admin) — «Import» sahifasi shu yerdan oladi.
+# Fayl va muqovalar faqat shu manzilning serveridan yuklanadi.
+# ---------------------------------------------------------------------------
+ARM_API_URL = os.getenv('ARM_API_URL') or 'https://arm-admin.xiuedu.uz/api/v1/books/'
+#: Diskda shuncha joy qolganda fayl yuklash to'xtaydi (GB)
+MEDIA_MIN_FREE_GB = 5
+
 # Autentifikatsiya yo'naltirishlari
 LOGIN_URL = '/auth/login/'          # talaba yoki xodim tanlovi
 LOGIN_REDIRECT_URL = '/dashboard/'
@@ -166,6 +174,7 @@ LOGGING = {
         'audit': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
         'jobs': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
         'hemis': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'arm': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
     },
 }
 

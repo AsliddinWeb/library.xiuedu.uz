@@ -1,0 +1,11 @@
+{% if error %}
+  <div class="notice notice-danger" role="alert">
+    {% include "ui/_icon.html" with name="alert" class="size-5 flex-none" %}<p class="min-w-0 break-words">{{ error }}</p>
+  </div>
+{% elif started %}
+  <div class="notice notice-success" role="status">
+    {% include "ui/_icon.html" with name="check-circle" class="size-5 flex-none" %}
+    <p>{% if dry %}Solishtirish boshlandi — hech narsa yozilmaydi.{% else %}Import boshlandi.{% endif %}
+      Jarayon yonda ko'rinadi, sahifani yopsangiz ham davom etadi (taxminan 10–40 daqiqa).</p>
+  </div>
+{% endif %}

@@ -82,7 +82,7 @@ class PanelBookForm(forms.ModelForm):
             # Universitet
             'faculty', 'department', 'is_textbook',
             # Fayllar
-            'cover_image', 'electronic_version', 'audio_version',
+            'cover_image', 'electronic_version', 'remote_file_url', 'audio_version',
             'reading_mode', 'download_allowed',
             # Holat
             'authors', 'is_active',
@@ -105,15 +105,15 @@ class PanelBookForm(forms.ModelForm):
         ("Mazmun", ['subjects_text', 'description', 'annotation', 'contents_note',
                     'target_audience', 'language', 'original_language']),
         ("Universitet", ['faculty', 'department', 'is_textbook']),
-        ("Fayllar va o'qish", ['cover_image', 'electronic_version', 'audio_version',
-                               'reading_mode', 'download_allowed']),
+        ("Fayllar va o'qish", ['cover_image', 'electronic_version', 'remote_file_url',
+                               'audio_version', 'reading_mode', 'download_allowed']),
         ("Holat", ['is_active']),
     ]
 
     #: Bir ustunga sig'maydigan (keng) maydonlar
     WIDE_FIELDS = {'title', 'subtitle', 'parallel_title', 'authors', 'subjects_text',
                    'description', 'annotation', 'contents_note', 'cover_image',
-                   'electronic_version', 'audio_version'}
+                   'electronic_version', 'remote_file_url', 'audio_version'}
 
     def sections(self):
         """Shablon uchun: [{title, fields: [{field, wide}]}] ko'rinishida."""

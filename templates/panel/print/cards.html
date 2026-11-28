@@ -1,0 +1,42 @@
+{% extends "panel/print/base.html" %}
+{% load static ui_extras %}
+{% block title %}A'zo kartalari{% endblock %}
+{% block heading %}A'zo kartalari{% endblock %}
+
+{% block notes %}
+  {% if not chosen %}
+    <div class="notice notice-info"><p>Kimning kartasi chop etilishi tanlanmagan. <a href="{% url 'panel:labels' %}" class="underline">Tanlov sahifasiga qayting</a>.</p></div>
+  {% elif not count %}
+    <div class="notice notice-info"><p>Bu shartlarga mos a'zo topilmadi.</p></div>
+  {% endif %}
+{% endblock %}
+
+{% block sheets %}
+  {% for sheet in sheets %}
+    <section class="sheet">
+      {% for entry in sheet %}
+        {% if entry %}
+          <article class="sticker member">
+            <header class="member-head">
+              <img src="{% static 'img/xiu-logo-192.png' %}" alt="">
+              <p><b>XIU Kutubxona</b><span>Kitobxon bileti</span></p>
+            </header>
+            <div class="member-body">
+              {% if entry.photo %}<img class="member-photo" src="{{ entry.photo }}" alt="">
+              {% else %}<span class="member-photo member-initials">{{ entry.patron.display_name|slice:":1" }}</span>{% endif %}
+              <div class="member-text">
+                <p class="member-name">{{ entry.patron.display_name }}</p>
+                <p class="member-category">{{ entry.patron.category.name }}</p>
+                {% if entry.details %}<p class="member-details">{{ entry.details }}</p>{% endif %}
+                {% if entry.patron.expires_on %}<p class="member-details">Amal qiladi: {{ entry.patron.expires_on|date:"d.m.Y" }}</p>{% endif %}
+              </div>
+            </div>
+            <div class="member-code">{{ entry.svg }}<p>{{ entry.patron.card_number }}</p></div>
+          </article>
+        {% else %}
+          <div class="sticker sticker-blank"></div>
+        {% endif %}
+      {% endfor %}
+    </section>
+  {% endfor %}
+{% endblock %}

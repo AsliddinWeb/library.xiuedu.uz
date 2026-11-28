@@ -5,10 +5,12 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import F
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse, StreamingHttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from book_app.models import Book
+from book_app.remote import start_ebook_fetch
 from user_app.roles import is_library_staff
 
 from .models import ReadingHistory, ReadingProgress
@@ -106,10 +108,38 @@ def _open_book(request, book, mode):
 @login_required
 def read_book(request, pk):
     book = get_object_or_404(Book, pk=pk)
-    if not book.electronic_version:
+    if not book.has_ebook:
         raise Http404("Bu kitobning elektron versiyasi yo'q.")
+    if not book.electronic_version:
+        return _prepare_book(request, book)
     start_page = int(_open_book(request, book, ReadingProgress.Mode.READ) or 0)
     return render(request, "reading/reader.html", {'book': book, 'start_page': start_page})
+
+
+def _prepare_book(request, book):
+    """Fayl universitet bazasidan yuklanguncha kutish sahifasi."""
+    if book.remote_file_error and request.GET.get('retry'):
+        Book.objects.filter(pk=book.pk).update(remote_file_error='')
+        return redirect('reading:read', pk=book.pk)
+    if not book.remote_file_error:
+        start_ebook_fetch(book)
+    return render(request, 'reading/preparing.html', {'book': book})
+
+
+@login_required
+def prepare_status(request, pk):
+    """Kutish sahifasi har ikki soniyada so'raydi; tayyor bo'lsa o'qishga o'tadi."""
+    book = get_object_or_404(Book, pk=pk)
+    if book.electronic_version:
+        response = HttpResponse(status=204)
+        response['HX-Redirect'] = reverse('reading:read', args=[book.pk])
+        return response
+    if not book.has_ebook:
+        raise Http404("Bu kitobning elektron versiyasi yo'q.")
+    if not book.remote_file_error:
+        # Oqim uzilgan bo'lsa (server qayta ishga tushgan) — qayta boshlanadi
+        start_ebook_fetch(book)
+    return render(request, 'reading/_preparing.html', {'book': book})
 
 
 @login_required

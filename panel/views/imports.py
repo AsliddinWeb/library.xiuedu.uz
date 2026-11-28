@@ -1,35 +1,108 @@
 """
-Kitob import qilish: Excel (CSV) fayldan yoki tashqi API manzilidan.
+Kitob import qilish: universitet kitoblar bazasidan (arm-admin) yoki Excel
+(CSV) fayldan.
 """
-import os
-from io import BytesIO
-
-import requests as http
+from django.conf import settings
 from django.contrib import messages
-from django.core.files import File
-from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from django.utils.text import slugify
 from django.views.decorators.http import require_POST
 
-from audit.models import ActionLog
+from audit.models import ActionLog, JobRun
 from audit.services import log_action
-from book_app.models import Author, Book, Genre
+from book_app import arm_import
+from book_app.models import Book, ExternalRecord
+from book_app.remote import free_bytes
+from core import background
 from user_app.permissions import Perms, has_perm, require_perm
 
 from .. import importers
 from ..exports import csv_response
 
-__all__ = ['import_books', 'import_preview', 'import_confirm']
+__all__ = ['import_books', 'import_preview', 'import_confirm',
+           'arm_start', 'arm_stop', 'arm_status']
 
 SESSION_KEY = 'book_csv_import'
 PREVIEW_ROWS = 200
+
+COUNTERS = (
+    ('new', "Yangi kitob"), ('linked', "Katalogda bor"), ('updated', "Yangilandi"),
+    ('same', "O'zgarmagan"), ('covers', "Muqova"), ('files', "PDF"),
+    ('skipped', "O'tkazildi"), ('failed', "Xato"), ('cover_failed', "Olinmagan muqova"),
+    ('file_failed', "Olinmagan PDF"),
+)
+
+
+def _status_context():
+    background.close_stale(arm_import.JOB_NAME)
+    runs = list(JobRun.objects.filter(name=arm_import.JOB_NAME)[:5])
+    latest = runs[0] if runs else None
+    context = {'runs': runs, 'latest': latest, 'running': False}
+    if latest:
+        stats = latest.stats
+        total, done = stats.get('total') or 0, stats.get('done', 0)
+        dry = bool(stats.get('dry'))
+        counters = []
+        for key, label in COUNTERS:
+            value = stats.get(key, 0)
+            if dry and key == 'new':
+                label = "Qo'shiladi"
+            if value or key in ('new', 'linked'):
+                counters.append((key, label, value))
+        context.update(
+            running=latest.status == JobRun.Status.RUNNING,
+            stopping=bool(stats.get('stop')), dry=dry,
+            total=total, done=done,
+            percent=min(100, round(done * 100 / total)) if total else 0,
+            counters=counters, samples=stats.get('samples') or {},
+            disk_full=stats.get('disk_full'))
+    return context
 
 
 def _import_page(request, **extra):
     return render(request, 'panel/import.html', {
         'active': 'import', 'page_title': 'Kitoblarni import qilish',
-        'columns': importers.template_header(), 'max_rows': importers.MAX_ROWS, **extra})
+        'columns': importers.template_header(), 'max_rows': importers.MAX_ROWS,
+        'source_url': settings.ARM_API_URL,
+        'linked_total': ExternalRecord.objects.filter(source=arm_import.SOURCE).count(),
+        'book_total': Book.objects.count(),
+        'free_gb': round(free_bytes() / 1024 ** 3, 1),
+        'min_free_gb': settings.MEDIA_MIN_FREE_GB,
+        **_status_context(), **extra})
+
+
+def _result(request, **context):
+    return render(request, 'panel/import/_result.html', context)
+
+
+@require_POST
+@require_perm(Perms.CATALOG_IMPORT)
+def arm_start(request):
+    """«Solishtirish» (hech narsa yozmaydi) yoki importni fonda boshlaydi."""
+    dry = request.POST.get('mode') != 'import'
+    covers = bool(request.POST.get('covers'))
+    files = bool(request.POST.get('files'))
+    if arm_import.start(dry=dry, covers=covers, files=files) is None:
+        return _result(request, error="Import allaqachon ishlayapti.")
+    if not dry:
+        log_action(ActionLog.Action.IMPORT, actor=request.user,
+                   note="Universitet bazasidan import boshlandi"
+                        + (", muqovalar bilan" if covers else "")
+                        + (", PDF fayllar bilan" if files else ""))
+    response = _result(request, started=True, dry=dry)
+    response['HX-Trigger'] = 'arm-changed'
+    return response
+
+
+@require_POST
+@require_perm(Perms.CATALOG_IMPORT)
+def arm_stop(request):
+    background.request_stop(arm_import.JOB_NAME)
+    return render(request, 'panel/import/_status.html', _status_context())
+
+
+@require_perm(Perms.CATALOG_IMPORT)
+def arm_status(request):
+    return render(request, 'panel/import/_status.html', _status_context())
 
 
 @require_POST
@@ -79,60 +152,8 @@ def import_confirm(request):
 
 @require_perm(Perms.CATALOG_IMPORT)
 def import_books(request):
-    """Import sahifasi (GET) va tashqi API'dan ommaviy yuklash (POST, JSON javob)."""
-    if request.method != 'POST':
-        if request.GET.get('template') == '1':
-            return csv_response(request, 'kitob-shabloni', importers.template_header(),
-                                [importers.EXAMPLE])
-        return _import_page(request)
-
-    url = request.POST.get('url', '').strip()
-    if not url:
-        return JsonResponse({'error': 'URL kiriting.'}, status=400)
-    try:
-        resp = http.get(url, timeout=20)
-        resp.raise_for_status()
-        results = resp.json().get('results', [])
-    except Exception as e:
-        return JsonResponse({'error': f"Manbaga ulanib bo'lmadi: {e}"}, status=400)
-
-    created = 0
-    for item in results:
-        try:
-            year_raw = str(item.get('year') or '')
-            published_year = int(year_raw) if year_raw.isdigit() else None
-            author, _ = Author.objects.get_or_create(full_name=item.get('author', {}).get('name') or "Noma'lum")
-            category, _ = Genre.objects.get_or_create(name=item.get('category', {}).get('title') or 'Boshqa')
-            book = Book.objects.create(
-                title=item.get('title') or 'Nomsiz',
-                published_year=published_year,
-                description=item.get('description') or '',
-                page_count=item.get('page_count') or None,
-                category=category,
-                reading_mode=Book.ReadingMode.DIGITAL,
-            )
-            book.authors.add(author)
-            book.slug = f"{slugify(book.title)[:280] or 'kitob'}-{book.pk}"
-            book.save(update_fields=['slug'])
-
-            cover = item.get('photo')
-            if cover:
-                try:
-                    ir = http.get(cover, timeout=15)
-                    if ir.ok:
-                        book.cover_image.save(os.path.basename(cover) or 'cover.jpg', File(BytesIO(ir.content)), save=True)
-                except Exception:
-                    pass
-            src = item.get('source')
-            if src:
-                try:
-                    br = http.get(src, timeout=30)
-                    if br.ok:
-                        book.electronic_version.save(os.path.basename(src) or 'book.pdf', File(BytesIO(br.content)), save=True)
-                except Exception:
-                    pass
-            created += 1
-        except Exception:
-            continue
-
-    return JsonResponse({'success': f"{created} ta kitob muvaffaqiyatli qo'shildi."})
+    """Import sahifasi va CSV namunasi."""
+    if request.GET.get('template') == '1':
+        return csv_response(request, 'kitob-shabloni', importers.template_header(),
+                            [importers.EXAMPLE])
+    return _import_page(request)

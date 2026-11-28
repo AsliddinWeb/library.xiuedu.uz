@@ -11,6 +11,7 @@ import re
 
 from django.conf import settings
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 from django.utils.timezone import now
 
 from .models import Book, Item, ItemStatusLog
@@ -38,6 +39,36 @@ def next_barcode() -> str:
         if match:
             number = int(match.group(1))
     return f"{BARCODE_PREFIX}{number + 1:0{BARCODE_DIGITS}d}"
+
+
+@transaction.atomic
+def assign_barcodes(items, by=None) -> list:
+    """Shtrix-kodi yo'q nusxalarga navbatdagi raqamlarni beradi."""
+    from audit.models import ActionLog
+    from audit.services import log_action
+
+    pending = (Item.objects.select_for_update()
+               .filter(pk__in=[item.pk for item in items])
+               .filter(Q(barcode__isnull=True) | Q(barcode=''))
+               .order_by('pk'))
+    assigned = []
+    for item in pending:
+        for attempt in range(3):
+            try:
+                with transaction.atomic():
+                    item.barcode = next_barcode()
+                    item.save(update_fields=['barcode', 'updated_at'])
+                assigned.append(item)
+                break
+            except IntegrityError:
+                if attempt == 2:
+                    raise
+                logger.warning("Shtrix-kod band chiqdi, qayta urinilmoqda")
+    if assigned:
+        log_action(ActionLog.Action.ITEM_EDIT, actor=by, obj=assigned[0],
+                   note=f"{len(assigned)} ta nusxaga shtrix-kod berildi: "
+                        f"{assigned[0].barcode} … {assigned[-1].barcode}")
+    return assigned
 
 
 def next_inventory_number(book) -> str:

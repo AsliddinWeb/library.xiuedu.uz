@@ -1,13 +1,13 @@
 {% comment %}Kitobni qayerdan olish mumkinligi — belgilar. Kirish: `book`.{% endcomment %}
 <span class="flex flex-wrap items-center gap-1.5">
-  {% if book.electronic_version or book.audio_version %}
+  {% if book.has_ebook or book.audio_version %}
     {% include "ui/_badge.html" with text="Onlayn" variant="brand" %}
   {% endif %}
   {% if book.available_count %}
     {% include "ui/_badge.html" with text="Mavjud" variant="success" dot=1 %}
   {% elif book.items_count %}
     {% include "ui/_badge.html" with text="Band" variant="warning" dot=1 %}
-  {% elif not book.electronic_version and not book.audio_version %}
+  {% elif not book.has_ebook and not book.audio_version %}
     {% include "ui/_badge.html" with text="Nusxa yo'q" variant="neutral" %}
   {% endif %}
 </span>

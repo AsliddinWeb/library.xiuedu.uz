@@ -11,14 +11,13 @@ Qoidalar:
   * qayta ishga tushirish xavfsiz.
 """
 import logging
-import threading
 from collections import Counter
 from datetime import UTC, datetime, timedelta
 
-from django.db import connection, transaction
-from django.utils import timezone
+from django.db import transaction
 
 from audit.models import JobRun
+from core import background
 from core.autojobs import exclusive
 
 from ..models import EmployeProfile, StudentProfile, User
@@ -37,8 +36,6 @@ SOURCES = {
     EMPLOYEES: ('v1/data/employee-list', {'type': 'all'}),
 }
 LABELS = {STUDENTS: "Talabalar", EMPLOYEES: "Xodimlar"}
-#: Shuncha vaqt belgi bermagan «bajarilmoqda» yozuvi uzilgan hisoblanadi
-STALE_AFTER = timedelta(minutes=10)
 PROGRESS_EVERY = 100
 
 
@@ -240,63 +237,27 @@ def summary(stats):
 # --------------------------------------------------------------------------
 
 def close_stale():
-    """Server qayta ishga tushganda uzilib qolgan yozuvlarni yopadi."""
-    limit = timezone.now() - STALE_AFTER
-    for record in JobRun.objects.filter(name=JOB_NAME, status=JobRun.Status.RUNNING):
-        beat = record.stats.get('beat')
-        seen = datetime.fromisoformat(beat) if beat else record.started_at
-        if seen < limit:
-            _finish(record, JobRun.Status.FAILED,
-                    "Uzilib qoldi (server qayta ishga tushgan bo'lishi mumkin). Qayta boshlang.")
+    background.close_stale(JOB_NAME)
 
 
 def is_running():
-    close_stale()
-    return JobRun.objects.filter(name=JOB_NAME, status=JobRun.Status.RUNNING).exists()
-
-
-def _finish(record, status, message):
-    record.status = status
-    record.message = message[:300]
-    record.finished_at = timezone.now()
-    record.duration_ms = int((record.finished_at - record.started_at).total_seconds() * 1000)
-    record.save(update_fields=['status', 'message', 'stats', 'finished_at', 'duration_ms'])
-
-
-def reporter(record):
-    """Oraliq hisoblagichlarni yozuvga saqlaydigan funksiya."""
-    def progress(stats):
-        record.stats = {**stats, 'beat': timezone.now().isoformat()}
-        record.save(update_fields=['stats'])
-    return progress
+    return background.is_running(JOB_NAME)
 
 
 def execute(record, token, kinds):
     """`JobRun` yozuvini yuritib sinxronlaydi (xato yozuvning o'ziga tushadi)."""
     try:
-        stats = run(token, kinds, progress=reporter(record))
+        stats = run(token, kinds, progress=background.reporter(record))
     except HemisError as exc:
-        _finish(record, JobRun.Status.FAILED, str(exc))
+        background.finish(record, JobRun.Status.FAILED, str(exc))
     except Exception as exc:
         logger.exception("HEMIS sinxronlash xato bilan tugadi")
-        _finish(record, JobRun.Status.FAILED, f"Kutilmagan xato: {type(exc).__name__}")
+        background.finish(record, JobRun.Status.FAILED, f"Kutilmagan xato: {type(exc).__name__}")
     else:
         record.stats = stats
-        _finish(record, JobRun.Status.SUCCESS, summary(stats))
-
-
-def _worker(record_pk, token, kinds):
-    try:
-        execute(JobRun.objects.get(pk=record_pk), token, kinds)
-    finally:
-        connection.close()
+        background.finish(record, JobRun.Status.SUCCESS, summary(stats))
 
 
 def start(token, kinds):
     """Fon oqimida boshlaydi. Boshqasi ishlayotgan bo'lsa `None`."""
-    if is_running():
-        return None
-    record = JobRun.objects.create(name=JOB_NAME, status=JobRun.Status.RUNNING)
-    threading.Thread(target=_worker, args=(record.pk, token, tuple(kinds)),
-                     name='hemis-sync', daemon=True).start()
-    return record
+    return background.start(JOB_NAME, execute, token, tuple(kinds))

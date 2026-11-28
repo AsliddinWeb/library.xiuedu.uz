@@ -1,0 +1,17 @@
+<div id="preparing" class="card-body text-center" aria-live="polite"
+     {% if not book.remote_file_error %}hx-get="{% url 'reading:prepare' book.pk %}" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
+  {% if book.remote_file_error %}
+    <span class="icon-box icon-box-lg icon-box-danger mx-auto">{% include "ui/_icon.html" with name="alert" class="size-7" %}</span>
+    <h1 class="mt-4 text-xl font-bold">Kitobni ochib bo'lmadi</h1>
+    <p class="help mt-1">{{ book.remote_file_error }}</p>
+    <div class="mt-5 flex flex-wrap justify-center gap-2">
+      <a href="{% url 'reading:read' book.pk %}?retry=1" class="btn btn-primary">Qayta urinish</a>
+      <a href="{% url 'book_app:student_book_detail' book.pk %}" class="btn btn-secondary">Kitob sahifasi</a>
+    </div>
+  {% else %}
+    <span class="icon-box icon-box-lg mx-auto">{% include "ui/_icon.html" with name="download" class="size-7" %}</span>
+    <h1 class="mt-4 text-xl font-bold">Kitob tayyorlanmoqda</h1>
+    <p class="help mt-1">«{{ book.title|truncatechars:90 }}» birinchi marta ochilyapti. Bir necha soniyadan keyin o'zi ochiladi.</p>
+    <a href="{% url 'book_app:student_book_detail' book.pk %}" class="btn btn-ghost btn-sm mt-5">Kitob sahifasiga qaytish</a>
+  {% endif %}
+</div>

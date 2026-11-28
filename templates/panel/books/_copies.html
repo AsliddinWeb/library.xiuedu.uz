@@ -10,6 +10,9 @@
       Nusxalar
       <span class="help ml-1">{{ book.items_count }} ta · {{ book.available_count }} mavjud</span>
     </h3>
+    {% if "items.manage" in perms_flags and copies %}
+      <a href="{% url 'panel:labels_copies' %}?book={{ book.pk }}" class="btn btn-secondary btn-sm">{% include "ui/_icon.html" with name="printer" class="size-4" %} Barcha yorliqlar</a>
+    {% endif %}
   </div>
 
   {% if "items.manage" in perms_flags %}
@@ -50,6 +53,8 @@
       {% csrf_token %}
       <input type="hidden" name="items" :value="selected.join(',')">
       <p class="text-sm"><b x-text="selected.length"></b> ta nusxa belgilandi</p>
+      <a :href="'{% url 'panel:labels_copies' %}?ids=' + selected.join(',')" class="btn btn-secondary">
+        {% include "ui/_icon.html" with name="printer" class="size-4" %} Yorliq</a>
 
       <div class="field w-48">
         <label class="label">Amal</label>

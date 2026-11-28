@@ -14,7 +14,7 @@
   <div class="flex flex-wrap items-center gap-2">
 
     {# --------- Raqamli nusxa --------- #}
-    {% if book.electronic_version %}
+    {% if book.has_ebook %}
       <a href="{% url 'reading:read' book.pk %}" class="btn btn-primary">
         {% include "ui/_icon.html" with name="book" class="size-4" %}
         Onlayn o'qish
@@ -100,7 +100,7 @@
     {% endif %}
   </div>
 
-  {% if not book.electronic_version and not book.audio_version and not book.items_count %}
+  {% if not book.has_ebook and not book.audio_version and not book.items_count %}
     <p class="help mt-3">
       Bu kitobning elektron fayli ham, qog'oz nusxasi ham yo'q — kutubxonachiga murojaat qiling.
     </p>

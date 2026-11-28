@@ -1,0 +1,71 @@
+{% extends "panel/base.html" %}
+{% comment %}Yorliq va a'zo kartasini tanlash. Har ikkala forma chop sahifasini ochadi.{% endcomment %}
+
+{% block title %}Yorliq va kartalar — XIU Kutubxona{% endblock %}
+
+{% block panel_content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Yorliq va kartalar</h1>
+    <p class="page-sub">Kitobga shtrix-kodli yorliq, a'zoga kitobxon bileti. Chop etilgan kodni <b>Berish va qaytarish</b> oynasida skanerlaysiz.</p>
+  </div>
+</div>
+
+<div class="grid gap-4 xl:grid-cols-2">
+  {% if "items.manage" in perms_flags %}
+  <section class="card self-start">
+    <div class="card-head">
+      <h2 class="card-title">Kitob yorliqlari</h2>
+      {% if without_barcode %}<span class="badge badge-warning">{{ without_barcode }} ta nusxada kod yo'q</span>{% endif %}
+    </div>
+    <form method="get" action="{% url 'panel:labels_copies' %}" class="border-b border-[color:var(--color-line)]">
+      <div class="card-body space-y-3">
+        <label class="field"><span class="label">Raqamlar ro'yxati</span>
+          <textarea name="numbers" class="textarea" rows="3" required placeholder="Inventar raqami yoki shtrix-kod: har qatorga bittadan yoki vergul bilan"></textarea></label>
+      </div>
+      <div class="card-foot"><button type="submit" class="btn btn-primary">{% include "ui/_icon.html" with name="printer" class="size-4" %} Shu raqamlarga</button></div>
+    </form>
+
+    <form method="get" action="{% url 'panel:labels_copies' %}">
+      <div class="card-body space-y-3">
+        <p class="text-sm font-semibold">Yoki shart bo'yicha <span class="help font-normal">— kamida bittasini to'ldiring</span></p>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="field"><span class="label">Shtrix-kod, dan</span><input name="from" class="input" placeholder="XIU000000001"></label>
+          <label class="field"><span class="label">Shtrix-kod, gacha</span><input name="to" class="input" placeholder="XIU000000100"></label>
+          <label class="field"><span class="label">Qabul qilingan sana, dan</span><input type="date" name="since" class="input"></label>
+          <label class="field"><span class="label">Filial</span>
+            <select name="library" class="select"><option value="">Hammasi</option>{% for l in libraries %}<option value="{{ l.pk }}">{{ l.name }}</option>{% endfor %}</select></label>
+          <label class="field sm:col-span-2"><span class="label">Kitob nomi yoki chaqiruv raqami</span><input name="q" class="input"></label>
+        </div>
+        <label class="field"><span class="label">Qog'oz</span>
+          <select name="paper" class="select">{% for p in copy_papers %}<option value="{{ p.code }}">{{ p.name }}</option>{% endfor %}</select></label>
+        <p class="help">Bitta kitobning yorliqlari kitob sahifasidan ham chiqadi: nusxalarni belgilab, «Yorliq» tugmasini bosing.</p>
+      </div>
+      <div class="card-foot"><button type="submit" class="btn btn-primary">{% include "ui/_icon.html" with name="printer" class="size-4" %} Yorliqlarni ko'rish</button></div>
+    </form>
+  </section>
+  {% endif %}
+
+  {% if "patrons.edit" in perms_flags %}
+  <section class="card self-start">
+    <div class="card-head"><h2 class="card-title">A'zo kartalari</h2></div>
+    <form method="get" action="{% url 'panel:labels_cards' %}">
+      <div class="card-body space-y-3">
+        <p class="help">Kamida bittasini to'ldiring. Bitta a'zoning kartasi uning sahifasidan ham chiqadi.</p>
+        <label class="field"><span class="label">Guruh</span>
+          <input name="group" class="input" list="card-groups" placeholder="Masalan: IQ-22-01" autocomplete="off">
+          <datalist id="card-groups">{% for group in groups %}<option value="{{ group }}"></option>{% endfor %}</datalist></label>
+        <label class="field"><span class="label">Ism, bilet raqami yoki HEMIS ID</span><input name="q" class="input"></label>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="field"><span class="label">Toifa</span>
+            <select name="category" class="select"><option value="">Hammasi</option>{% for c in categories %}<option value="{{ c.code }}">{{ c.name }}</option>{% endfor %}</select></label>
+          <label class="field"><span class="label">Qog'oz</span>
+            <select name="paper" class="select">{% for p in card_papers %}<option value="{{ p.code }}">{{ p.name }}</option>{% endfor %}</select></label>
+        </div>
+      </div>
+      <div class="card-foot"><button type="submit" class="btn btn-primary">{% include "ui/_icon.html" with name="printer" class="size-4" %} Kartalarni ko'rish</button></div>
+    </form>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

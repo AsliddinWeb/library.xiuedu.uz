@@ -9,5 +9,6 @@ from .hemis import *  # noqa: F401,F403
 from .holdings import *  # noqa: F401,F403,E402
 from .imports import *  # noqa: F401,F403,E402
 from .items import *  # noqa: F401,F403,E402
+from .labels import *  # noqa: F401,F403,E402
 from .members import *  # noqa: F401,F403,E402
 from .system import *  # noqa: F401,F403

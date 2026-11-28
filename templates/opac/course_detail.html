@@ -83,7 +83,7 @@
               </div>
               <div class="flex items-center gap-2">
                 {% include "opac/_availability.html" with book=item.book %}
-                {% if item.book.electronic_version %}
+                {% if item.book.has_ebook %}
                   <a href="{% url 'reading:read' item.book_id %}" class="btn btn-secondary btn-sm">O'qish</a>
                 {% endif %}
                 {% if can_edit %}

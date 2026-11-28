@@ -182,6 +182,11 @@ class Book(models.Model):
 
     audio_version = models.FileField(upload_to="audio_books/", verbose_name="Audio versiyasi", blank=True, null=True)
     electronic_version = models.FileField(upload_to="ebooks/", verbose_name="Elektron versiyasi", blank=True, null=True)
+    #: Fayl hali serverda yo'q: o'quvchi birinchi ochganda shu manzildan yuklanadi
+    remote_file_url = models.URLField(max_length=500, blank=True, verbose_name="Tashqi fayl manzili (PDF)",
+                                      help_text="Universitet bazasidagi PDF. Birinchi ochilganda serverga yuklanadi.")
+    remote_file_error = models.CharField(max_length=200, blank=True, editable=False,
+                                         verbose_name="Faylni yuklash xatosi")
 
     page_count = models.PositiveIntegerField(verbose_name="Sahifalar soni", blank=True, null=True)
     cover_image = models.ImageField(upload_to="book_covers/", verbose_name="Muqova rasmi", blank=True, null=True)
@@ -259,6 +264,11 @@ class Book(models.Model):
     def copy_count(self):
         """Mavjud nusxalar soni (denormalizatsiya maydonidan — tez)."""
         return self.available_count
+
+    @property
+    def has_ebook(self):
+        """O'qish mumkinmi — fayl serverda yoki yuklab olinadigan manzilda."""
+        return bool(self.electronic_version or self.remote_file_url)
 
     @property
     def contributors_by_role(self):
@@ -605,3 +615,30 @@ class CourseReserveItem(models.Model):
 
     def __str__(self):
         return f"{self.reserve.course_name}: {self.book.title}"
+
+
+class ExternalRecord(models.Model):
+    """Tashqi bazadagi yozuvning shu kutubxonadagi kitobga bog'lanishi.
+
+    Qayta import qilinganda kitob ikkinchi marta ochilmasligi uchun. Bir kitobga
+    manbadagi bir nechta (takror) yozuv bog'lanishi mumkin.
+    """
+
+    book = models.ForeignKey('book_app.Book', on_delete=models.CASCADE,
+                             related_name='external_records', verbose_name="Kitob")
+    source = models.CharField(max_length=20, verbose_name="Manba")
+    external_id = models.CharField(max_length=40, verbose_name="Manbadagi ID")
+    file_url = models.URLField(max_length=500, blank=True, verbose_name="Fayl manzili")
+    source_updated_at = models.CharField(max_length=40, blank=True, verbose_name="Manbada o'zgargan")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Bog'langan")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Yangilangan")
+
+    class Meta:
+        verbose_name = "Tashqi yozuv"
+        verbose_name_plural = "Tashqi yozuvlar"
+        constraints = [
+            models.UniqueConstraint(fields=['source', 'external_id'], name='uniq_external_record'),
+        ]
+
+    def __str__(self):
+        return f"{self.source}:{self.external_id}"

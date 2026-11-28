@@ -111,6 +111,13 @@
     {% endif %}
   {% endif %}
 
+  {% if "items.manage" in perms_flags or "patrons.edit" in perms_flags %}
+    <p class="nav-group-title">Chop etish</p>
+    <a href="{% url 'panel:labels' %}" class="nav-link {% if '/panel/labels/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="printer" class="size-4" %}<span>Yorliq va kartalar</span>
+    </a>
+  {% endif %}
+
   {% if flags.acquisitions or flags.serials %}
     <p class="nav-group-title">Ta'minot</p>
     {% if flags.acquisitions and "acq.manage" in perms_flags %}

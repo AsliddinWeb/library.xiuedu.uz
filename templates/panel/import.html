@@ -1,11 +1,12 @@
 {% extends "panel/base.html" %}
+{% load ui_extras %}
 {% block title %}Kitoblarni import qilish — Kutubxona paneli{% endblock %}
 
 {% block panel_content %}
 <div class="page-head">
   <div>
     <h1 class="page-title">Kitoblarni import qilish</h1>
-    <p class="page-sub">Excel'dagi ro'yxatni bir yo'la katalogga kiriting. Avval tekshiruv ko'rsatiladi, tasdiqlamaguningizcha hech narsa yozilmaydi.</p>
+    <p class="page-sub">Universitet kitoblar bazasidan yoki Excel ro'yxatidan. Avval solishtiruv ko'rsatiladi, tasdiqlamaguningizcha hech narsa yozilmaydi.</p>
   </div>
   <a href="{% url 'panel:import_books' %}?template=1" class="btn btn-secondary" download>
     {% include "ui/_icon.html" with name="download" class="size-4" %} Namuna fayl
@@ -65,63 +66,66 @@
   </div>
   {% if counts.total > preview|length %}<p class="help mt-2">Dastlabki {{ preview|length }} qator ko'rsatildi (xatolilari birinchi).</p>{% endif %}
 {% else %}
-  <div class="grid gap-4 lg:grid-cols-2">
-    <section class="card">
-      <div class="card-head"><h2 class="card-title">Excel (CSV) fayldan</h2></div>
-      <form method="post" action="{% url 'panel:import_preview' %}" enctype="multipart/form-data" class="card-body space-y-3">
+  <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+    <div class="min-w-0 space-y-4">
+      <form class="card" method="post" action="{% url 'panel:arm_start' %}"
+            hx-post="{% url 'panel:arm_start' %}" hx-target="#arm-result" hx-disabled-elt="find button">
         {% csrf_token %}
-        <input type="file" name="file" accept=".csv,text/csv" required class="input !h-auto py-2" aria-label="CSV fayl">
-        <button type="submit" class="btn btn-primary">{% include "ui/_icon.html" with name="upload" class="size-4" %} Tekshirish</button>
-        <ol class="list-inside list-decimal space-y-1 pt-2 text-sm text-[color:var(--color-content-muted)]">
-          <li>«Namuna fayl»ni yuklab oling va Excel'da to'ldiring.</li>
-          <li>«Boshqacha saqlash» → <b>CSV UTF-8</b>.</li>
-          <li>Faylni shu yerga yuklang (ko'pi bilan {{ max_rows }} qator).</li>
-        </ol>
-        <p class="help">Ustunlar: {{ columns|join:", " }}. Majburiysi: Sarlavha va Katalog. Bir nechta muallif vergul bilan yoziladi.</p>
-      </form>
-    </section>
+        <div class="card-head"><h2 class="card-title">Universitet kitoblar bazasi</h2></div>
+        <div class="card-body space-y-4">
+          <dl class="grid grid-cols-3 gap-3 text-center">
+            <div class="stat"><dt class="stat-label justify-center">Katalogda</dt><dd class="stat-value">{{ book_total|spaced }}</dd></div>
+            <div class="stat"><dt class="stat-label justify-center">Bazaga bog'langan</dt><dd class="stat-value">{{ linked_total|spaced }}</dd></div>
+            <div class="stat"><dt class="stat-label justify-center">Diskda bo'sh</dt><dd class="stat-value">{{ free_gb }} <span class="text-sm font-normal">GB</span></dd></div>
+          </dl>
 
-    <section class="card" x-data="importer()">
-      <div class="card-head"><h2 class="card-title">Tashqi manzildan (JSON)</h2></div>
-      <div class="card-body space-y-3">
-        <label class="field"><span class="label">Manba manzili</span>
-          <input type="url" x-model="url" class="input" placeholder="https://manba.example.com/api/books/"></label>
-        <button type="button" class="btn btn-secondary" @click="run()" :disabled="loading">
-          <span x-text="loading ? 'Yuklanmoqda...' : 'Importni boshlash'">Importni boshlash</span>
-        </button>
-        <template x-if="result">
-          <div class="notice" :class="result.ok ? 'notice-success' : 'notice-danger'"><p class="text-sm" x-text="result.msg"></p></div>
-        </template>
-        <p class="help">Kutilayotgan format: <code>results[]</code> ichida title, year, description, page_count, author.name, category.title, photo, source.</p>
+          <fieldset class="space-y-2.5">
+            <legend class="label mb-1.5">Nimani ko'chirish</legend>
+            <label class="check-row"><input type="checkbox" class="checkbox" name="covers" value="1" checked> Muqova rasmlari <span class="help">— 11 000 kitobga taxminan 1 GB</span></label>
+            <label class="check-row"><input type="checkbox" class="checkbox" name="files" value="1"> PDF fayllarni ham hozir ko'chirish <span class="help">— taxminan 36 GB, bir necha soat</span></label>
+            <p class="help">PDF belgilanmasa ham kitob o'qiladi: fayl o'quvchi birinchi marta ochganda serverga yuklanadi.
+              Diskda {{ min_free_gb }} GB qolganda ko'chirish o'zi to'xtaydi.</p>
+          </fieldset>
+
+          <div id="arm-result" aria-live="polite"></div>
+        </div>
+        <div class="card-body flex flex-wrap justify-end gap-2 border-t border-[color:var(--color-line)]">
+          <button type="submit" name="mode" value="compare" class="btn btn-secondary">
+            {% include "ui/_icon.html" with name="search" class="size-4" %} Avval solishtirish
+          </button>
+          <button type="submit" name="mode" value="import" class="btn btn-primary"
+                  data-confirm="Universitet bazasidagi kitoblar katalogga qo'shilsinmi? Avval «solishtirish» natijasini ko'rganingiz ma'qul."
+                  data-confirm-label="Boshlash" data-confirm-tone="primary">
+            {% include "ui/_icon.html" with name="download" class="size-4" %} Importni boshlash
+          </button>
+        </div>
+      </form>
+
+      <section class="card">
+        <div class="card-head"><h2 class="card-title">Excel (CSV) fayldan</h2></div>
+        <form method="post" action="{% url 'panel:import_preview' %}" enctype="multipart/form-data" class="card-body space-y-3">
+          {% csrf_token %}
+          <input type="file" name="file" accept=".csv,text/csv" required class="input !h-auto py-2" aria-label="CSV fayl">
+          <button type="submit" class="btn btn-secondary">{% include "ui/_icon.html" with name="upload" class="size-4" %} Tekshirish</button>
+          <p class="help">«Namuna fayl»ni yuklab oling, Excel'da to'ldiring va <b>CSV UTF-8</b> qilib saqlang (ko'pi bilan {{ max_rows }} qator).
+            Ustunlar: {{ columns|join:", " }}. Majburiysi: Sarlavha va Katalog.</p>
+        </form>
+      </section>
+    </div>
+
+    <div class="min-w-0 space-y-4">
+      {% include "panel/import/_status.html" %}
+      <div class="card card-body text-sm leading-6">
+        <h2 class="card-title mb-2">Qanday ishlaydi</h2>
+        <ul class="list-disc space-y-1 pl-5 text-[color:var(--color-content-muted)]">
+          <li>Katalogda bor kitob nomi, yili va muallifi bo'yicha topiladi (kirill va lotin farq qilmaydi), ikkinchisi ochilmaydi.</li>
+          <li>Kutubxonachi kiritgan ma'lumot o'zgartirilmaydi, faqat bo'sh maydonlar to'ldiriladi.</li>
+          <li>Hech narsa o'chirilmaydi. Qayta ishga tushirish xavfsiz: faqat yangilari qo'shiladi.</li>
+          <li>Qog'oz nusxa ochilmaydi — nusxalarni kitob sahifasidan qo'shasiz.</li>
+        </ul>
+        <p class="help mt-3 break-all">Manba: {{ source_url }}</p>
       </div>
-    </section>
+    </div>
   </div>
 {% endif %}
-{% endblock %}
-
-{% block extra_js %}
-<script>
-function importer() {
-  return {
-    url: '', loading: false, result: null,
-    async run() {
-      if (!this.url.trim()) { this.result = { ok: false, msg: 'Manzilni kiriting.' }; return; }
-      this.loading = true; this.result = null;
-      try {
-        const resp = await fetch("{% url 'panel:import_books' %}", {
-          method: 'POST',
-          headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ url: this.url }),
-        });
-        const data = await resp.json();
-        this.result = resp.ok ? { ok: true, msg: data.success } : { ok: false, msg: data.error || 'Xatolik' };
-      } catch (e) {
-        this.result = { ok: false, msg: 'Tarmoq xatosi: ' + e };
-      } finally {
-        this.loading = false;
-      }
-    },
-  };
-}
-</script>
 {% endblock %}

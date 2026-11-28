@@ -20,6 +20,10 @@
       <button class="btn btn-secondary btn-sm" @click="statusOpen = true">
         {% include "ui/_icon.html" with name="clock" class="size-4" %} Holatni o'zgartirish
       </button>
+      {% if "items.manage" in perms_flags %}
+        <a href="{% url 'panel:labels_copies' %}?ids={{ item.pk }}&paper=t58" class="btn btn-secondary btn-sm">
+          {% include "ui/_icon.html" with name="printer" class="size-4" %} Yorliq</a>
+      {% endif %}
       <a href="{% url 'panel:book_detail' item.book_id %}" class="btn btn-ghost btn-sm">Kitobga qaytish</a>
     </div>
   </div>

@@ -22,6 +22,9 @@
         </a>
       {% endif %}
       {% if "patrons.edit" in perms_flags %}
+        <a href="{% url 'panel:labels_cards' %}?ids={{ patron.pk }}&paper=card" class="btn btn-secondary btn-sm">
+          {% include "ui/_icon.html" with name="printer" class="size-4" %} Karta
+        </a>
         <a href="{% url 'panel:member_edit' patron.pk %}" class="btn btn-secondary btn-sm">
           {% include "ui/_icon.html" with name="pencil" class="size-4" %} Tahrirlash
         </a>

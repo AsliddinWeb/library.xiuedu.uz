@@ -15,7 +15,7 @@
       {% for author in book.authors.all %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}Muallif ko'rsatilmagan{% endfor %}
     </span>
     <span class="mt-1 flex flex-wrap items-center gap-1.5">
-      {% if book.electronic_version %}
+      {% if book.has_ebook %}
         <span class="badge badge-brand">{% include "ui/_icon.html" with name="book-open" class="size-3" %} Onlayn</span>
       {% endif %}
       {% if book.audio_version %}

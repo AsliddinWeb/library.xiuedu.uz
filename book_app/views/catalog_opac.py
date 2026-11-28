@@ -54,7 +54,8 @@ def _apply_facets(books, params):
 
     fmt = params.get('format', '')
     if fmt == 'digital':
-        books = books.filter(Q(electronic_version__gt='') | Q(audio_version__gt=''))
+        books = books.filter(Q(electronic_version__gt='') | Q(remote_file_url__gt='')
+                             | Q(audio_version__gt=''))
         applied['format'] = fmt
     elif fmt == 'physical':
         books = books.filter(items_count__gt=0)

@@ -1,0 +1,52 @@
+{% load static %}{% comment %}
+  Chop etish sahifasi: panel menyusisiz. Ustki asboblar qatori faqat ekranda,
+  qog'ozga faqat `.sheet`lar tushadi.
+{% endcomment %}<!doctype html>
+<html lang="uz">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Chop etish{% endblock %} — XIU Kutubxona</title>
+    <link rel="icon" href="{% static 'favicon.ico' %}">
+    {% include "ui/_theme_init.html" %}
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <link rel="stylesheet" href="{% static 'css/print.css' %}">
+    <style>@page { size: {{ paper.page.0|stringformat:"s" }}mm {{ paper.page.1|stringformat:"s" }}mm; margin: 0; }</style>
+</head>
+<body class="print-body">
+    <header class="no-print print-bar">
+        <a href="{% url 'panel:labels' %}" class="btn btn-secondary btn-sm">{% include "ui/_icon.html" with name="arrow-left" class="size-4" %} Tanlov</a>
+        <div class="min-w-0">
+            <h1 class="text-base font-bold">{% block heading %}Chop etish{% endblock %}</h1>
+            <p class="help">{{ count }} ta · {{ sheets|length }} sahifa</p>
+        </div>
+        <form method="get" class="ml-auto flex flex-wrap items-end gap-2">
+            {% for name, value in criteria.items %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
+            <label class="field"><span class="label">Qog'oz</span>
+                <select name="paper" class="select" onchange="this.form.submit()">
+                    {% for option in papers %}<option value="{{ option.code }}" {% if option.code == paper.code %}selected{% endif %}>{{ option.name }}</option>{% endfor %}
+                </select></label>
+            {% if paper.per_page > 1 %}
+                <label class="field w-40"><span class="label">Band kataklar soni</span>
+                    <input type="number" name="skip" value="{{ skip }}" min="0" max="{{ paper.per_page|add:"-1" }}" class="input" onchange="this.form.submit()"></label>
+            {% endif %}
+        </form>
+        <button type="button" class="btn btn-primary self-end" onclick="window.print()" {% if not count %}disabled{% endif %}>
+            {% include "ui/_icon.html" with name="printer" class="size-4" %} Chop etish
+        </button>
+    </header>
+
+    <div class="no-print print-notes">
+        {% for message in messages %}<div class="notice notice-success" role="status"><p>{{ message }}</p></div>{% endfor %}
+        {% block notes %}{% endblock %}
+        {% if truncated %}<div class="notice notice-warning"><p>Faqat birinchi {{ limit }} tasi ko'rsatildi. Tanlovni toraytirib, bo'lib chop eting.</p></div>{% endif %}
+        {% if unprintable %}<div class="notice notice-warning"><p>Shtrix-kodga yozib bo'lmaydigan belgilari bor ({{ unprintable|length }} ta): {{ unprintable|slice:":10"|join:", " }}. Raqamni lotin harf va raqam bilan yozing.</p></div>{% endif %}
+        {% if count %}<p class="help">Chop etish oynasida masshtab <b>100%</b> (haqiqiy o'lcham), hoshiya <b>yo'q</b> bo'lsin. Avval bitta sahifani oddiy qog'ozga sinab ko'ring.</p>{% endif %}
+    </div>
+
+    <main class="sheets paper-{{ paper.code }}"
+          style="--page-w: {{ paper.page.0|stringformat:'s' }}mm; --page-h: {{ paper.page.1|stringformat:'s' }}mm; --label-w: {{ paper.label.0|stringformat:'s' }}mm; --label-h: {{ paper.label.1|stringformat:'s' }}mm; --columns: {{ paper.columns }}; --rows: {{ paper.rows }};">
+        {% block sheets %}{% endblock %}
+    </main>
+</body>
+</html>

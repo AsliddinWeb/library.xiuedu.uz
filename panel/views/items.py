@@ -28,17 +28,12 @@ PER_PAGE = 30
 #  Nusxalar ro'yxati
 # --------------------------------------------------------------------------
 
-@require_perm(Perms.CATALOG_VIEW)
-def item_list(request):
-    """Butun fond bo'yicha nusxalar ro'yxati (shtrix-kod bo'yicha qidiruv bilan)."""
-    items = (Item.objects
-             .select_related('book', 'item_type', 'library', 'shelf_location')
-             .order_by('-id'))
-
-    q = request.GET.get('q', '').strip()
-    status = request.GET.get('status', '').strip()
-    library = request.GET.get('library', '').strip()
-    item_type = request.GET.get('type', '').strip()
+def filter_items(items, params):
+    """Ro'yxat filtrlari (`q`, `status`, `library`, `type`) — yorliq tanlovida ham."""
+    q = params.get('q', '').strip()
+    status = params.get('status', '').strip()
+    library = params.get('library', '').strip()
+    item_type = params.get('type', '').strip()
 
     if q:
         items = items.filter(
@@ -46,10 +41,23 @@ def item_list(request):
             Q(call_number__icontains=q) | Q(book__title__icontains=q))
     if status:
         items = items.filter(status=status)
-    if library:
+    if library.isdigit():
         items = items.filter(library_id=library)
-    if item_type:
+    if item_type.isdigit():
         items = items.filter(item_type_id=item_type)
+    return items
+
+@require_perm(Perms.CATALOG_VIEW)
+def item_list(request):
+    """Butun fond bo'yicha nusxalar ro'yxati (shtrix-kod bo'yicha qidiruv bilan)."""
+    q = request.GET.get('q', '').strip()
+    status = request.GET.get('status', '').strip()
+    library = request.GET.get('library', '').strip()
+    item_type = request.GET.get('type', '').strip()
+
+    items = filter_items(
+        Item.objects.select_related('book', 'item_type', 'library', 'shelf_location')
+        .order_by('-id'), request.GET)
 
     if wants_csv(request):
         rows = ((i.barcode, i.inventory_number, i.book.title,
@@ -64,9 +72,9 @@ def item_list(request):
 
     page = Paginator(items, PER_PAGE).get_page(request.GET.get('page', 1))
 
-    query = ''.join(f"&{key}={value}" for key, value in
-                    (('q', q), ('status', status), ('library', library), ('type', item_type))
-                    if value)
+    filters = {key: value for key, value in
+               (('q', q), ('status', status), ('library', library), ('type', item_type)) if value}
+    query = '&' + urlencode(filters) if filters else ''
 
     from holdings.models import ItemType, Library
     ctx = {

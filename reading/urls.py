@@ -6,6 +6,7 @@ app_name = "reading"
 
 urlpatterns = [
     path('read/<int:pk>/', views.read_book, name='read'),
+    path('read/<int:pk>/prepare/', views.prepare_status, name='prepare'),
     path('listen/<int:pk>/', views.listen_book, name='listen'),
 
     # Himoyalangan stream (inline, Range)

@@ -1,0 +1,12 @@
+{% extends "layouts/opac.html" %}
+{% comment %}Fayl universitet bazasidan birinchi marta yuklanayotganda.{% endcomment %}
+
+{% block title %}{{ book.title }} — tayyorlanmoqda{% endblock %}
+
+{% block content %}
+<div class="container-page py-12">
+  <div class="card mx-auto max-w-lg">
+    {% include "reading/_preparing.html" %}
+  </div>
+</div>
+{% endblock %}

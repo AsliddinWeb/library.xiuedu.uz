@@ -16,7 +16,7 @@ def home(request):
     books = Book.objects.filter(is_active=True, category__is_active=True)
     stats = books.aggregate(
         total=Count('id'),
-        digital=Count('id', filter=Q(electronic_version__gt='')),
+        digital=Count('id', filter=Q(electronic_version__gt='') | Q(remote_file_url__gt='')),
         audio=Count('id', filter=Q(audio_version__gt='')),
     )
     stats['authors'] = (Contributor.objects.filter(book__in=books)

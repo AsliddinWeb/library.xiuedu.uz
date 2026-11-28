@@ -24,6 +24,12 @@ urlpatterns = [
     path('items/<int:pk>/status/', views.item_status, name='item_status'),
     path('books/<int:pk>/items/bulk/', views.item_bulk, name='item_bulk'),
 
+    # Chop etish: kitob yorlig'i va a'zo kartasi
+    path('labels/', views.labels, name='labels'),
+    path('labels/copies/', views.labels_copies, name='labels_copies'),
+    path('labels/copies/barcodes/', views.labels_barcodes, name='labels_barcodes'),
+    path('labels/cards/', views.labels_cards, name='labels_cards'),
+
     # Fond tuzilmasi (filial / tur / javon)
     path('holdings/', views.holdings_overview, name='holdings'),
     path('holdings/<str:kind>/<int:pk>/edit/', views.holdings_edit, name='holdings_edit'),
@@ -34,6 +40,9 @@ urlpatterns = [
     path('search/', views.quick_search, name='quick_search'),
 
     path('import/', views.import_books, name='import_books'),
+    path('import/arm/start/', views.arm_start, name='arm_start'),
+    path('import/arm/stop/', views.arm_stop, name='arm_stop'),
+    path('import/arm/status/', views.arm_status, name='arm_status'),
     path('import/csv/', views.import_preview, name='import_preview'),
     path('import/csv/confirm/', views.import_confirm, name='import_confirm'),
 

@@ -77,14 +77,11 @@ class PatronForm(forms.ModelForm):
         return data
 
 
-def _members_ctx(request):
-    qs = (Patron.objects
-          .select_related('user', 'category')
-          .order_by('-created_at'))
-
-    q = request.GET.get('q', '').strip()
-    category = request.GET.get('category', '').strip()
-    status = request.GET.get('status', '').strip()
+def filter_members(qs, params):
+    """Ro'yxat filtrlari (`q`, `category`, `status`) — karta tanlovida ham."""
+    q = params.get('q', '').strip()
+    category = params.get('category', '').strip()
+    status = params.get('status', '').strip()
 
     if q:
         qs = qs.filter(
@@ -102,6 +99,16 @@ def _members_ctx(request):
         qs = qs.filter(category__code=category)
     if status:
         qs = qs.filter(status=status)
+    return qs
+
+
+def _members_ctx(request):
+    q = request.GET.get('q', '').strip()
+    category = request.GET.get('category', '').strip()
+    status = request.GET.get('status', '').strip()
+    qs = filter_members(
+        Patron.objects.select_related('user', 'category').order_by('-created_at'),
+        request.GET)
 
     page = Paginator(qs, PER_PAGE).get_page(request.GET.get('page', 1))
 

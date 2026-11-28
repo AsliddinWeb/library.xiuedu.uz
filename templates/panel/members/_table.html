@@ -1,5 +1,11 @@
 {% comment %}A'zolar jadvali (HTMX target).{% endcomment %}
 {% if members %}
+{% if query and "patrons.edit" in perms_flags %}
+<div class="mb-2 flex justify-end">
+  <a href="{% url 'panel:labels_cards' %}?{{ query|slice:"1:" }}" class="btn btn-secondary btn-sm">
+    {% include "ui/_icon.html" with name="printer" class="size-4" %} Shu ro'yxatga karta</a>
+</div>
+{% endif %}
 <div class="table-wrap">
   <table class="table table-zebra">
     <thead>
