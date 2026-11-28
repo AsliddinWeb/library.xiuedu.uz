@@ -166,7 +166,7 @@ class Record:
 
 
 def _clean(value, limit=None):
-    text = ' '.join(str(value or '').split())
+    text = ' '.join(str(value or '').replace('\x00', '').split())
     return text[:limit] if limit else text
 
 
@@ -213,7 +213,8 @@ def parse(raw):
         category=_clean(_field(raw.get('category'), 'title', 'title_uz', 'title_ru'), 100)
         or DEFAULT_CATEGORY,
         year=year,
-        description=str(_field(raw, 'description', 'description_uz', 'description_ru')).strip(),
+        description=str(_field(raw, 'description', 'description_uz', 'description_ru'))
+        .replace('\x00', '').strip(),
         file_url=file_url, cover_url=remote.source_url(raw.get('photo')),
         updated_at=str(raw.get('updated_at') or '')[:40])
 

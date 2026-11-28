@@ -278,6 +278,11 @@ class ImportTests(ArmCase):
 
         self.assertEqual((source.asked, stats['stopped'], Book.objects.count()), ([1], 1, 1))
 
+    def test_null_characters_are_removed(self):
+        record = arm_import.parse(raw(title="Nom\x00li", description="Ta\x00vsif"))
+
+        self.assertEqual((record.title, record.description), ("Nomli", "Tavsif"))
+
     def test_foreign_addresses_are_ignored(self):
         self.run_import([raw(source='http://boshqa.example/a.pdf',
                              photo='file:///etc/passwd')], covers=True, files=True)

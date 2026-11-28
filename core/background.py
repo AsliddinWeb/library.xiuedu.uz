@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from django.conf import settings
-from django.db import connection
+from django.db import DatabaseError, connection, transaction
 from django.utils import timezone
 
 from audit.models import JobRun
@@ -32,7 +32,14 @@ def finish(record, status, message):
     record.message = message[:300]
     record.finished_at = timezone.now()
     record.duration_ms = int((record.finished_at - record.started_at).total_seconds() * 1000)
-    record.save(update_fields=['status', 'message', 'stats', 'finished_at', 'duration_ms'])
+    fields = ['status', 'message', 'finished_at', 'duration_ms']
+    try:
+        with transaction.atomic():
+            record.save(update_fields=[*fields, 'stats'])
+    except DatabaseError:
+        # Hisoblagichlarni saqlab bo'lmasa ham ish «bajarilmoqda»da qotib qolmasin
+        logger.exception("Ish natijasini to'liq saqlab bo'lmadi: %s", record.name)
+        record.save(update_fields=fields)
 
 
 def reporter(record):
