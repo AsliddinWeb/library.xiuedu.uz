@@ -74,8 +74,8 @@
         <div class="card-head"><h2 class="card-title">Universitet kitoblar bazasi</h2></div>
         <div class="card-body space-y-4">
           <dl class="grid grid-cols-3 gap-3 text-center">
-            <div class="stat"><dt class="stat-label justify-center">Katalogda</dt><dd class="stat-value">{{ book_total|spaced }}</dd></div>
-            <div class="stat"><dt class="stat-label justify-center">Bazaga bog'langan</dt><dd class="stat-value">{{ linked_total|spaced }}</dd></div>
+            <div class="stat"><dt class="stat-label justify-center">Katalogda</dt><dd class="stat-value" id="arm-book-total">{{ book_total|spaced }}</dd></div>
+            <div class="stat"><dt class="stat-label justify-center">Bazaga bog'langan</dt><dd class="stat-value" id="arm-linked-total">{{ linked_total|spaced }}</dd></div>
             <div class="stat"><dt class="stat-label justify-center">Diskda bo'sh</dt><dd class="stat-value">{{ free_gb }} <span class="text-sm font-normal">GB</span></dd></div>
           </dl>
 
@@ -96,7 +96,7 @@
           <button type="submit" name="mode" value="import" class="btn btn-primary"
                   data-confirm="Universitet bazasidagi kitoblar katalogga qo'shilsinmi? Avval «solishtirish» natijasini ko'rganingiz ma'qul."
                   data-confirm-label="Boshlash" data-confirm-tone="primary">
-            {% include "ui/_icon.html" with name="download" class="size-4" %} Importni boshlash
+            {% include "ui/_icon.html" with name="download" class="size-4" %} <span id="arm-start-label">{% if resumable %}Davom ettirish{% else %}Importni boshlash{% endif %}</span>
           </button>
         </div>
       </form>

@@ -30,17 +30,27 @@ PREVIEW_ROWS = 200
 
 COUNTERS = (
     ('new', "Yangi kitob"), ('linked', "Katalogda bor"), ('updated', "Yangilandi"),
-    ('same', "O'zgarmagan"), ('covers', "Muqova"), ('files', "PDF"),
+    ('same', "Avval yuklangan"), ('covers', "Muqova"), ('files', "PDF"),
     ('skipped', "O'tkazildi"), ('failed', "Xato"), ('cover_failed', "Olinmagan muqova"),
     ('file_failed', "Olinmagan PDF"),
 )
 
 
+PHASES = {
+    'preparing': "Katalog bilan solishtirishga tayyorlanmoqda",
+    'books': "Kitoblar yozilmoqda",
+    'covers': "Muqovalar ko'chirilmoqda",
+    'files': "PDF fayllar ko'chirilmoqda",
+}
+
+
 def _status_context():
-    background.close_stale(arm_import.JOB_NAME)
+    background.close_stale(arm_import.JOB_NAME, arm_import.STALE_AFTER)
     runs = list(JobRun.objects.filter(name=arm_import.JOB_NAME)[:5])
     latest = runs[0] if runs else None
-    context = {'runs': runs, 'latest': latest, 'running': False}
+    context = {'runs': runs, 'latest': latest, 'running': False,
+               'book_total': Book.objects.count(),
+               'linked_total': ExternalRecord.objects.filter(source=arm_import.SOURCE).count()}
     if latest:
         stats = latest.stats
         total, done = stats.get('total') or 0, stats.get('done', 0)
@@ -58,7 +68,11 @@ def _status_context():
             total=total, done=done,
             percent=min(100, round(done * 100 / total)) if total else 0,
             counters=counters, samples=stats.get('samples') or {},
-            disk_full=stats.get('disk_full'))
+            disk_full=stats.get('disk_full'),
+            phase=PHASES.get(stats.get('phase'), ''), current=stats.get('current', ''),
+            # Tugamay qolgan import: yuklangani saqlangan, davom ettirsa bo'ladi
+            resumable=bool(not dry and (latest.status == JobRun.Status.FAILED
+                                        or stats.get('stopped'))))
     return context
 
 
@@ -78,11 +92,14 @@ def _import_page(request, **extra):
         'columns': importers.template_header(), 'max_rows': importers.MAX_ROWS,
         'source_url': settings.ARM_API_URL,
         'export': _export_info(),
-        'linked_total': ExternalRecord.objects.filter(source=arm_import.SOURCE).count(),
-        'book_total': Book.objects.count(),
         'free_gb': round(free_bytes() / 1024 ** 3, 1),
         'min_free_gb': settings.MEDIA_MIN_FREE_GB,
         **_status_context(), **extra})
+
+
+def _status(request):
+    # `oob` — yon tomondagi umumiy sonlar ham yangilansin
+    return render(request, 'panel/import/_status.html', {**_status_context(), 'oob': True})
 
 
 def _result(request, **context):
@@ -112,12 +129,12 @@ def arm_start(request):
 @require_perm(Perms.CATALOG_IMPORT)
 def arm_stop(request):
     background.request_stop(arm_import.JOB_NAME)
-    return render(request, 'panel/import/_status.html', _status_context())
+    return _status(request)
 
 
 @require_perm(Perms.CATALOG_IMPORT)
 def arm_status(request):
-    return render(request, 'panel/import/_status.html', _status_context())
+    return _status(request)
 
 
 @require_POST

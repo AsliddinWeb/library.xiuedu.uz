@@ -18,6 +18,7 @@ import time
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
+from datetime import timedelta
 from pathlib import Path
 from urllib.parse import quote, urlsplit
 
@@ -47,6 +48,10 @@ TIMEOUT = 60
 #: Manbani charchatmaslik uchun sahifalar orasidagi eng kam vaqt
 MIN_INTERVAL = 0.2
 COVER_WORKERS = 4
+#: Holat shundan tez-tez saqlanmaydi (soniya)
+REPORT_EVERY = 2
+#: Shuncha vaqt belgi bermagan import to'xtagan hisoblanadi
+STALE_AFTER = timedelta(minutes=3)
 SAMPLES = 8
 DEFAULT_CATEGORY = "Boshqa"
 
@@ -359,8 +364,13 @@ class Writer:
 # --------------------------------------------------------------------------
 
 class Importer:
-    def __init__(self, *, dry=False, covers=True, files=False):
+    def __init__(self, *, dry=False, covers=True, files=False, progress=lambda stats: False):
         self.dry, self.covers, self.files = dry, covers and not dry, files and not dry
+        self.progress = progress
+        self.stopped = False
+        self.phase = ''
+        self.current = ''
+        self._reported = 0.0
         self.stats = Counter(dry=int(dry), done=0, new=0, linked=0, updated=0, same=0,
                              skipped=0, failed=0)
         self.samples = {'new': [], 'linked': []}
@@ -410,9 +420,21 @@ class Importer:
             self.without_cover.add(book_id)
         return result, book_id
 
+    def report(self, force=False):
+        """Holatni saqlaydi; xodim to'xtatishni so'ragan bo'lsa `True`."""
+        moment = time.monotonic()
+        if force or moment - self._reported >= REPORT_EVERY:
+            self._reported = moment
+            if self.progress(self.snapshot()):
+                self.stopped = True
+        return self.stopped
+
     def page(self, rows):
         covers, files = {}, []
         for raw in rows:
+            if self.stopped:
+                break
+            self.phase = 'books'
             record = parse(raw)
             self.stats['done'] += 1
             if record is None:
@@ -430,6 +452,7 @@ class Importer:
                     self.writer = Writer()
                 continue
             self.stats[result] += 1
+            self.current = record.title[:90]
             if result in self.samples and len(self.samples[result]) < SAMPLES:
                 self.samples[result].append([record.title[:90], book_id])
             if book_id:
@@ -437,6 +460,7 @@ class Importer:
                     covers[book_id] = record.cover_url
                 if self.files and record.file_url:
                     files.append(book_id)
+            self.report()
         self._covers(covers)
         self._files(files)
 
@@ -453,6 +477,7 @@ class Importer:
             except remote.FetchError:
                 return entry[0], None
 
+        self.phase = 'covers'
         # Oqimlar faqat tarmoqdan oladi; bazaga shu oqimda yoziladi
         with ThreadPoolExecutor(max_workers=COVER_WORKERS) as pool:
             for book_id, result in pool.map(fetch, wanted.items()):
@@ -465,10 +490,14 @@ class Importer:
                     continue
                 self.without_cover.discard(book_id)
                 self.stats['covers'] += 1
+                self.report()
 
     def _files(self, book_ids):
+        if not self.files or not book_ids:
+            return
+        self.phase = 'files'
         for book in Book.objects.filter(pk__in=book_ids).exclude(remote_file_url=''):
-            if not self.files:
+            if not self.files or self.report():
                 return
             if book.electronic_version:
                 continue
@@ -483,7 +512,8 @@ class Importer:
             self.stats['files'] += 1
 
     def snapshot(self):
-        return {**self.stats, 'samples': self.samples}
+        return {**self.stats, 'samples': self.samples,
+                'phase': self.phase, 'current': self.current}
 
 
 def run(*, dry=False, covers=True, files=False, progress=lambda stats: False,
@@ -493,7 +523,8 @@ def run(*, dry=False, covers=True, files=False, progress=lambda stats: False,
     with exclusive(LOCK_KEY) as locked:
         if not locked:
             raise SourceError("Boshqa import hozir ishlayapti.")
-        importer = Importer(dry=dry, covers=covers, files=files)
+        progress({'dry': int(dry), 'phase': 'preparing'})
+        importer = Importer(dry=dry, covers=covers, files=files, progress=progress)
         number = 1
         while True:
             data = client.page(number)
@@ -502,7 +533,7 @@ def run(*, dry=False, covers=True, files=False, progress=lambda stats: False,
             importer.stats['total'] = data.get('count') or 0
             importer.page(data['results'])
             importer.stats['page'] = number
-            if progress(importer.snapshot()):
+            if importer.report(force=True):
                 importer.stats['stopped'] = 1
                 break
             if not data.get('next') or not data['results'] or number == max_pages:
@@ -526,20 +557,36 @@ def summary(stats):
     return f"{head}: " + ', '.join(parts)
 
 
-def execute(record, dry, covers, files):
+def execute(record, dry, covers, files, echo=None):
     """`JobRun` yozuvini yuritib import qiladi (xato yozuvning o'ziga tushadi)."""
+    save = background.reporter(record)
+
+    def progress(stats):
+        stop = save(stats)
+        if echo:
+            echo(stats)
+        return stop
+
     try:
-        stats = run(dry=dry, covers=covers, files=files, progress=background.reporter(record))
+        stats = run(dry=dry, covers=covers, files=files, progress=progress)
     except SourceError as exc:
         background.finish(record, JobRun.Status.FAILED, str(exc))
     except Exception as exc:
         logger.exception("Kitob importi xato bilan tugadi")
-        background.finish(record, JobRun.Status.FAILED, f"Kutilmagan xato: {type(exc).__name__}")
+        background.finish(record, JobRun.Status.FAILED,
+                          f"Kutilmagan xato: {type(exc).__name__}: {exc}")
+    except KeyboardInterrupt:
+        background.finish(record, JobRun.Status.FAILED,
+                          "To'xtatildi. Qayta boshlang — bajarilgan qismi saqlangan.")
+        raise
     else:
         record.stats = stats
         background.finish(record, JobRun.Status.SUCCESS, summary(stats))
 
 
 def start(*, dry, covers, files):
-    """Fonda boshlaydi. Boshqa import ishlayotgan bo'lsa `None`."""
-    return background.start(JOB_NAME, execute, dry, covers, files, dry=int(dry))
+    """Alohida jarayonda boshlaydi. Boshqa import ishlayotgan bo'lsa `None`."""
+    options = [flag for flag, on in (('--compare', dry), ('--no-covers', not covers),
+                                     ('--files', files)) if on]
+    return background.spawn(JOB_NAME, 'import_arm', *options,
+                            stale_after=STALE_AFTER, dry=int(dry))

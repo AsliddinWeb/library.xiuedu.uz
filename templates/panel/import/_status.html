@@ -1,7 +1,12 @@
 {% load ui_extras %}
 {% comment %}Oxirgi import holati. Ishlab turganida har 2 soniyada yangilanadi.{% endcomment %}
-<div id="arm-status" class="card" hx-get="{% url 'panel:arm_status' %}" hx-swap="outerHTML"
+<div id="arm-status" class="card" data-quiet hx-get="{% url 'panel:arm_status' %}" hx-swap="outerHTML"
      hx-trigger="arm-changed from:body{% if running %}, every 2s{% endif %}">
+  {% if oob %}
+    <dd class="stat-value" id="arm-book-total" hx-swap-oob="true">{{ book_total|spaced }}</dd>
+    <dd class="stat-value" id="arm-linked-total" hx-swap-oob="true">{{ linked_total|spaced }}</dd>
+    <span id="arm-start-label" hx-swap-oob="true">{% if resumable %}Davom ettirish{% else %}Importni boshlash{% endif %}</span>
+  {% endif %}
   <div class="card-head">
     <h2 class="card-title">{% if latest and dry %}Solishtirish natijasi{% else %}Oxirgi import{% endif %}</h2>
     {% if latest %}
@@ -38,6 +43,14 @@
               <dd class="stat-value {% if key == 'failed' and value %}text-[color:var(--color-danger-700)]{% endif %}">{{ value|spaced }}</dd></div>
           {% endfor %}
         </dl>
+      {% endif %}
+      {% if running %}
+        <p class="help" aria-live="polite">{{ phase|default:"Boshlanmoqda" }}{% if current %} — <span class="font-medium">{{ current }}</span>{% endif %}</p>
+      {% elif resumable %}
+        <div class="notice notice-info">
+          {% include "ui/_icon.html" with name="info" class="size-5 flex-none" %}
+          <p><b>Davom ettirish</b> tugmasini bosing: yuklangan kitoblar o'tkazib yuboriladi, qolgani davom etadi. Tozalash shart emas.</p>
+        </div>
       {% endif %}
       {% if disk_full %}
         <div class="notice notice-warning"><p>Diskda joy kam qolgani uchun fayl ko'chirish to'xtadi. Kitob ma'lumotlari to'liq qo'shiladi.</p></div>

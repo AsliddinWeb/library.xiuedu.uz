@@ -1,4 +1,4 @@
-<div id="preparing" class="card-body text-center" aria-live="polite"
+<div id="preparing" class="card-body text-center" aria-live="polite" data-quiet
      {% if not book.remote_file_error %}hx-get="{% url 'reading:prepare' book.pk %}" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
   {% if book.remote_file_error %}
     <span class="icon-box icon-box-lg icon-box-danger mx-auto">{% include "ui/_icon.html" with name="alert" class="size-7" %}</span>

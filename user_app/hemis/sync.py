@@ -27,6 +27,8 @@ from .client import HemisClient, HemisError
 logger = logging.getLogger('hemis')
 
 JOB_NAME = 'hemis_sync'
+#: Paneldan boshlangan jarayonga token shu o'zgaruvchi orqali o'tadi
+TOKEN_ENV = 'HEMIS_RUN_TOKEN'
 #: pg_advisory_lock kaliti ("XIU2")
 LOCK_KEY = 0x58495532
 STUDENTS = 'students'
@@ -259,5 +261,6 @@ def execute(record, token, kinds):
 
 
 def start(token, kinds):
-    """Fon oqimida boshlaydi. Boshqasi ishlayotgan bo'lsa `None`."""
-    return background.start(JOB_NAME, execute, token, tuple(kinds))
+    """Alohida jarayonda boshlaydi. Boshqasi ishlayotgan bo'lsa `None`."""
+    return background.spawn(JOB_NAME, 'hemis_import', '--kinds', ','.join(kinds),
+                            env={TOKEN_ENV: token})

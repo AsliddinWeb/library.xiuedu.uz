@@ -1,6 +1,6 @@
 {% load ui_extras %}
 {% comment %}Oxirgi yuklash holati. Ishlab turganida har 2 soniyada yangilanadi.{% endcomment %}
-<div id="hemis-status" class="card" hx-get="{% url 'panel:hemis_status' %}" hx-swap="outerHTML"
+<div id="hemis-status" class="card" data-quiet hx-get="{% url 'panel:hemis_status' %}" hx-swap="outerHTML"
      hx-trigger="hemis-started from:body{% if running %}, every 2s{% endif %}">
   <div class="card-head">
     <h2 class="card-title">Oxirgi yuklash</h2>

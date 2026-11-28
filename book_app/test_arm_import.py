@@ -1,19 +1,26 @@
 """Universitet kitoblar bazasidan import. Yozuv shakli arm-admin API'sidan olingan."""
 import json
+import os
 import shutil
 import tempfile
-from io import BytesIO
+from datetime import timedelta
+from io import BytesIO, StringIO
 from pathlib import Path
 from unittest import mock
 
 import requests
 from django.core.files.base import ContentFile
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 from PIL import Image
 
 from audit.models import ActionLog, JobRun
+from core import background
 from core.testing import make_author, make_book, make_genre, make_librarian, make_student
+from user_app.hemis import sync
 
 from . import arm_import, remote
 from .models import Author, Book, ExternalRecord, Genre
@@ -454,6 +461,129 @@ class LazyReadingTests(ArmCase):
         response = self.client.get(reverse('book_app:student_book_detail', args=[self.book.pk]))
 
         self.assertContains(response, reverse('reading:read', args=[self.book.pk]))
+
+
+class ProgressTests(ArmCase):
+    def test_progress_is_reported_while_a_page_is_processed(self):
+        seen = []
+        with mock.patch.object(arm_import, 'REPORT_EVERY', 0):
+            self.run_import([raw(1), raw(2, title="Ikkinchi")], progress=seen.append)
+
+        self.assertEqual(seen[0]['phase'], 'preparing')
+        self.assertIn(1, [stats.get('done') for stats in seen])
+        self.assertIn("Mumtoz adabiyot tarixi", [stats.get('current') for stats in seen])
+
+    def test_stop_is_honoured_in_the_middle_of_a_page_and_run_can_resume(self):
+        page = [raw(n, title=f"Kitob {n}") for n in range(1, 6)]
+        with mock.patch.object(arm_import, 'REPORT_EVERY', 0):
+            first = self.run_import(page, progress=lambda stats: stats.get('done', 0) >= 2)
+        second = self.run_import(page)
+
+        self.assertEqual((first['done'], first['stopped']), (2, 1))
+        self.assertEqual((second['same'], second['new'], Book.objects.count()), (2, 3, 5))
+
+
+class CommandTests(ArmCase):
+    def setUp(self):
+        super().setUp()
+        self.export.write_text(json.dumps({'count': 1, 'results': [raw(source='', photo='')]}),
+                               encoding='utf-8')
+
+    def run_command(self, *args):
+        out = StringIO()
+        call_command('import_arm', *args, stdout=out)
+        return out.getvalue()
+
+    def test_prints_progress_and_records_the_run(self):
+        text = self.run_command()
+
+        self.assertIn('ko\'rildi 1 / 1', text)
+        self.assertEqual(JobRun.objects.get().status, JobRun.Status.SUCCESS)
+        self.assertIn('avval yuklangan 1', self.run_command())
+        self.assertEqual(Book.objects.count(), 1)
+
+    def test_uses_the_record_created_by_the_panel(self):
+        record = JobRun.objects.create(name=arm_import.JOB_NAME, status=JobRun.Status.RUNNING)
+
+        self.run_command('--run-id', str(record.pk), '--compare')
+
+        record.refresh_from_db()
+        self.assertEqual((record.status, JobRun.objects.count(), Book.objects.count()),
+                         (JobRun.Status.SUCCESS, 1, 0))
+
+    def test_refuses_a_second_run_and_reports_failures(self):
+        busy = JobRun.objects.create(name=arm_import.JOB_NAME, status=JobRun.Status.RUNNING,
+                                     stats={'beat': timezone.now().isoformat()})
+        with self.assertRaisesMessage(CommandError, 'allaqachon'):
+            self.run_command()
+        busy.delete()
+        self.export.write_text('{', encoding='utf-8')
+        with self.assertRaisesMessage(CommandError, 'Eksport faylini'):
+            self.run_command()
+
+    def test_silent_run_is_closed_after_a_few_minutes(self):
+        record = JobRun.objects.create(
+            name=arm_import.JOB_NAME, status=JobRun.Status.RUNNING,
+            stats={'beat': (timezone.now() - timedelta(minutes=4)).isoformat()})
+        self.client.force_login(make_librarian())
+
+        response = self.client.get(reverse('panel:import_books'))
+
+        record.refresh_from_db()
+        self.assertEqual(record.status, JobRun.Status.FAILED)
+        self.assertContains(response, 'Davom ettirish')
+
+
+class SpawnTests(ArmCase):
+    """Panel uzoq ishni web worker ichida emas, alohida jarayonda boshlaydi."""
+
+    def setUp(self):
+        super().setUp()
+        patcher = mock.patch.object(background.subprocess, 'Popen')
+        self.popen = patcher.start()
+        self.addCleanup(patcher.stop)
+        log = mock.patch.object(background, 'log_file', return_value=self.export.parent / 'bg.log')
+        log.start()
+        self.addCleanup(log.stop)
+
+    def test_import_starts_the_command_with_chosen_options(self):
+        record = arm_import.start(dry=False, covers=False, files=True)
+
+        command = self.popen.call_args.args[0]
+        self.assertEqual(command[2:], ['import_arm', '--run-id', str(record.pk),
+                                       '--no-covers', '--files'])
+        self.assertTrue(command[1].endswith('manage.py'))
+        self.assertTrue(self.popen.call_args.kwargs['start_new_session'])
+        self.assertIsNone(arm_import.start(dry=True, covers=True, files=False))
+
+    def test_hemis_token_travels_in_environment_only(self):
+        sync.start('maxfiy-token', ['students'])
+
+        call = self.popen.call_args
+        self.assertNotIn('maxfiy-token', ' '.join(call.args[0]))
+        self.assertEqual(call.kwargs['env'][sync.TOKEN_ENV], 'maxfiy-token')
+        self.assertNotIn('maxfiy-token', str(JobRun.objects.get().stats))
+
+    def test_hemis_command_reads_the_token_and_forgets_it(self):
+        record = JobRun.objects.create(name=sync.JOB_NAME, status=JobRun.Status.RUNNING)
+
+        def finish(run, token, kinds):
+            self.assertEqual((token, kinds), ('maxfiy-token', ['students']))
+            background.finish(run, JobRun.Status.SUCCESS, 'tayyor')
+
+        with mock.patch.dict(os.environ, {sync.TOKEN_ENV: 'maxfiy-token'}), \
+                mock.patch.object(sync, 'execute', finish):
+            call_command('hemis_import', '--run-id', str(record.pk), '--kinds', 'students',
+                         stdout=StringIO())
+            self.assertNotIn(sync.TOKEN_ENV, os.environ)
+
+    def test_failure_to_start_is_recorded(self):
+        self.popen.side_effect = OSError('joy yo\'q')
+
+        record = arm_import.start(dry=True, covers=True, files=False)
+
+        self.assertEqual(record.status, JobRun.Status.FAILED)
+        self.assertIn("boshlab bo'lmadi", record.message)
 
 
 @override_settings(ARM_API_URL=SOURCE, ARM_EXPORT_FILE='/yoq/arm-books.json')

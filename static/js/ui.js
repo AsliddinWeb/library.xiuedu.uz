@@ -22,7 +22,12 @@
   /* --- 1. HTMX progress chizig'i --------------------------------------- */
   const bar = document.getElementById('htmx-bar');
   if (bar) {
-    document.body.addEventListener('htmx:beforeRequest', () => bar.classList.add('on'));
+    // `data-quiet` — fonda holat so'rab turadigan bloklar: chiziq chiqmaydi
+    const quiet = (event) => Boolean(event.detail && event.detail.elt
+      && event.detail.elt.closest && event.detail.elt.closest('[data-quiet]'));
+    document.body.addEventListener('htmx:beforeRequest', (event) => {
+      if (!quiet(event)) bar.classList.add('on');
+    });
     document.body.addEventListener('htmx:afterRequest', () => bar.classList.remove('on'));
     document.body.addEventListener('htmx:sendError', () => bar.classList.remove('on'));
   }

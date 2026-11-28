@@ -637,6 +637,7 @@
   .htmx-request .htmx-indicator,
   .htmx-request.htmx-indicator { opacity: 1; }
   .htmx-request { cursor: progress; }
+  [data-quiet].htmx-request { cursor: auto; }
 
   #htmx-bar {
     position: fixed; inset-inline: 0; top: 0; height: 3px; z-index: 70;
