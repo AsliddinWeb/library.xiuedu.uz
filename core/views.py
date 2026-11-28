@@ -12,14 +12,15 @@ from user_app.roles import Roles, effective_role
 from .flags import flag_enabled
 
 PALETTE = [
-    {'name': "Pine 700 — brend", 'token': '--color-pine-700', 'value': '#164a41'},
-    {'name': "Clay 500 — aksent", 'token': '--color-clay-500', 'value': '#c2683f'},
-    {'name': "Ink 900 — matn", 'token': '--color-ink-900', 'value': '#10151c'},
-    {'name': "Paper — OPAC foni", 'token': '--color-paper', 'value': '#faf8f4'},
-    {'name': "Slate — Staff foni", 'token': '--color-slate-bg', 'value': '#f3f5f7'},
-    {'name': "Success", 'token': '--color-success-700', 'value': '#15803d'},
-    {'name': "Warning", 'token': '--color-warning-700', 'value': '#b45309'},
-    {'name': "Danger", 'token': '--color-danger-700', 'value': '#b91c1c'},
+    {'name': "Pine 700 — brend", 'token': '--color-pine-700', 'value': '#0e675b'},
+    {'name': "Clay 500 — aksent", 'token': '--color-clay-500', 'value': '#ec5b30'},
+    {'name': "Sun 400 — urg'u", 'token': '--color-sun-400', 'value': '#fdb924'},
+    {'name': "Ink 900 — matn", 'token': '--color-ink-900', 'value': '#101a18'},
+    {'name': "Paper — OPAC foni", 'token': '--color-paper', 'value': '#fbf9f5'},
+    {'name': "Slate — Staff foni", 'token': '--color-slate-bg', 'value': '#f2f5f4'},
+    {'name': "Success", 'token': '--color-success-700', 'value': '#067647'},
+    {'name': "Warning", 'token': '--color-warning-700', 'value': '#b54708'},
+    {'name': "Danger", 'token': '--color-danger-700', 'value': '#b42318'},
 ]
 
 SHELLS = [
@@ -42,7 +43,15 @@ ICONS = [
     'search', 'bell', 'user', 'users', 'menu', 'close', 'check', 'plus',
     'minus', 'pencil', 'trash', 'book', 'library', 'barcode', 'cash', 'chart',
     'clock', 'alert', 'inbox', 'cog', 'chevron-down', 'chevron-left',
-    'chevron-right', 'external', 'printer', 'logout',
+    'chevron-right', 'external', 'printer', 'logout', 'login', 'home', 'grid', 'rows',
+    'list', 'filter', 'sliders', 'book-open', 'headphones', 'heart', 'bookmark',
+    'graduation', 'star', 'sparkles', 'flame', 'history', 'calendar', 'download',
+    'upload', 'copy', 'quote', 'eye', 'play', 'pause', 'rewind', 'forward', 'maximize',
+    'zoom-in', 'zoom-out', 'arrow-left', 'arrow-right', 'arrow-up', 'arrow-up-right',
+    'check-circle', 'info', 'sun', 'moon', 'monitor', 'map-pin', 'globe', 'send', 'mail',
+    'shield', 'id-card', 'code', 'calculator', 'scale', 'atom', 'flask', 'heart-pulse',
+    'briefcase', 'trending', 'landmark', 'feather', 'palette', 'sprout', 'lightbulb',
+    'layers', 'folder', 'building', 'wallet',
 ]
 
 STAFF_ROLES = (Roles.LIBRARIAN, Roles.ADMIN, Roles.EMPLOYEE)

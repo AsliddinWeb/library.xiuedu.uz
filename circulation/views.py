@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.timezone import localdate
 from django.views.decorators.http import require_POST
 
 from book_app.models import Book, Rental
@@ -87,9 +88,13 @@ def my_rentals(request):
     if patron is None:
         return render(request, '403.html', status=403)
 
-    active_rentals = (Rental.objects
-                      .filter(patron=patron, return_date__isnull=True)
-                      .select_related('copy__book'))
+    active_rentals = list(Rental.objects
+                          .filter(patron=patron, return_date__isnull=True)
+                          .select_related('copy__book__category')
+                          .prefetch_related('copy__book__authors'))
+    today = localdate()
+    for rental in active_rentals:
+        rental.days_left = (rental.due_date - today).days if rental.due_date else None
     rental_history = (Rental.objects
                       .filter(patron=patron, return_date__isnull=False)
                       .select_related('copy__book')[:20])

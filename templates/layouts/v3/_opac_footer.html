@@ -1,31 +1,51 @@
-<footer class="mt-16 bg-[color:var(--color-surface-invert)] text-[color:var(--color-content-invert)]">
-  <div class="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-3 lg:px-8">
+{% load static %}
+<footer class="relative mt-16 overflow-hidden bg-[color:var(--color-surface-invert)] text-white">
+
+  <div class="container-page relative grid gap-10 py-12 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:py-16">
     <div>
-      <p class="flex items-center gap-2 font-display text-lg">
-        {% include "ui/_icon.html" with name="library" class="size-5" %}
-        XIU Kutubxona
-      </p>
-      <div class="rule-accent mt-3"></div>
-      <p class="mt-3 max-w-sm text-sm text-white/70">
-        Xalqaro Innovatsion Universitet elektron kutubxonasi — katalog, onlayn o'qish,
-        ijara va o'quv zali xizmatlari.
+      <div class="flex items-center gap-3">
+        <span class="grid size-16 place-items-center logo-chip rounded-[var(--radius-lg)] p-1.5">
+          <img src="{% static 'img/xiu-logo-192.png' %}" alt="XIU logotipi" width="56" height="56" loading="lazy">
+        </span>
+        <p class="font-display text-xl font-bold leading-tight">XIU Kutubxona<br><span class="font-sans text-xs font-medium text-white/60">Xalqaro Innovatsion Universitet</span></p>
+      </div>
+      <p class="mt-4 max-w-sm text-sm leading-relaxed text-white/70">
+        Katalog, onlayn o'qish va tinglash, kitob ijarasi, fan adabiyoti — talaba va xodimlar uchun bitta manzilda.
       </p>
     </div>
-    <div class="text-sm">
-      <p class="font-medium">Bo'limlar</p>
-      <ul class="mt-3 space-y-2 text-white/70">
-        <li><a class="hover:text-white" href="{% url 'book_app:student_book_list' %}">Katalog</a></li>
-        {% if user.is_authenticated %}<li><a class="hover:text-white" href="/dashboard/">Kabinet</a></li>{% endif %}
+
+    <div>
+      <p class="text-xs font-bold uppercase tracking-[0.14em] text-[color:var(--color-sun-300)]">Kutubxona</p>
+      <ul class="mt-4 space-y-3 text-sm font-medium text-white/75">
+        <li><a class="inline-flex items-center gap-2 transition hover:translate-x-1 hover:text-white" href="{% url 'book_app:student_book_list' %}">{% include "ui/_icon.html" with name="library" class="size-4" %} Katalog</a></li>
+        <li><a class="inline-flex items-center gap-2 transition hover:translate-x-1 hover:text-white" href="{% url 'book_app:course_list' %}">{% include "ui/_icon.html" with name="graduation" class="size-4" %} Fan adabiyoti</a></li>
+        <li><a class="inline-flex items-center gap-2 transition hover:translate-x-1 hover:text-white" href="{% url 'engagement:shelf_list' %}">{% include "ui/_icon.html" with name="bookmark" class="size-4" %} Ro'yxatlar</a></li>
       </ul>
     </div>
-    <div class="text-sm">
-      <p class="font-medium">Aloqa</p>
-      <ul class="mt-3 space-y-2 text-white/70">
-        <li>library.xiuedu.uz</li>
+
+    <div>
+      <p class="text-xs font-bold uppercase tracking-[0.14em] text-[color:var(--color-sun-300)]">Shaxsiy</p>
+      <ul class="mt-4 space-y-3 text-sm font-medium text-white/75">
+        <li><a class="inline-flex items-center gap-2 transition hover:translate-x-1 hover:text-white" href="{% url 'dashboard' %}">{% include "ui/_icon.html" with name="grid" class="size-4" %} Kabinet</a></li>
+        <li><a class="inline-flex items-center gap-2 transition hover:translate-x-1 hover:text-white" href="{% url 'circulation:my_rentals' %}">{% include "ui/_icon.html" with name="history" class="size-4" %} Ijaralarim</a></li>
+        <li><a class="inline-flex items-center gap-2 transition hover:translate-x-1 hover:text-white" href="{% url 'engagement:my_library' %}">{% include "ui/_icon.html" with name="heart" class="size-4" %} Kutubxonam</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <p class="text-xs font-bold uppercase tracking-[0.14em] text-[color:var(--color-sun-300)]">Universitet</p>
+      <ul class="mt-4 space-y-3 text-sm font-medium text-white/75">
+        <li><a class="inline-flex items-center gap-2 transition hover:translate-x-1 hover:text-white" href="https://xiuedu.uz" target="_blank" rel="noopener">{% include "ui/_icon.html" with name="globe" class="size-4" %} xiuedu.uz</a></li>
+        <li><a class="inline-flex items-center gap-2 transition hover:translate-x-1 hover:text-white" href="https://student.xiuedu.uz" target="_blank" rel="noopener">{% include "ui/_icon.html" with name="external" class="size-4" %} HEMIS talaba</a></li>
+        <li><a class="inline-flex items-center gap-2 transition hover:translate-x-1 hover:text-white" href="https://hemis.xiuedu.uz" target="_blank" rel="noopener">{% include "ui/_icon.html" with name="external" class="size-4" %} HEMIS xodim</a></li>
       </ul>
     </div>
   </div>
-  <div class="border-t border-white/10 py-4 text-center text-xs text-white/50">
-    &copy; {% now "Y" %} Xalqaro Innovatsion Universitet
+
+  <div class="relative border-t border-white/10">
+    <div class="container-page flex flex-wrap items-center justify-between gap-2 py-5 text-xs text-white/55">
+      <p>&copy; {% now "Y" %} Xalqaro Innovatsion Universitet</p>
+      <p>library.xiuedu.uz</p>
+    </div>
   </div>
 </footer>

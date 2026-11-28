@@ -4,21 +4,26 @@
 {% block title %}Fan adabiyoti — XIU Kutubxona{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-  <div class="page-head">
-    <div>
-      <h1 class="page-title">Fan adabiyoti</h1>
-      <p class="page-sub">Fanni tanlang — o'qituvchi tavsiya qilgan kitoblar va ular fondda bor-yo'qligi ko'rinadi.</p>
+<section class="page-hero">
+  <div class="container-page">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="enter flex min-w-0 items-center gap-3.5">
+        <span class="icon-box icon-box-lg max-sm:hidden">{% include "ui/_icon.html" with name="graduation" class="size-7" %}</span>
+        <div class="min-w-0">
+          <h1>Fan adabiyoti</h1>
+          <p class="mt-1 max-w-xl text-sm">Fanni tanlang — o'qituvchi tavsiya qilgan kitoblar va ular fondda bor-yo'qligi ko'rinadi.</p>
+        </div>
+      </div>
+      <div class="enter flex flex-wrap gap-2" style="--i:1">
+        {% if can_create %}<a href="{% url 'book_app:course_create' %}" class="btn btn-accent btn-pill">{% include "ui/_icon.html" with name="plus" class="size-4.5" %} Fan qo'shish</a>{% endif %}
+      </div>
     </div>
-    {% if can_create %}
-      <a href="{% url 'book_app:course_create' %}" class="btn btn-primary">
-        {% include "ui/_icon.html" with name="plus" class="size-4" %}
-        Fan qo'shish
-      </a>
-    {% endif %}
   </div>
+</section>
 
-  <form method="get" class="card card-body mt-5 grid gap-3 sm:grid-cols-[1fr_16rem_10rem_auto] sm:items-end">
+<div class="container-page py-6 lg:py-8">
+
+  <form method="get" class="card card-body enter grid gap-3 sm:grid-cols-[1fr_16rem_10rem_auto] sm:items-end">
     <div class="field">
       <label class="label" for="course-q">Fan yoki o'qituvchi</label>
       <input id="course-q" type="search" name="q" value="{{ query }}" class="input" placeholder="Masalan: iqtisodiyot">
@@ -41,12 +46,12 @@
         {% endfor %}
       </select>
     </div>
-    <button type="submit" class="btn btn-secondary">Qidirish</button>
+    <button type="submit" class="btn btn-primary">{% include "ui/_icon.html" with name="search" class="size-4.5" %} Qidirish</button>
   </form>
 
   {% if own_reserves %}
-    <section class="mt-8">
-      <h2 class="font-display text-xl">Siz tuzgan ro'yxatlar</h2>
+    <section class="mt-8" data-reveal>
+      <h2 class="text-xl">Siz tuzgan ro'yxatlar</h2>
       <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {% for reserve in own_reserves %}{% include "opac/_course_card.html" %}{% endfor %}
       </div>
@@ -54,8 +59,8 @@
   {% endif %}
 
   {% if student_reserves %}
-    <section class="mt-8">
-      <h2 class="font-display text-xl">Sizning fanlaringiz</h2>
+    <section class="mt-8" data-reveal>
+      <h2 class="text-xl">Sizning fanlaringiz</h2>
       <p class="page-sub">Fakultetingiz va semestringiz bo'yicha.</p>
       <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {% for reserve in student_reserves %}{% include "opac/_course_card.html" %}{% endfor %}
@@ -63,9 +68,9 @@
     </section>
   {% endif %}
 
-  <section class="mt-8">
+  <section class="mt-8" data-reveal>
     <div class="flex items-end justify-between gap-3">
-      <h2 class="font-display text-xl">{% if filtered %}Natijalar{% else %}Barcha fanlar{% endif %}</h2>
+      <h2 class="text-xl">{% if filtered %}Natijalar{% else %}Barcha fanlar{% endif %}</h2>
       {% if filtered %}<a href="{% url 'book_app:course_list' %}" class="btn btn-ghost btn-sm">Tozalash</a>{% endif %}
     </div>
     {% if page_obj.object_list %}

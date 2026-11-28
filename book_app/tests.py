@@ -561,6 +561,21 @@ class OpacCatalogViewTests(TestCase):
         response = self.client.get('/books/', {'sort': 'title'})
         self.assertEqual(response.status_code, 200)
 
+    def test_search_form_does_not_force_newest_sort(self):
+        """Sahifadagi saralash bo'sh yuborilishi kerak — aks holda qidiruvda
+        moslik o'rniga "yangi qo'shilgan" tartibi ishlab qoladi."""
+        response = self.client.get('/books/')
+        self.assertContains(response, '<option value="">Avtomatik</option>')
+        self.assertNotContains(response, '<option value="-id" selected>')
+
+    def test_empty_sort_means_relevance_when_searching(self):
+        exact = make_book("Algoritmlar")
+        make_book("Dasturlash", description="algoritmlar haqida ham so'z boradi")
+
+        response = self.client.get('/books/', {'q': 'algoritmlar', 'sort': ''})
+
+        self.assertEqual(response.context['page_obj'].object_list[0], exact)
+
     def test_htmx_returns_partial(self):
         response = self.client.get('/books/', {'q': 'kitob'}, HTTP_HX_REQUEST='true')
         self.assertEqual(response.status_code, 200)

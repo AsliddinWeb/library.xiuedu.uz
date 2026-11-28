@@ -1,175 +1,309 @@
-{% extends "layouts/base.html" %}
+{% extends "layouts/opac.html" %}
+{% load ui_extras %}
+{% comment %}
+  Bosh sahifa: hero (qidiruv + kitoblar) · sonlar · yo'nalishlar · ommabop ·
+  imkoniyatlar · qanday ishlaydi · yangilar · chaqiruv.
+  Barcha sonlar fonddan olinadi — to'qilgan ko'rsatkich yo'q.
+{% endcomment %}
 
-{% block title %}XIU Elektron kutubxona — Bilim platformasi{% endblock %}
+{% block title %}XIU Elektron kutubxona — o'qing, tinglang, kashf eting{% endblock %}
 
 {% block content %}
-{# ===================================================== Hero (editorial) #}
-<section class="relative">
-    <div class="mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-4 pb-16 pt-12 sm:px-6 lg:grid-cols-12 lg:gap-8 lg:px-8 lg:pb-24 lg:pt-20">
 
-        {# Chap: matn #}
-        <div class="lg:col-span-7">
-            <div class="flex items-center gap-3">
-                <span class="h-px w-8 bg-gold-400"></span>
-                <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">Elektron kutubxona platformasi</span>
-            </div>
+{# ============================================================ HERO #}
+<section class="hero">
+  <div class="dot-grid"></div>
 
-            <h1 class="mt-7 font-serif text-5xl font-semibold leading-[1.02] tracking-tight text-navy-950 sm:text-6xl lg:text-7xl">
-                O'qing. Izlang.<br>
-                <span class="italic font-medium text-navy-800">Kashf eting.</span>
-            </h1>
+  <div class="container-page grid items-center gap-10 pb-12 pt-8 sm:pt-12 lg:grid-cols-[1.08fr_0.92fr] lg:gap-8 lg:pb-20 lg:pt-16">
+    <div class="min-w-0">
+      <p class="enter inline-flex items-center gap-2.5 rounded-full border border-[color:var(--color-line)] bg-[color:var(--color-surface-raised)] py-1.5 pl-3 pr-4 text-xs font-bold shadow-[var(--shadow-sm)] backdrop-blur sm:text-[13px]" style="--i:0">
+        <span class="live-dot"></span>
+        {% if stats.total %}{{ stats.total|spaced }} ta kitob hozir ochiq{% else %}Xalqaro Innovatsion Universitet{% endif %}
+      </p>
 
-            <p class="mt-7 max-w-xl text-lg leading-8 text-navy-600">
-                Minglab kitob, audio va elektron nashrlar — Xalqaro Innovatsion Universitet
-                kutubxonasi endi bir joyda. Onlayn o'qing, tinglang yoki jismoniy nusxani ijaraga oling.
-            </p>
+      <h1 class="enter hero-title mt-5" style="--i:1">
+        Bilim sari yo'l
+        <span class="scribble"><span class="text-[color:var(--color-link)]">shu yerdan</span><svg viewBox="0 0 300 20" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M4 14C58 5 112 4 160 9c44 4.500 90 4 136-4" stroke="currentColor" stroke-width="6" stroke-linecap="round"/></svg></span>
+        boshlanadi
+      </h1>
 
-            <div class="mt-9 flex flex-wrap items-center gap-4">
-                <a href="/auth/student-login/" class="group inline-flex items-center gap-2 rounded-full bg-navy-900 px-7 py-3.5 text-base font-semibold text-white shadow-lift transition hover:bg-navy-800">
-                    Tizimga kirish
-                    <svg class="h-4 w-4 text-gold-300 transition group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></svg>
-                </a>
-                <a href="/books/" class="text-base font-semibold text-navy-800 underline decoration-gold-400 decoration-2 underline-offset-[6px] transition hover:text-navy-950 hover:decoration-gold-600">
-                    Katalogni ko'rish
-                </a>
-            </div>
+      <p class="enter mt-6 max-w-xl text-base leading-relaxed text-[color:var(--color-content-muted)] sm:text-lg" style="--i:2">
+        Xalqaro Innovatsion Universitet kutubxonasi: kitobni brauzerda o'qing, audio nashrni tinglang,
+        nusxani ijaraga oling va fan adabiyotini bir joydan toping.
+      </p>
 
-            {# Inline statistika — hairline bilan #}
-            <dl class="mt-12 flex max-w-lg divide-x divide-navy-200/70">
-                <div class="pr-8">
-                    <dt class="text-xs uppercase tracking-wider text-navy-400">Kitoblar</dt>
-                    <dd class="mt-1 font-serif text-2xl font-semibold text-navy-900">{{ books_count|default:"1 200+" }}</dd>
-                </div>
-                <div class="px-8">
-                    <dt class="text-xs uppercase tracking-wider text-navy-400">Kirish</dt>
-                    <dd class="mt-1 font-serif text-2xl font-semibold text-navy-900">24/7</dd>
-                </div>
-                <div class="pl-8">
-                    <dt class="text-xs uppercase tracking-wider text-navy-400">Avtorizatsiya</dt>
-                    <dd class="mt-1 font-serif text-2xl font-semibold text-navy-900">HEMIS</dd>
-                </div>
-            </dl>
+      <form action="{% url 'book_app:student_book_list' %}" method="get" class="enter hero-search mt-7 max-w-xl" style="--i:3"
+            {% if not user.is_authenticated %}x-data @submit.prevent="$dispatch('open-login')"{% endif %}>
+        <span class="text-[color:var(--color-link)]">{% include "ui/_icon.html" with name="search" class="size-5" %}</span>
+        <input type="search" name="q" placeholder="Kitob, muallif yoki mavzu…" aria-label="Katalogdan qidirish" autocomplete="off">
+        <button type="submit" class="btn btn-primary btn-pill">
+          <span class="max-sm:hidden">Qidirish</span>
+          {% include "ui/_icon.html" with name="arrow-right" class="btn-arrow size-4.5" %}
+        </button>
+      </form>
+
+      {% if genres %}
+        <div class="enter mt-4 flex flex-wrap items-center gap-2" style="--i:4">
+          <span class="text-xs font-bold text-[color:var(--color-content-subtle)]">Ko'p qidiriladi:</span>
+          {% for genre in genres|slice:":4" %}
+            <a href="{% url 'book_app:student_book_list' %}?category={{ genre.id }}" class="chip"{% if not user.is_authenticated %} data-login{% endif %}>{{ genre.name }}</a>
+          {% endfor %}
         </div>
+      {% endif %}
 
-        {# O'ng: kitob kompozitsiyasi #}
-        <div class="relative hidden h-[30rem] lg:col-span-5 lg:block">
-            {# orqa karta #}
-            <div class="absolute right-6 top-10 h-80 w-56 rotate-6 rounded-2xl border border-navy-100 bg-gradient-to-br from-navy-700 to-navy-900 shadow-soft"></div>
-            {# o'rta karta #}
-            <div class="absolute right-24 top-4 flex h-88 w-60 -rotate-3 flex-col justify-between rounded-2xl bg-gradient-to-br from-navy-800 to-navy-950 p-6 shadow-lift ring-1 ring-navy-700">
-                <div>
-                    <span class="h-px w-8 bg-gold-400"></span>
-                    <p class="mt-4 text-[11px] uppercase tracking-widest text-gold-400">Adabiyot</p>
-                    <h3 class="mt-2 font-serif text-2xl font-semibold leading-tight text-white">O'tkan kunlar</h3>
-                    <p class="mt-1 text-sm text-navy-300">Abdulla Qodiriy</p>
-                </div>
-                <div class="flex items-center gap-2 text-navy-300">
-                    <svg class="h-4 w-4 text-gold-300" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
-                    <span class="text-xs">Onlayn o'qish</span>
-                </div>
-            </div>
-            {# old karta (oltin chekka) #}
-            <div class="absolute left-2 top-24 flex h-72 w-52 rotate-[-7deg] flex-col justify-between rounded-2xl bg-paper p-6 shadow-lift ring-1 ring-navy-100">
-                <div>
-                    <span class="h-px w-8 bg-gold-400"></span>
-                    <p class="mt-4 text-[11px] uppercase tracking-widest text-gold-700">Tarix</p>
-                    <h3 class="mt-2 font-serif text-xl font-semibold leading-tight text-navy-900">Sapiens</h3>
-                    <p class="mt-1 text-sm text-navy-500">Yuval Noah Harari</p>
-                </div>
-                <div class="flex items-center gap-1.5 text-gold-600">
-                    {% for i in "12345" %}<svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8 6.8 19.2l1-5.8-4.3-4.1 5.9-.9z"/></svg>{% endfor %}
-                </div>
-            </div>
-            {# kichik suzuvchi nishon #}
-            <div class="absolute bottom-2 right-4 flex items-center gap-2 rounded-full bg-paper px-4 py-2 shadow-lift ring-1 ring-navy-100">
-                <span class="flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                <span class="text-xs font-medium text-navy-700">3 nusxa mavjud</span>
-            </div>
-        </div>
+      <div class="enter mt-8 flex flex-wrap items-center gap-3" style="--i:5">
+        {% if user.is_authenticated %}
+          <a href="{% url 'book_app:student_book_list' %}" class="btn btn-accent btn-lg btn-pill">
+            {% include "ui/_icon.html" with name="library" class="size-5" %} Katalogni ochish
+          </a>
+          <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-lg btn-pill">Kabinetim {% include "ui/_icon.html" with name="arrow-right" class="btn-arrow size-4.5" %}</a>
+        {% else %}
+          <a href="{% url 'student_login' %}" class="btn btn-accent btn-lg btn-pill" data-login>
+            {% include "ui/_icon.html" with name="login" class="size-5" %} HEMIS orqali kirish
+          </a>
+          <a href="#imkoniyatlar" class="btn btn-secondary btn-lg btn-pill">Imkoniyatlar {% include "ui/_icon.html" with name="arrow-right" class="btn-arrow size-4.5" %}</a>
+        {% endif %}
+      </div>
     </div>
+
+    {# --------- Kitoblar to'plami --------- #}
+    <div class="enter min-w-0" style="--i:3">
+      <div class="stack">
+        <div class="stack-ring" aria-hidden="true"></div>
+        {% for book in hero_books %}
+          <a href="{% url 'book_app:student_book_detail' book.pk %}" class="stack-book stack-{{ forloop.counter }}" aria-label="{{ book.title }}"{% if not user.is_authenticated %} data-login{% endif %}>
+            {% include "ui/_cover.html" with book=book %}
+          </a>
+        {% endfor %}
+
+        <div class="float-chip float left-0 top-[8%]">
+          <span class="icon-box icon-box-sm">{% include "ui/_icon.html" with name="book-open" class="size-4.5" %}</span>
+          <span>Onlayn o'qish<small>Brauzerning o'zida</small></span>
+        </div>
+        <div class="float-chip float-slow bottom-[6%] left-[8%]">
+          <span class="icon-box icon-box-sm icon-box-accent">{% include "ui/_icon.html" with name="graduation" class="size-4.5" %}</span>
+          <span>Fan adabiyoti<small>{% if course_count %}{{ course_count }} ta fan{% else %}O'qituvchi tavsiyasi{% endif %}</small></span>
+        </div>
+        <div class="float-chip float right-0 top-[2%] max-sm:hidden" style="animation-delay:-2s">
+          <span class="icon-box icon-box-sm icon-box-sun">{% include "ui/_icon.html" with name="quote" class="size-4.5" %}</span>
+          <span>GOST tavsifi<small>Bir bosishda nusxa</small></span>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
-{# ============================================== Imkoniyatlar (raqamli) #}
-<section id="about" class="border-t border-navy-100 py-20 lg:py-28">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 gap-12 lg:grid-cols-12">
-            <div class="lg:col-span-4">
-                <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gold-700">Imkoniyatlar</span>
-                <h2 class="mt-4 font-serif text-4xl font-semibold leading-tight tracking-tight text-navy-950">
-                    Bitta platforma,<br>to'liq tajriba
-                </h2>
-                <p class="mt-5 max-w-sm leading-7 text-navy-600">
-                    Talaba va o'qituvchilar uchun zamonaviy kutubxona — qidirishdan o'qishgacha,
-                    ijaradan navbatgacha.
-                </p>
-            </div>
-
-            <div class="lg:col-span-8">
-                <div class="grid grid-cols-1 sm:grid-cols-2">
-                    {# 01 #}
-                    <div class="border-t border-navy-200 py-7 sm:pr-10">
-                        <div class="flex items-baseline gap-4">
-                            <span class="font-serif text-lg text-gold-500">01</span>
-                            <div>
-                                <h3 class="font-serif text-xl font-semibold text-navy-900">Onlayn o'qish va tinglash</h3>
-                                <p class="mt-2 text-sm leading-6 text-navy-600">Brauzerda o'qing, audio nashrlarni tinglang — yuklab olmasdan, istalgan joydan.</p>
-                            </div>
-                        </div>
-                    </div>
-                    {# 02 #}
-                    <div class="border-t border-navy-200 py-7 sm:border-t sm:pl-10">
-                        <div class="flex items-baseline gap-4">
-                            <span class="font-serif text-lg text-gold-500">02</span>
-                            <div>
-                                <h3 class="font-serif text-xl font-semibold text-navy-900">Kitob ijarasi</h3>
-                                <p class="mt-2 text-sm leading-6 text-navy-600">Jismoniy nusxani so'rab oling — kutubxonachi tasdiqlaydi, siz qulay vaqtda olasiz.</p>
-                            </div>
-                        </div>
-                    </div>
-                    {# 03 #}
-                    <div class="border-t border-navy-200 py-7 sm:pr-10">
-                        <div class="flex items-baseline gap-4">
-                            <span class="font-serif text-lg text-gold-500">03</span>
-                            <div>
-                                <h3 class="font-serif text-xl font-semibold text-navy-900">Navbat tizimi</h3>
-                                <p class="mt-2 text-sm leading-6 text-navy-600">Band kitobga navbatga yoziling — bo'shashi bilan birinchi bo'lib xabar olasiz.</p>
-                            </div>
-                        </div>
-                    </div>
-                    {# 04 #}
-                    <div class="border-t border-navy-200 py-7 sm:pl-10">
-                        <div class="flex items-baseline gap-4">
-                            <span class="font-serif text-lg text-gold-500">04</span>
-                            <div>
-                                <h3 class="font-serif text-xl font-semibold text-navy-900">Sharh va sevimlilar</h3>
-                                <p class="mt-2 text-sm leading-6 text-navy-600">Baho bering, sharh qoldiring va shaxsiy kutubxonangizni yuriting.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+{# ============================================================ SONLAR #}
+<section class="container-page -mt-2 lg:-mt-6">
+  <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+    <div class="stat stat-hover" data-reveal style="--i:0">
+      <span class="icon-box">{% include "ui/_icon.html" with name="library" class="size-5.5" %}</span>
+      <span class="stat-value mt-1" data-count="{{ stats.total }}">{{ stats.total|spaced }}</span>
+      <span class="stat-label">Kitob katalogda</span>
     </div>
+    <div class="stat stat-hover" data-reveal style="--i:1">
+      <span class="icon-box icon-box-accent">{% include "ui/_icon.html" with name="book-open" class="size-5.5" %}</span>
+      <span class="stat-value mt-1" data-count="{{ stats.digital }}">{{ stats.digital|spaced }}</span>
+      <span class="stat-label">Onlayn o'qiladi</span>
+    </div>
+    <div class="stat stat-hover" data-reveal style="--i:2">
+      <span class="icon-box icon-box-sun">{% include "ui/_icon.html" with name="feather" class="size-5.5" %}</span>
+      <span class="stat-value mt-1" data-count="{{ stats.authors }}">{{ stats.authors|spaced }}</span>
+      <span class="stat-label">Muallif</span>
+    </div>
+    <div class="stat stat-hover" data-reveal style="--i:3">
+      <span class="icon-box icon-box-plum">{% include "ui/_icon.html" with name="layers" class="size-5.5" %}</span>
+      <span class="stat-value mt-1" data-count="{{ stats.genres }}">{{ stats.genres|spaced }}</span>
+      <span class="stat-label">Yo'nalish</span>
+    </div>
+  </div>
 </section>
 
-{# ============================================================== CTA #}
-<section class="px-4 pb-24 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-navy-950">
-        <div class="grid grid-cols-1 items-center gap-8 px-8 py-16 sm:px-14 lg:grid-cols-2">
-            <div>
-                <span class="h-px w-10 bg-gold-400"></span>
-                <h2 class="mt-5 font-serif text-4xl font-semibold leading-tight text-white">Hoziroq boshlang</h2>
-                <p class="mt-4 max-w-md leading-7 text-navy-300">
-                    HEMIS hisobingiz orqali bir bosishda kiring va universitet kutubxonasidan to'liq foydalaning.
-                </p>
-            </div>
-            <div class="lg:justify-self-end">
-                <a href="/auth/student-login/" class="group inline-flex items-center gap-2 rounded-full bg-gold-400 px-7 py-3.5 text-base font-semibold text-navy-950 transition hover:bg-gold-300">
-                    HEMIS orqali kirish
-                    <svg class="h-4 w-4 transition group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></svg>
-                </a>
-            </div>
-        </div>
+{# ============================================================ YO'NALISHLAR #}
+{% if genres %}
+<section class="section">
+  <div class="container-page">
+    <div class="section-head" data-reveal>
+      <div>
+        <p class="eyebrow">Katalog</p>
+        <h2 class="section-title">Yo'nalishingizni tanlang</h2>
+      </div>
+      <a href="{% url 'book_app:student_book_list' %}" class="link-more"{% if not user.is_authenticated %} data-login{% endif %}>Butun katalog {% include "ui/_icon.html" with name="arrow-right" class="size-4" %}</a>
     </div>
+    <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      {% for genre in genres %}
+        <a href="{% url 'book_app:student_book_list' %}?category={{ genre.id }}"
+           class="tile group !gap-4 !p-4 sm:!p-5 tone-{{ forloop.counter0|tone_of }}"{% if not user.is_authenticated %} data-login{% endif %}
+           data-reveal style="--i:{{ forloop.counter0 }}">
+          <span class="grid size-12 place-items-center rounded-[var(--radius-md)] bg-[var(--t1)] text-white shadow-[var(--shadow-md)] transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
+            {% include "ui/_icon.html" with name=genre.name|genre_icon class="size-6" %}
+          </span>
+          <span class="min-w-0">
+            <span class="line-clamp-2 block font-bold leading-snug">{{ genre.name }}</span>
+            <span class="mt-1 flex items-center justify-between gap-2">
+              <span class="help">{{ genre.n|spaced }} ta kitob</span>
+              <span class="text-[color:var(--color-link)] transition-transform duration-300 group-hover:translate-x-1">{% include "ui/_icon.html" with name="arrow-right" class="size-4" %}</span>
+            </span>
+          </span>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# ============================================================ OMMABOP #}
+{% if popular_books %}
+<section class="section !pt-0">
+  <div class="container-page">
+    {% url 'book_app:student_book_list' as catalog_url %}
+    {% include "opac/_rail.html" with rail_id="popular" eyebrow="Trendda" title="Ko'p o'qilayotganlar" books=popular_books icon="flame" tone="icon-box-accent" more_url=catalog_url %}
+  </div>
+</section>
+{% endif %}
+
+{# ============================================================ IMKONIYATLAR #}
+<section id="imkoniyatlar" class="section scroll-mt-20 border-y border-[color:var(--color-line)] bg-[color:var(--color-surface-raised)]/60">
+  <div class="container-page">
+    <div class="mx-auto mb-10 max-w-2xl text-center" data-reveal>
+      <p class="eyebrow">Imkoniyatlar</p>
+      <h2 class="text-3xl sm:text-4xl">Kutubxona cho'ntagingizda</h2>
+      <p class="mt-3 text-[color:var(--color-content-muted)]">Qidirishdan o'qishgacha, ijaradan kurs ishigacha — hammasi bitta hisobda.</p>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-6">
+      {# --------- O'qish --------- #}
+      <article class="tile md:col-span-4 md:flex-row md:items-center md:gap-8" data-reveal>
+        <div class="md:flex-1">
+          <span class="icon-box">{% include "ui/_icon.html" with name="book-open" class="size-5.5" %}</span>
+          <h3 class="tile-title mt-4">Brauzerda o'qing</h3>
+          <p class="mt-2 text-sm leading-relaxed text-[color:var(--color-content-muted)]">
+            Yuklab olish va alohida dastur shart emas. To'xtagan sahifangiz eslab qolinadi — telefonda boshlab, kompyuterda davom eting.
+          </p>
+        </div>
+        <div class="rounded-[var(--radius-lg)] border border-[color:var(--color-line)] bg-[color:var(--color-surface)] p-4 shadow-[var(--shadow-md)] md:w-64" aria-hidden="true">
+          <div class="flex items-center gap-1.5">
+            <span class="size-2.5 rounded-full bg-[color:var(--color-clay-400)]"></span>
+            <span class="size-2.5 rounded-full bg-[color:var(--color-sun-400)]"></span>
+            <span class="size-2.5 rounded-full bg-[color:var(--color-pine-400)]"></span>
+          </div>
+          <div class="mt-4 space-y-2.5">
+            <div class="mock-line w-2/3 !bg-[color:var(--color-pine-200)]"></div>
+            <div class="mock-line"></div><div class="mock-line w-11/12"></div><div class="mock-line"></div>
+            <div class="mock-line w-4/5 !bg-[color:var(--color-sun-200)]"></div><div class="mock-line"></div><div class="mock-line w-3/5"></div>
+          </div>
+          <div class="mt-5 flex items-center gap-3 text-[11px] font-bold text-[color:var(--color-content-subtle)]">
+            <div class="progress flex-1"><i class="grow-x" style="width:64%"></i></div> 64%
+          </div>
+        </div>
+      </article>
+
+      {# --------- Tinglash --------- #}
+      <article class="tile md:col-span-2" data-reveal style="--i:1">
+        <span class="icon-box icon-box-accent">{% include "ui/_icon.html" with name="headphones" class="size-5.5" %}</span>
+        <h3 class="tile-title">Tinglang</h3>
+        <p class="text-sm leading-relaxed text-[color:var(--color-content-muted)]">Audio nashrlar tezligini o'zingiz tanlaysiz, yo'lda ham davom etadi.</p>
+        <div class="eq mt-auto !flex !h-14 justify-between text-[color:var(--color-clay-500)]" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+      </article>
+
+      {# --------- Ijara --------- #}
+      <article class="tile md:col-span-2" data-reveal>
+        <span class="icon-box icon-box-sun">{% include "ui/_icon.html" with name="bell" class="size-5.5" %}</span>
+        <h3 class="tile-title">Ijara va navbat</h3>
+        <p class="text-sm leading-relaxed text-[color:var(--color-content-muted)]">Nusxani onlayn so'rang. Band bo'lsa navbatga yoziling — bo'shashi bilan xabar keladi.</p>
+        <div class="mt-auto flex flex-wrap gap-2" aria-hidden="true">
+          <span class="badge badge-warning"><span class="dot dot-warning"></span> So'rov</span>
+          <span class="badge badge-success"><span class="dot dot-success"></span> Tasdiqlandi</span>
+        </div>
+      </article>
+
+      {# --------- Fan adabiyoti --------- #}
+      <article class="tile md:col-span-2" data-reveal style="--i:1">
+        <span class="icon-box icon-box-plum">{% include "ui/_icon.html" with name="graduation" class="size-5.5" %}</span>
+        <h3 class="tile-title">Fan adabiyoti</h3>
+        <p class="text-sm leading-relaxed text-[color:var(--color-content-muted)]">O'qituvchi tavsiya qilgan asosiy va qo'shimcha kitoblar fakultet va semestringiz bo'yicha.</p>
+        <a href="{% url 'book_app:course_list' %}" class="link-more mt-auto"{% if not user.is_authenticated %} data-login{% endif %}>Fanlarni ko'rish {% include "ui/_icon.html" with name="arrow-right" class="size-4" %}</a>
+      </article>
+
+      {# --------- Ro'yxat va tavsif --------- #}
+      <article class="tile md:col-span-2" data-reveal style="--i:2">
+        <span class="icon-box icon-box-info">{% include "ui/_icon.html" with name="quote" class="size-5.5" %}</span>
+        <h3 class="tile-title">Adabiyotlar ro'yxati</h3>
+        <p class="text-sm leading-relaxed text-[color:var(--color-content-muted)]">Kitoblarni ro'yxatga yig'ing va referat uchun tayyor GOST tavsifini ko'chiring.</p>
+        <p class="mt-auto rounded-[var(--radius-sm)] bg-[color:var(--color-surface-sunken)] px-3 py-2 font-mono text-[11px] leading-relaxed text-[color:var(--color-content-muted)]" aria-hidden="true">Qodiriy A. O'tkan kunlar : roman. — Toshkent, 2019. — 384 b.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+{# ============================================================ QANDAY #}
+<section id="qanday" class="section scroll-mt-20">
+  <div class="container-page">
+    <div class="mb-10 max-w-2xl" data-reveal>
+      <p class="eyebrow">Qanday ishlaydi</p>
+      <h2 class="text-3xl sm:text-4xl">Uch qadamda kitob qo'lingizda</h2>
+    </div>
+    <ol class="steps">
+      <li class="tile" data-reveal style="--i:0">
+        <span class="step-num" aria-hidden="true">1</span>
+        <span class="icon-box icon-box-lg relative">{% include "ui/_icon.html" with name="id-card" class="size-7" %}</span>
+        <h3 class="tile-title">HEMIS bilan kiring</h3>
+        <p class="text-sm leading-relaxed text-[color:var(--color-content-muted)]">Talaba ham, o'qituvchi va xodim ham o'z hisobi bilan kiradi. Kutubxona bileti avtomatik ochiladi.</p>
+      </li>
+      <li class="tile" data-reveal style="--i:1">
+        <span class="step-num" aria-hidden="true">2</span>
+        <span class="icon-box icon-box-lg icon-box-accent relative">{% include "ui/_icon.html" with name="search" class="size-7" %}</span>
+        <h3 class="tile-title">Kitobni toping</h3>
+        <p class="text-sm leading-relaxed text-[color:var(--color-content-muted)]">Nomi, muallifi yoki mavzusi bo'yicha — lotinda ham, kirillda ham.</p>
+      </li>
+      <li class="tile" data-reveal style="--i:2">
+        <span class="step-num" aria-hidden="true">3</span>
+        <span class="icon-box icon-box-lg icon-box-sun relative">{% include "ui/_icon.html" with name="sparkles" class="size-7" %}</span>
+        <h3 class="tile-title">O'qing yoki oling</h3>
+        <p class="text-sm leading-relaxed text-[color:var(--color-content-muted)]">Elektron nusxani darrov oching yoki qog'oz nusxani so'rab, kutubxonadan olib keting.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+{# ============================================================ YANGILAR #}
+{% if recent_books %}
+<section class="section !pt-0">
+  <div class="container-page">
+    {% url 'book_app:student_book_list' as catalog_url %}
+    {% include "opac/_rail.html" with rail_id="recent" eyebrow="Yangi" title="Fondga qo'shilganlar" books=recent_books icon="sparkles" tone="icon-box-sun" more_url=catalog_url %}
+  </div>
+</section>
+{% endif %}
+
+{# ============================================================ LENTA #}
+{% if all_genres|length > 5 %}
+<div class="marquee pb-4" aria-hidden="true">
+  <div class="marquee-track">
+    {% for genre in all_genres %}<span class="chip">{% include "ui/_icon.html" with name=genre.name|genre_icon class="size-4" %} {{ genre.name }}</span>{% endfor %}
+    {% for genre in all_genres %}<span class="chip">{% include "ui/_icon.html" with name=genre.name|genre_icon class="size-4" %} {{ genre.name }}</span>{% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{# ============================================================ CHAQIRUV #}
+<section class="container-page pt-8">
+  <div class="band-dark px-6 py-12 text-center sm:px-12 sm:py-16" data-reveal="zoom">
+    <h2 class="mx-auto max-w-2xl text-3xl text-white sm:text-5xl">Bugun nima o'qiymiz?</h2>
+    <p class="mx-auto mt-4 max-w-lg text-white/75">
+      {% if user.is_authenticated %}Katalogni oching yoki to'xtagan joyingizdan davom eting.{% else %}HEMIS hisobingiz bilan bir daqiqada kiring.{% endif %}
+    </p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      {% if user.is_authenticated %}
+        <a href="{% url 'book_app:student_book_list' %}" class="btn btn-light btn-lg btn-pill">{% include "ui/_icon.html" with name="library" class="size-5" %} Katalog</a>
+        <a href="{% url 'engagement:my_library' %}" class="btn btn-glass btn-lg btn-pill">{% include "ui/_icon.html" with name="heart" class="size-5" %} Kutubxonam</a>
+      {% else %}
+        <a href="{% url 'student_login' %}" class="btn btn-light btn-lg btn-pill">{% include "ui/_icon.html" with name="graduation" class="size-5" %} Talaba sifatida</a>
+        <a href="{% url 'employee_login' %}" class="btn btn-glass btn-lg btn-pill">{% include "ui/_icon.html" with name="briefcase" class="size-5" %} O'qituvchi yoki xodim</a>
+      {% endif %}
+    </div>
+  </div>
 </section>
 {% endblock %}

@@ -1,4 +1,5 @@
 {% extends "layouts/opac.html" %}
+{% load ui_extras %}
 {% comment %}
   Kitob sahifasi (OPAC).
 
@@ -10,100 +11,97 @@
 {% block description %}{{ book.annotation|default:book.description|truncatechars:160 }}{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+<section class="book-hero tone-{{ book|cover_tone }}">
+  <div class="container-page pb-10 pt-5 lg:pb-14">
+    <nav class="breadcrumb mb-6">
+      <a href="{% url 'book_app:student_book_list' %}">Katalog</a>
+      <span>/</span>
+      <a href="{% url 'book_app:student_book_list' %}?category={{ book.category_id }}">{{ book.category.name }}</a>
+    </nav>
 
-  <nav class="breadcrumb mb-6">
-    <a href="{% url 'book_app:student_book_list' %}">Katalog</a>
-    <span>/</span>
-    <a href="{% url 'book_app:student_book_list' %}?category={{ book.category_id }}">{{ book.category.name }}</a>
-  </nav>
-
-  {# ======================= HERO ======================= #}
-  <div class="grid gap-8 lg:grid-cols-[18rem_1fr]">
-    <div>
-      <div class="overflow-hidden rounded-[var(--radius-lg)] bg-[color:var(--color-surface-sunken)] shadow-[var(--shadow-md)]">
-        {% if book.cover_image %}
-          <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="w-full object-cover">
-        {% else %}
-          <div class="flex aspect-[3/4] items-center justify-center text-[color:var(--color-content-subtle)]">
-            {% include "ui/_icon.html" with name="book" class="size-12" %}
+    <div class="grid gap-8 md:grid-cols-[15rem_1fr] lg:grid-cols-[18rem_1fr] lg:gap-12">
+      <div class="enter mx-auto w-48 sm:w-56 md:mx-0 md:w-full">
+        <div class="book-3d">
+          {% include "ui/_cover.html" with book=book %}
+        </div>
+        {% if book.avg_rating %}
+          <div class="mt-5 text-center">
+            <p class="flex items-center justify-center gap-1.5 text-2xl font-extrabold">
+              <span class="text-[color:var(--color-sun-500)]">{% include "ui/_icon.html" with name="star" class="size-6 fill-current" %}</span>
+              {{ book.avg_rating|floatformat:1 }}
+            </p>
+            <p class="help">{{ book.rating_count }} ta baho</p>
           </div>
         {% endif %}
       </div>
 
-      {% if book.avg_rating %}
-        <div class="mt-4 text-center">
-          <p class="text-2xl"><span class="text-[color:var(--color-accent)]">★</span> {{ book.avg_rating }}</p>
-          <p class="help">{{ book.rating_count }} ta baho</p>
-        </div>
-      {% endif %}
-    </div>
+      <div class="min-w-0 max-md:text-center">
+        <p class="enter eyebrow" style="--i:1">{{ book.get_record_type_display }}</p>
+        <h1 class="enter text-3xl leading-tight sm:text-4xl lg:text-5xl" style="--i:1">{{ book.title }}</h1>
+        {% if book.subtitle %}
+          <p class="enter mt-2 text-lg text-[color:var(--color-content-muted)]" style="--i:2">{{ book.subtitle }}</p>
+        {% endif %}
 
-    <div class="min-w-0">
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-accent)]">
-        {{ book.get_record_type_display }}
-      </p>
-      <h1 class="mt-2 font-display text-3xl leading-tight sm:text-4xl">{{ book.title }}</h1>
-      {% if book.subtitle %}
-        <p class="mt-2 text-lg text-[color:var(--color-content-muted)]">{{ book.subtitle }}</p>
-      {% endif %}
-
-      {# Hissadorlar rol bilan #}
-      <div class="mt-4 space-y-1 text-sm">
-        {% for role, people in book.contributors_by_role.items %}
-          <p>
-            <span class="text-[color:var(--color-content-muted)]">{{ role }}:</span>
-            {% for person in people %}{{ person.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
-          </p>
-        {% empty %}
-          <p class="text-[color:var(--color-content-muted)]">Muallif ko'rsatilmagan</p>
-        {% endfor %}
-      </div>
-
-      {# Mavzular — bosilsa katalogda filtrlaydi #}
-      {% if book.subjects.all %}
-        <div class="mt-4 flex flex-wrap gap-1.5">
-          {% for subject in book.subjects.all %}
-            <a href="{% url 'book_app:student_book_list' %}?subject={{ subject.id }}" class="chip">
-              {{ subject.name }}
-            </a>
+        {# Hissadorlar rol bilan #}
+        <div class="enter mt-4 space-y-1.5 text-sm" style="--i:2">
+          {% for role, people in book.contributors_by_role.items %}
+            <p>
+              <span class="text-[color:var(--color-content-subtle)]">{{ role }}:</span>
+              <b>{% for person in people %}{{ person.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</b>
+            </p>
+          {% empty %}
+            <p class="text-[color:var(--color-content-muted)]">Muallif ko'rsatilmagan</p>
           {% endfor %}
         </div>
-      {% endif %}
 
-      {# Amallar (HTMX bilan yangilanadi) #}
-      <div class="mt-6">
-        {% include "opac/_actions.html" %}
+        {# Mavzular — bosilsa katalogda filtrlaydi #}
+        {% if book.subjects.all %}
+          <div class="enter mt-4 flex flex-wrap gap-1.5 max-md:justify-center" style="--i:3">
+            {% for subject in book.subjects.all %}
+              <a href="{% url 'book_app:student_book_list' %}?subject={{ subject.id }}" class="chip">
+                {{ subject.name }}
+              </a>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {# Amallar (HTMX bilan yangilanadi) #}
+        <div class="enter relative z-10 mt-6 max-md:[&_#book-actions>div]:justify-center" style="--i:4">
+          {% include "opac/_actions.html" %}
+        </div>
+
+        {# Qisqa meta #}
+        <dl class="enter mt-7 grid grid-cols-2 gap-2.5 text-left text-sm sm:grid-cols-3" style="--i:5">
+          {% if book.published_year %}
+            <div class="meta-tile">{% include "ui/_icon.html" with name="calendar" class="size-5" %}<div><dt>Nashr yili</dt><dd>{{ book.published_year }}</dd></div></div>
+          {% endif %}
+          {% if book.publisher_id %}
+            <div class="meta-tile">{% include "ui/_icon.html" with name="building" class="size-5" %}<div><dt>Nashriyot</dt><dd>{{ book.publisher.name }}</dd></div></div>
+          {% endif %}
+          {% if book.language %}
+            <div class="meta-tile">{% include "ui/_icon.html" with name="globe" class="size-5" %}<div><dt>Til</dt><dd>{{ book.language }}</dd></div></div>
+          {% endif %}
+          {% if book.page_count %}
+            <div class="meta-tile">{% include "ui/_icon.html" with name="book-open" class="size-5" %}<div><dt>Sahifa</dt><dd>{{ book.page_count }}</dd></div></div>
+          {% endif %}
+          {% if book.isbn %}
+            <div class="meta-tile">{% include "ui/_icon.html" with name="barcode" class="size-5" %}<div><dt>ISBN</dt><dd class="font-mono text-xs">{{ book.isbn }}</dd></div></div>
+          {% endif %}
+          {% if book.udc %}
+            <div class="meta-tile">{% include "ui/_icon.html" with name="layers" class="size-5" %}<div><dt>UDK</dt><dd class="font-mono text-xs">{{ book.udc }}</dd></div></div>
+          {% endif %}
+        </dl>
       </div>
-
-      {# Qisqa meta #}
-      <dl class="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
-        {% if book.published_year %}
-          <div><dt class="help">Nashr yili</dt><dd>{{ book.published_year }}</dd></div>
-        {% endif %}
-        {% if book.publisher_id %}
-          <div><dt class="help">Nashriyot</dt><dd>{{ book.publisher.name }}</dd></div>
-        {% endif %}
-        {% if book.language %}
-          <div><dt class="help">Til</dt><dd>{{ book.language }}</dd></div>
-        {% endif %}
-        {% if book.page_count %}
-          <div><dt class="help">Sahifa</dt><dd>{{ book.page_count }}</dd></div>
-        {% endif %}
-        {% if book.isbn %}
-          <div><dt class="help">ISBN</dt><dd class="font-mono text-xs">{{ book.isbn }}</dd></div>
-        {% endif %}
-        {% if book.udc %}
-          <div><dt class="help">UDK</dt><dd class="font-mono text-xs">{{ book.udc }}</dd></div>
-        {% endif %}
-      </dl>
     </div>
   </div>
+</section>
+
+<div class="container-page">
 
   {# ======================= FAN ADABIYOTI ======================= #}
   {% if course_items %}
-  <section class="mt-10">
-    <h2 class="font-display text-xl">Fan adabiyoti sifatida</h2>
+  <section class="mt-10" data-reveal>
+    <h2 class="section-title !text-xl"><span class="icon-box icon-box-sm icon-box-plum">{% include "ui/_icon.html" with name="graduation" class="size-4.5" %}</span> Fan adabiyoti sifatida</h2>
     <div class="mt-3 flex flex-wrap gap-2">
       {% for course_item in course_items %}
         <a href="{{ course_item.reserve.get_absolute_url }}" class="chip">
@@ -116,8 +114,8 @@
 
   {# ======================= NUSXALAR ======================= #}
   {% if items %}
-  <section class="mt-10">
-    <h2 class="font-display text-xl">Fonddagi nusxalar</h2>
+  <section class="mt-10" data-reveal>
+    <h2 class="section-title !text-xl"><span class="icon-box icon-box-sm">{% include "ui/_icon.html" with name="map-pin" class="size-4.5" %}</span> Fonddagi nusxalar</h2>
     <p class="page-sub">Kitob qaysi bo'limda va qaysi javonda turganini shu yerdan ko'ring.</p>
 
     <div class="table-wrap mt-4">
@@ -159,9 +157,9 @@
 
   {# ======================= TAVSIF ======================= #}
   {% if book.annotation or book.description or book.contents_note %}
-  <section class="mt-10 grid gap-6 lg:grid-cols-3">
+  <section class="mt-10 grid gap-6 lg:grid-cols-3" data-reveal>
     <div class="lg:col-span-2">
-      <h2 class="font-display text-xl">Kitob haqida</h2>
+      <h2 class="section-title !text-xl"><span class="icon-box icon-box-sm icon-box-info">{% include "ui/_icon.html" with name="info" class="size-4.5" %}</span> Kitob haqida</h2>
       <div class="prose mt-3 max-w-none text-[15px] leading-relaxed">
         {% if book.annotation %}<p>{{ book.annotation|linebreaksbr }}</p>{% endif %}
         {% if book.description and book.description != book.annotation %}
@@ -181,14 +179,14 @@
 
     {# --------- GOST tavsifi --------- #}
     <div x-data="{ copied: false }">
-      <h2 class="font-display text-xl">Bibliografik tavsif</h2>
+      <h2 class="section-title !text-xl"><span class="icon-box icon-box-sm icon-box-sun">{% include "ui/_icon.html" with name="quote" class="size-4.5" %}</span> Bibliografik tavsif</h2>
       <p class="page-sub">Referat va dissertatsiyadagi adabiyotlar ro'yxati uchun.</p>
       <div class="card card-body mt-3">
         <p id="citation" class="text-sm leading-relaxed">{{ citation }}</p>
         <button type="button" class="btn btn-secondary btn-sm mt-3"
                 @click="navigator.clipboard.writeText(document.getElementById('citation').innerText.trim());
                         copied = true; toast('Tavsif nusxalandi', 'success'); setTimeout(() => copied = false, 2000)">
-          {% include "ui/_icon.html" with name="check" class="size-4" %}
+          {% include "ui/_icon.html" with name="copy" class="size-4" %}
           <span x-text="copied ? 'Nusxalandi' : 'Nusxalash'">Nusxalash</span>
         </button>
       </div>
@@ -197,8 +195,8 @@
   {% endif %}
 
   {# ======================= SHARHLAR ======================= #}
-  <section class="mt-10">
-    <h2 class="font-display text-xl">Sharhlar va baholar</h2>
+  <section class="mt-10" data-reveal>
+    <h2 class="section-title !text-xl"><span class="icon-box icon-box-sm icon-box-accent">{% include "ui/_icon.html" with name="star" class="size-4.5" %}</span> Sharhlar va baholar</h2>
     <div class="mt-4">
       {% include "engagement/partials/_reviews.html" %}
     </div>
@@ -207,12 +205,7 @@
   {# ======================= O'XSHASH ======================= #}
   {% if similar %}
   <section class="mt-12">
-    <h2 class="font-display text-xl">O'xshash kitoblar</h2>
-    <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {% for item in similar %}
-        {% include "opac/_book_card.html" with book=item %}
-      {% endfor %}
-    </div>
+    {% include "opac/_rail.html" with rail_id="similar" title="O'xshash kitoblar" books=similar icon="sparkles" %}
   </section>
   {% endif %}
 </div>

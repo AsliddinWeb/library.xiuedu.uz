@@ -1,202 +1,236 @@
 /* ===========================================================================
-   XIU Library — dizayn tokenlari (v3)
+   XIU Library — dizayn tokenlari (v4)
    ---------------------------------------------------------------------------
    IKKI QIYOFA (dual shell):
-     [data-shell="opac"]   o'quvchi tomoni — issiq qog'oz, editorial, keng
+     [data-shell="opac"]   o'quvchi tomoni — issiq qog'oz, jonli, keng
      [data-shell="staff"]  xodim tomoni    — neytral, zich, ish quroli
 
    Ikkisi ham AYNAN BIR XIL komponent klasslarini ishlatadi; farq faqat shu
-   yerdagi semantik o'zgaruvchilarda. Shuning uchun komponent bir marta
-   yoziladi va ikki qiyofada ham to'g'ri ko'rinadi.
+   yerdagi semantik o'zgaruvchilarda.
+
+   Ranglar kutubxonaning o'ziniki: zumrad-qarag'ay (brend), marjon-terrakota
+   (aksent), quyosh sarig'i (urg'u). Almashtirish kerak bo'lsa — faqat shu fayl.
 
    Qoida: komponentlarda hech qachon to'g'ridan-to'g'ri `pine-600`, `#fff`
-   kabi qiymat yozilmaydi — faqat semantik token (`--color-surface`,
-   `--color-brand`, `--ui-control-h`) ishlatiladi.
+   kabi qiymat yozilmaydi — faqat semantik token ishlatiladi.
 =========================================================================== */
 
 @theme {
   /* ------------------------------------------------------------------
-     1. XOM PALITRA (v3) — faqat semantik tokenlar uchun manba
+     1. XOM PALITRA
      ------------------------------------------------------------------ */
 
-  /* Ink — asosiy matn va to'q sirtlar (sovuqroq qora) */
-  --color-ink-50:  #f5f6f7;
-  --color-ink-100: #e6e8ea;
-  --color-ink-200: #c9ced3;
-  --color-ink-300: #9aa3ab;
-  --color-ink-400: #6b757f;
-  --color-ink-500: #4b555f;
-  --color-ink-600: #353e47;
-  --color-ink-700: #252d35;
-  --color-ink-800: #181f26;
-  --color-ink-900: #10151c;
-  --color-ink-950: #080b10;
+  /* Ink — yashil tusli neytral (barcha kulranglar bitta oilada) */
+  --color-ink-50:  #f4f7f6;
+  --color-ink-100: #e6ecea;
+  --color-ink-200: #cdd8d4;
+  --color-ink-300: #9fb0ab;
+  --color-ink-400: #667a74;
+  --color-ink-500: #4d605a;
+  --color-ink-600: #3a4b46;
+  --color-ink-700: #283633;
+  --color-ink-800: #1a2523;
+  --color-ink-900: #101a18;
+  --color-ink-950: #08100f;
 
-  /* Pine — brend (chuqur kutubxona yashili) */
-  --color-pine-50:  #eff6f4;
-  --color-pine-100: #d7e9e4;
-  --color-pine-200: #aed3ca;
-  --color-pine-300: #7db5a8;
-  --color-pine-400: #4f9385;
-  --color-pine-500: #317a6b;
-  --color-pine-600: #1c5c50;
-  --color-pine-700: #164a41;
-  --color-pine-800: #113a33;
-  --color-pine-900: #0c2a25;
+  /* Pine — brend (zumrad) */
+  --color-pine-50:  #edfbf7;
+  --color-pine-100: #d2f4e9;
+  --color-pine-200: #a9e9d6;
+  --color-pine-300: #70d6bd;
+  --color-pine-400: #37bca0;
+  --color-pine-500: #17a088;
+  --color-pine-600: #0d8170;
+  --color-pine-700: #0e675b;
+  --color-pine-800: #0f524a;
+  --color-pine-900: #10443e;
+  --color-pine-950: #052824;
 
-  /* Clay — aksent (iliq terrakota: urg'u, "yangi", CTA ikkilamchi) */
-  --color-clay-50:  #fdf5f1;
-  --color-clay-100: #f8e5da;
-  --color-clay-200: #efc7b2;
-  --color-clay-300: #e3a383;
-  --color-clay-400: #d2805a;
-  --color-clay-500: #c2683f;
-  --color-clay-600: #a9532f;
-  --color-clay-700: #8a4227;
-  --color-clay-800: #6d3522;
-  --color-clay-900: #582d1e;
+  /* Clay — aksent (marjon-terrakota) */
+  --color-clay-50:  #fff5f0;
+  --color-clay-100: #ffe8dd;
+  --color-clay-200: #ffcdb8;
+  --color-clay-300: #ffa886;
+  --color-clay-400: #fa7c53;
+  --color-clay-500: #ec5b30;
+  --color-clay-600: #cf431b;
+  --color-clay-700: #ac3417;
+  --color-clay-800: #8b2d19;
+  --color-clay-900: #71291a;
 
-  /* Qog'oz (OPAC foni) va neytral (Staff foni) */
-  --color-paper:      #faf8f4;
+  /* Sun — quyosh sarig'i (urg'u, reyting, "yangi") */
+  --color-sun-50:  #fff9eb;
+  --color-sun-100: #ffefc6;
+  --color-sun-200: #ffdf89;
+  --color-sun-300: #ffcc4d;
+  --color-sun-400: #fdb924;
+  --color-sun-500: #f0990b;
+  --color-sun-700: #b05a09;
+
+  --color-paper:      #fbf9f5;
   --color-paper-high: #ffffff;
-  --color-slate-bg:   #f3f5f7;
+  --color-slate-bg:   #f2f5f4;
 
-  /* Status ranglari (ikki qiyofada bir xil ma'noni bildiradi) */
-  --color-success-50:  #ecfdf3;
-  --color-success-500: #16a34a;
-  --color-success-700: #15803d;
-  --color-warning-50:  #fffbeb;
-  --color-warning-500: #d97706;
-  --color-warning-700: #b45309;
-  --color-danger-50:   #fef2f2;
-  --color-danger-500:  #dc2626;
-  --color-danger-700:  #b91c1c;
+  /* Status ranglari */
+  --color-success-50:  #ebfdf3;
+  --color-success-500: #12b76a;
+  --color-success-700: #067647;
+  --color-warning-50:  #fffaeb;
+  --color-warning-500: #f79009;
+  --color-warning-700: #b54708;
+  --color-danger-50:   #fef3f2;
+  --color-danger-500:  #f04438;
+  --color-danger-700:  #b42318;
   --color-info-50:     #eff6ff;
-  --color-info-500:    #2563eb;
-  --color-info-700:    #1d4ed8;
+  --color-info-500:    #2e90fa;
+  --color-info-700:    #175cd3;
 
   /* ------------------------------------------------------------------
      2. SEMANTIK TOKENLAR (standart = OPAC qiymatlari)
-        Komponentlar FAQAT shularni ishlatadi.
      ------------------------------------------------------------------ */
-  --color-surface:        var(--color-paper);        /* sahifa foni */
-  --color-surface-raised: var(--color-paper-high);   /* karta, panel */
-  --color-surface-sunken: #f2efe9;                   /* ichki blok, jadval sarlavhasi */
-  --color-surface-invert: var(--color-ink-900);      /* to'q bloklar */
+  --color-surface:        var(--color-paper);
+  --color-surface-raised: var(--color-paper-high);
+  --color-surface-sunken: #f3efe6;
+  --color-surface-invert: var(--color-pine-950);
 
-  --color-line:        #e4ded3;                      /* oddiy chegara */
-  --color-line-strong: #cfc6b7;                      /* ajratuvchi, jadval */
+  --color-line:        #eae4d8;
+  --color-line-strong: #d9d1c1;
 
-  --color-content:        var(--color-ink-900);      /* asosiy matn */
-  --color-content-muted:  var(--color-ink-500);      /* ikkilamchi matn */
-  --color-content-subtle: var(--color-ink-400);      /* meta, izoh */
+  --color-content:        var(--color-ink-900);
+  --color-content-muted:  var(--color-ink-500);
+  --color-content-subtle: var(--color-ink-400);
   --color-content-invert: #ffffff;
 
   --color-brand:          var(--color-pine-700);
   --color-brand-hover:    var(--color-pine-800);
   --color-brand-soft:     var(--color-pine-50);
-  --color-brand-content:  #ffffff;                   /* brend ustidagi matn */
+  --color-brand-content:  #ffffff;
   --color-accent:         var(--color-clay-500);
+  --color-accent-strong:  var(--color-clay-600);
   --color-accent-soft:    var(--color-clay-50);
+  --color-highlight:      var(--color-sun-400);
 
-  --color-focus: var(--color-pine-400);
+  --color-focus: var(--color-pine-500);
+
+  /* Matn sifatida ishlatiladigan brend/aksent (tungi rejimda yorqinlashadi) */
+  --color-link:       var(--color-pine-700);
+  --color-brand-ink:  var(--color-pine-800);   /* brand-soft ustidagi matn */
+  --color-accent-ink: var(--color-clay-700);
+  --color-sun-ink:    var(--color-sun-700);
+  --color-plum-ink:   #6b32b8;
+
+  /* To'q bloklar */
+  --color-hero:    var(--color-pine-900);
+  --color-sidebar: var(--color-pine-950);
 
   /* ------------------------------------------------------------------
      3. SHRIFTLAR
      ------------------------------------------------------------------ */
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: "Newsreader", ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
   /* ------------------------------------------------------------------
-     4. SHAKL VA SOYA
+     4. SHAKL VA SOYA (soyalar fon tusiga bo'yalgan)
      ------------------------------------------------------------------ */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
 
-  --shadow-xs: 0 1px 2px rgb(16 21 28 / 0.05);
-  --shadow-sm: 0 1px 2px rgb(16 21 28 / 0.06), 0 2px 6px -2px rgb(16 21 28 / 0.08);
-  --shadow-md: 0 2px 4px rgb(16 21 28 / 0.06), 0 12px 28px -10px rgb(16 21 28 / 0.18);
-  --shadow-lg: 0 4px 8px rgb(16 21 28 / 0.08), 0 24px 56px -16px rgb(16 21 28 / 0.26);
+  --shadow-xs: 0 1px 2px rgb(16 68 62 / 0.05);
+  --shadow-sm: 0 1px 2px rgb(16 68 62 / 0.05), 0 4px 12px -4px rgb(16 68 62 / 0.10);
+  --shadow-md: 0 2px 4px rgb(16 68 62 / 0.05), 0 16px 32px -12px rgb(16 68 62 / 0.20);
+  --shadow-lg: 0 4px 8px rgb(16 68 62 / 0.06), 0 32px 64px -20px rgb(16 68 62 / 0.30);
+  --shadow-brand: 0 8px 20px -8px rgb(14 103 91 / 0.55);
+  --shadow-accent: 0 8px 20px -8px rgb(207 67 27 / 0.55);
 
   /* ------------------------------------------------------------------
-     5. ESKI (v2) PALITRA — vaqtincha saqlanadi
-        Hali ko'chirilmagan sahifalar (`layouts/base.html`, `panel/*`)
-        shu klasslarni ishlatadi. Har phase o'z ekranlarini v3'ga
-        ko'chiradi; hammasi ko'chgach bu blok o'chiriladi.
+     5. HARAKAT
      ------------------------------------------------------------------ */
-  --color-navy-50:  #eef2f9;
-  --color-navy-100: #d7e0ef;
-  --color-navy-200: #b0c2dd;
-  --color-navy-300: #819cc4;
-  --color-navy-400: #5474a6;
-  --color-navy-500: #375789;
-  --color-navy-600: #2a4470;
-  --color-navy-700: #20335a;
-  --color-navy-800: #16243f;
-  --color-navy-900: #0e1a30;
-  --color-navy-950: #070f20;
-  --color-gold-50:  #fbf8ef;
-  --color-gold-100: #f5ecd0;
-  --color-gold-200: #ecd89f;
-  --color-gold-300: #e1c06c;
-  --color-gold-400: #d6a945;
-  --color-gold-500: #c89537;
-  --color-gold-600: #ab742c;
-  --color-gold-700: #895726;
-  --color-gold-800: #714625;
-  --color-gold-900: #613b23;
-  --color-cream: #faf7f0;
-  --color-ink: #15203a;
+  --ease-out-soft: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-soft: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
+
+  /* ------------------------------------------------------------------
+     6. ESKI NOMLAR (v2) — xodim panelidagi sahifalar hali shu klasslarni
+        ishlatadi. Qiymatlar yangi palitraga bog'langan, shuning uchun ular
+        ham bir xil ko'rinadi. Sahifalar ko'chgach bu blok o'chiriladi.
+     ------------------------------------------------------------------ */
+  --color-navy-50:  #f0f6f4;
+  --color-navy-100: #e1ebe8;
+  --color-navy-200: #c8d9d4;
+  --color-navy-300: #9cb5ae;
+  --color-navy-400: #647e77;
+  --color-navy-500: #4c6760;
+  --color-navy-600: #38544d;
+  --color-navy-700: #1f4a42;
+  --color-navy-800: #0f524a;
+  --color-navy-900: #0e675b;
+  --color-navy-950: #0c1f1c;
+  --color-gold-50:  #fff6f1;
+  --color-gold-100: #ffe8dd;
+  --color-gold-200: #ffd0bb;
+  --color-gold-300: #ffd466;
+  --color-gold-400: #fdb924;
+  --color-gold-500: #f0990b;
+  --color-gold-600: #cf431b;
+  --color-gold-700: #ac3417;
+  --color-gold-800: #8b2d19;
+  --color-gold-900: #71291a;
+  --color-cream: #fbf9f5;
+  --color-ink: #101a18;
   --font-serif: "Fraunces", ui-serif, Georgia, serif;
-  --shadow-soft: 0 1px 2px rgba(16, 26, 48, .04), 0 8px 24px -8px rgba(16, 26, 48, .12);
-  --shadow-lift: 0 2px 4px rgba(16, 26, 48, .06), 0 18px 40px -12px rgba(16, 26, 48, .22);
+  --shadow-soft: 0 1px 2px rgb(16 68 62 / .05), 0 4px 12px -4px rgb(16 68 62 / .10);
+  --shadow-lift: 0 2px 4px rgb(16 68 62 / .05), 0 16px 32px -12px rgb(16 68 62 / .22);
 }
 
 /* ===========================================================================
-   QIYOFA A — OPAC (o'quvchi): issiq qog'oz, bo'sh joy ko'p, o'qishga qulay
+   QIYOFA A — OPAC (o'quvchi)
 =========================================================================== */
 [data-shell="opac"] {
-  /* zichlik: bo'sh (comfortable) */
-  --ui-text:        0.9375rem;  /* 15px */
+  --ui-text:        0.9375rem;
   --ui-text-sm:     0.8125rem;
   --ui-control-h:   2.75rem;    /* 44px — barmoq uchun qulay */
   --ui-control-h-sm: 2.25rem;
-  --ui-control-px:  1rem;
+  --ui-control-px:  1.125rem;
   --ui-row-py:      0.875rem;
   --ui-cell-px:     1rem;
   --ui-gap:         1rem;
   --ui-radius:      var(--radius-md);
-  --ui-card-p:      1.5rem;
+  --ui-card-radius: var(--radius-lg);
+  --ui-card-p:      1.25rem;
+}
+@media (min-width: 640px) {
+  [data-shell="opac"] { --ui-card-p: 1.5rem; }
 }
 
 /* ===========================================================================
-   QIYOFA B — STAFF (xodim): neytral sirt, zich jadvallar, ko'p ma'lumot
+   QIYOFA B — STAFF (xodim)
 =========================================================================== */
 [data-shell="staff"] {
   --color-surface:        var(--color-slate-bg);
   --color-surface-raised: #ffffff;
-  --color-surface-sunken: #eceff2;
-  --color-line:           #dfe4e9;
-  --color-line-strong:    #c6ced6;
+  --color-surface-sunken: #ebf0ee;
+  --color-line:           #dfe7e4;
+  --color-line-strong:    #c8d4d0;
   --color-content:        var(--color-ink-800);
   --color-content-muted:  var(--color-ink-500);
   --color-content-subtle: var(--color-ink-400);
 
-  /* zichlik: kompakt (compact) */
-  --ui-text:        0.8125rem;  /* 13px — ERP/ILS zichligi */
+  --ui-text:        0.84375rem;
   --ui-text-sm:     0.75rem;
-  --ui-control-h:   2rem;       /* 32px */
-  --ui-control-h-sm: 1.75rem;
-  --ui-control-px:  0.625rem;
-  --ui-row-py:      0.375rem;
-  --ui-cell-px:     0.625rem;
+  --ui-control-h:   2.25rem;
+  --ui-control-h-sm: 2rem;
+  --ui-control-px:  0.75rem;
+  --ui-row-py:      0.5rem;
+  --ui-cell-px:     0.75rem;
   --ui-gap:         0.75rem;
   --ui-radius:      var(--radius-sm);
-  --ui-card-p:      1rem;
+  --ui-card-radius: var(--radius-md);
+  --ui-card-p:      1.125rem;
 }
 
 /* Zichlikni sahifa darajasida majburlash (masalan kioskda yirik ko'rinish) */

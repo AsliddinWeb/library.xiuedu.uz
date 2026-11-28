@@ -1,0 +1,94 @@
+/* ===========================================================================
+   XIU Library — harakat (animatsiya) qatlami
+   ---------------------------------------------------------------------------
+   Qoidalar:
+     * faqat `transform` va `opacity` animatsiya qilinadi (silliq, GPU);
+     * kirish — ease-out; interfeys harakati 300ms dan oshmaydi, faqat sahifa
+       ochilishidagi "reveal" biroz uzunroq;
+     * `prefers-reduced-motion` — hammasi o'chadi;
+     * JavaScript ishlamasa kontent ko'rinib turadi (`.js` klassi shart).
+=========================================================================== */
+
+@keyframes fade-up   { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop-in    { from { opacity: 0; transform: scale(0.94) translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes toast-in  { from { opacity: 0; transform: translateX(24px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes float     { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes spin      { to { transform: rotate(360deg); } }
+@keyframes drift     { 0%, 100% { transform: translate3d(0,0,0) scale(1); } 33% { transform: translate3d(4%, -6%, 0) scale(1.08); } 66% { transform: translate3d(-5%, 4%, 0) scale(0.95); } }
+@keyframes marquee   { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes grow-x    { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes draw      { to { stroke-dashoffset: 0; } }
+@keyframes equalize  { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+@keyframes ping-soft { 0% { transform: scale(1); opacity: .6; } 80%, 100% { transform: scale(2.4); opacity: 0; } }
+@keyframes ring-bell { 0%, 100% { transform: rotate(0); } 10% { transform: rotate(14deg); } 20% { transform: rotate(-12deg); } 30% { transform: rotate(8deg); } 40% { transform: rotate(-6deg); } 50% { transform: rotate(0); } }
+
+/* Sahifalar orasida yumshoq o'tish (qo'llab-quvvatlaydigan brauzerlarda) */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: fade-in .16s ease reverse both; }
+::view-transition-new(root) { animation: fade-in .22s ease both; }
+
+@layer components {
+  /* --- Ko'rinishga kirganda ochilish (ui.js `is-in` qo'shadi) ------------ */
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .6s var(--ease-out-soft), transform .6s var(--ease-out-soft);
+    transition-delay: calc(var(--i, 0) * 60ms);
+  }
+  .js [data-reveal="left"]  { transform: translateX(-22px); }
+  .js [data-reveal="right"] { transform: translateX(22px); }
+  .js [data-reveal="zoom"]  { transform: scale(0.95); }
+  .js [data-reveal].is-in { opacity: 1; transform: none; }
+
+  /* --- Sahifa ochilishida ketma-ket chiqish (JS kerak emas) ------------- */
+  .enter { animation: fade-up .6s var(--ease-out-soft) both; animation-delay: calc(var(--i, 0) * 70ms); }
+
+  /* Tab paneli / x-show bilan ochilgan blok */
+  .panel-in { animation: fade-up .32s var(--ease-out-soft) both; }
+  .pop-in   { animation: pop-in .2s var(--ease-out-soft) both; }
+
+  /* HTMX bilan kelgan yangi kontent */
+  .htmx-swapping { opacity: 0; transition: opacity .15s ease; }
+  .htmx-added    { opacity: 0; }
+  .htmx-settling > * { animation: fade-in .25s ease both; }
+
+  .float      { animation: float 6s ease-in-out infinite; }
+  .float-slow { animation: float 8s ease-in-out infinite; animation-delay: -3s; }
+
+  /* Progress chizig'i chapdan o'sib chiqadi */
+  .grow-x { transform-origin: left; animation: grow-x .9s var(--ease-out-soft) both .15s; }
+
+  /* Jonli nuqta ("hozir mavjud") */
+  .live-dot { position: relative; display: inline-block; width: .5rem; height: .5rem; border-radius: 999px; background: var(--color-success-500); }
+  .live-dot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit; animation: ping-soft 1.8s ease-out infinite; }
+
+  .bell-ring { animation: ring-bell 2.4s ease-in-out 1s 2; transform-origin: 50% 10%; }
+
+  /* Audio to'lqini */
+  .eq { display: inline-flex; align-items: flex-end; gap: 3px; height: 2rem; }
+  .eq > i { width: 4px; height: 100%; border-radius: 4px; background: currentColor; transform-origin: bottom; animation: equalize 1.1s ease-in-out infinite; }
+  .eq > i:nth-child(2n)   { animation-delay: -.35s; }
+  .eq > i:nth-child(3n)   { animation-delay: -.7s; }
+  .eq > i:nth-child(4n)   { animation-delay: -.15s; }
+  .eq > i:nth-child(5n)   { animation-delay: -.9s; }
+  .eq.paused > i { animation-play-state: paused; transform: scaleY(0.35); }
+
+  /* Cheksiz lenta */
+  .marquee { overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+  .marquee-track { display: flex; width: max-content; gap: 0.75rem; padding-right: 0.75rem; animation: marquee 45s linear infinite; }
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    transition-delay: 0ms !important;
+  }
+  .js [data-reveal] { opacity: 1; transform: none; }
+  @view-transition { navigation: none; }
+}

@@ -1,7 +1,7 @@
 {% comment %}Ro'yxat kartasi. `show_owner` — boshqalarning ro'yxatida muallifi ko'rinadi.{% endcomment %}
-<a href="{{ shelf.get_absolute_url }}" class="card card-hover flex flex-col gap-2 p-4">
-  <div class="flex items-start justify-between gap-3">
-    <p class="font-display text-base leading-snug">{{ shelf.name }}</p>
+<a href="{{ shelf.get_absolute_url }}" class="card card-hover group flex flex-col gap-3 p-5">
+  <span class="flex items-start justify-between gap-3">
+    <span class="icon-box {% if shelf.is_official %}icon-box-accent{% else %}icon-box-sun{% endif %} transition-transform duration-300 group-hover:-rotate-6">{% include "ui/_icon.html" with name="bookmark" class="size-5.5" %}</span>
     {% if shelf.is_official %}
       {% include "ui/_badge.html" with text="Kutubxona tanlovi" variant="accent" %}
     {% elif shelf.visibility == 'PUBLIC' %}
@@ -11,9 +11,11 @@
     {% else %}
       {% include "ui/_badge.html" with text="Shaxsiy" variant="neutral" %}
     {% endif %}
-  </div>
-  {% if shelf.description %}<p class="help">{{ shelf.description|truncatechars:110 }}</p>{% endif %}
-  <p class="help mt-auto">
-    {{ shelf.books_count }} ta kitob{% if show_owner %} · {{ shelf.owner.get_full_name }}{% endif %}
-  </p>
+  </span>
+  <span class="font-display text-lg font-semibold leading-snug">{{ shelf.name }}</span>
+  {% if shelf.description %}<span class="help">{{ shelf.description|truncatechars:110 }}</span>{% endif %}
+  <span class="mt-auto flex items-center justify-between border-t border-[color:var(--color-line)] pt-3 text-xs font-bold text-[color:var(--color-content-muted)]">
+    <span>{{ shelf.books_count }} ta kitob{% if show_owner %} · {{ shelf.owner.get_full_name }}{% endif %}</span>
+    <span class="text-[color:var(--color-link)] transition-transform duration-300 group-hover:translate-x-1">{% include "ui/_icon.html" with name="arrow-right" class="size-4" %}</span>
+  </span>
 </a>

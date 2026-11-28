@@ -1,0 +1,114 @@
+/* ===========================================================================
+   XIU Library — tungi rejim
+   ---------------------------------------------------------------------------
+   `<html data-theme="dark">` bo'lganda faqat semantik tokenlar almashadi;
+   komponentlar o'zgarmaydi. Tanlov `ui/_theme_init.html` va `ui.js`da:
+   yorug' / tungi / tizimcha.
+
+   Bu fayl ataylab @layer'siz — qatlamli utility va tokenlardan ustun turadi.
+=========================================================================== */
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-surface:        #0b1312;
+  --color-surface-raised: #121d1b;
+  --color-surface-sunken: #192725;
+  --color-surface-invert: #060c0b;
+  --color-line:           #223330;
+  --color-line-strong:    #334743;
+
+  --color-content:        #e8f1ee;
+  --color-content-muted:  #aebfba;
+  --color-content-subtle: #829892;
+
+  --color-brand:       #127a69;
+  --color-brand-hover: #16907c;
+  --color-brand-soft:  rgb(55 188 160 / 0.15);
+  --color-brand-ink:   #8fe5cd;
+  --color-link:        #62d3b8;
+  --color-accent-soft: rgb(250 124 83 / 0.15);
+  --color-accent-ink:  #ffab8b;
+  --color-sun-ink:     #ffd466;
+  --color-plum-ink:    #cba7f5;
+  --color-focus:       #37bca0;
+
+  --color-hero:    #0c2b26;
+  --color-sidebar: #081210;
+
+  --color-success-50: rgb(18 183 106 / 0.16);  --color-success-700: #6ee7ab;
+  --color-warning-50: rgb(247 144 9 / 0.17);   --color-warning-700: #fdc65a;
+  --color-danger-50:  rgb(240 68 56 / 0.17);   --color-danger-700:  #fda49c;
+  --color-info-50:    rgb(46 144 250 / 0.18);  --color-info-700:    #8cc8ff;
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px -4px rgb(0 0 0 / 0.5);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 0.4), 0 16px 32px -12px rgb(0 0 0 / 0.65);
+  --shadow-lg: 0 4px 8px rgb(0 0 0 / 0.45), 0 32px 64px -20px rgb(0 0 0 / 0.75);
+  --shadow-soft: var(--shadow-sm);
+  --shadow-lift: var(--shadow-md);
+
+  /* eski nomlar (xodim panelidagi sahifalar) */
+  --color-paper: #121d1b;
+  --color-cream: #0b1312;
+  --color-ink:   #e8f1ee;
+  --color-navy-50:  #182624;
+  --color-navy-100: #243532;
+  --color-navy-200: #354a45;
+  --color-navy-300: #5d7870;
+  --color-navy-400: #859d96;
+  --color-navy-500: #9db3ac;
+  --color-navy-600: #b7cac4;
+  --color-navy-700: #cfddd9;
+  --color-gold-50:  rgb(250 124 83 / 0.12);
+  --color-gold-100: rgb(250 124 83 / 0.18);
+  --color-gold-200: rgb(250 124 83 / 0.34);
+  --color-gold-600: #fa7c53;
+  --color-gold-700: #ffab8b;
+  --color-red-50:      rgb(240 68 56 / 0.14);
+  --color-red-100:     rgb(240 68 56 / 0.24);
+  --color-red-200:     rgb(240 68 56 / 0.36);
+  --color-emerald-50:  rgb(18 183 106 / 0.14);
+  --color-emerald-100: rgb(18 183 106 / 0.24);
+}
+
+html[data-theme="dark"] .text-navy-800,
+html[data-theme="dark"] .text-navy-900,
+html[data-theme="dark"] .text-navy-950 { color: var(--color-content); }
+html[data-theme="dark"] .text-red-600,
+html[data-theme="dark"] .text-red-700   { color: #fda49c; }
+html[data-theme="dark"] .text-emerald-700 { color: #6ee7ab; }
+html[data-theme="dark"] .bg-white { background-color: var(--color-surface-raised); }
+
+html[data-theme="dark"] .toast { background-color: #20322e; }
+html[data-theme="dark"] .toast-success { background-color: #067647; }
+html[data-theme="dark"] .toast-danger  { background-color: #b42318; }
+html[data-theme="dark"] .toast-warning { background-color: #b54708; }
+html[data-theme="dark"] .btn-secondary { background-color: var(--color-surface-sunken); }
+html[data-theme="dark"] .btn-secondary:hover { background-color: var(--color-brand-soft); }
+html[data-theme="dark"] .cover { box-shadow: 0 14px 26px -12px rgb(0 0 0 / .8); }
+
+/* ===========================================================================
+   Mavzu tanlagich
+=========================================================================== */
+@layer components {
+  .theme-sun, .theme-moon { display: inline-flex; }
+  html[data-theme="dark"] .theme-sun { display: none; }
+  html:not([data-theme="dark"]) .theme-moon { display: none; }
+
+  .theme-check { margin-left: auto; opacity: 0; color: var(--color-link); }
+  html[data-theme-choice="light"]  [data-theme-set="light"]  .theme-check,
+  html[data-theme-choice="dark"]   [data-theme-set="dark"]   .theme-check,
+  html[data-theme-choice="system"] [data-theme-set="system"] .theme-check { opacity: 1; }
+
+  .segment { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0.25rem; padding: 0.25rem; border-radius: var(--radius-md); background: var(--color-surface-sunken); }
+  .segment > button {
+    display: flex; align-items: center; justify-content: center; gap: 0.35rem;
+    min-height: 2.25rem; border-radius: var(--radius-sm); cursor: pointer;
+    font-size: 0.75rem; font-weight: 700; color: var(--color-content-muted);
+    transition: background-color .15s ease, color .15s ease;
+  }
+  html[data-theme-choice="light"]  .segment > [data-theme-set="light"],
+  html[data-theme-choice="dark"]   .segment > [data-theme-set="dark"],
+  html[data-theme-choice="system"] .segment > [data-theme-set="system"] { background: var(--color-surface-raised); color: var(--color-brand-ink); box-shadow: var(--shadow-sm); }
+}

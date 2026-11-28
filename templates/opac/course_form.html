@@ -3,10 +3,23 @@
 {% block title %}{% if reserve %}Fan ro'yxatini tahrirlash{% else %}Yangi fan{% endif %} — XIU Kutubxona{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-xl px-4 py-8 sm:px-6">
-  <h1 class="page-title">{% if reserve %}Fan ro'yxatini tahrirlash{% else %}Fan qo'shish{% endif %}</h1>
+<section class="page-hero">
+  <div class="container-page container-narrow">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="enter flex min-w-0 items-center gap-3.5">
+        <span class="icon-box icon-box-lg max-sm:hidden">{% include "ui/_icon.html" with name="graduation" class="size-7" %}</span>
+        <div class="min-w-0">
+          <h1>{% if reserve %}Fan ro'yxatini tahrirlash{% else %}Fan qo'shish{% endif %}</h1>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-  <form method="post" class="card card-body mt-5 space-y-4" novalidate>
+<div class="container-page py-6 lg:py-8">
+<div class="mx-auto max-w-xl">
+  <form method="post" class="card card-body enter space-y-4" novalidate>
     {% csrf_token %}
     {% for error in form.non_field_errors %}<p class="error-text">{{ error }}</p>{% endfor %}
     {% for field in form %}{% include "opac/_field.html" %}{% endfor %}
@@ -18,5 +31,6 @@
       <a href="{% if reserve %}{{ reserve.get_absolute_url }}{% else %}{% url 'book_app:course_list' %}{% endif %}" class="btn btn-ghost">Bekor qilish</a>
     </div>
   </form>
+</div>
 </div>
 {% endblock %}

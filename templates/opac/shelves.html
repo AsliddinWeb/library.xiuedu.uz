@@ -4,29 +4,36 @@
 {% block title %}Ro'yxatlar — XIU Kutubxona{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-  <div class="page-head">
-    <div>
-      <h1 class="page-title">Ro'yxatlar</h1>
-      <p class="page-sub">Kitoblarni mavzu yoki ish bo'yicha to'plang va adabiyotlar ro'yxatini bir bosishda ko'chiring.</p>
+<section class="page-hero">
+  <div class="container-page">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="enter flex min-w-0 items-center gap-3.5">
+        <span class="icon-box icon-box-lg max-sm:hidden">{% include "ui/_icon.html" with name="bookmark" class="size-7" %}</span>
+        <div class="min-w-0">
+          <h1>Ro'yxatlar</h1>
+          <p class="mt-1 max-w-xl text-sm">Kitoblarni mavzu yoki ish bo'yicha to'plang va adabiyotlar ro'yxatini bir bosishda ko'chiring.</p>
+        </div>
+      </div>
+      <div class="enter flex flex-wrap gap-2" style="--i:1">
+        <a href="{% url 'engagement:shelf_create' %}" class="btn btn-accent btn-pill">{% include "ui/_icon.html" with name="plus" class="size-4.5" %} Yangi ro'yxat</a>
+      </div>
     </div>
-    <a href="{% url 'engagement:shelf_create' %}" class="btn btn-primary">
-      {% include "ui/_icon.html" with name="plus" class="size-4" %}
-      Yangi ro'yxat
-    </a>
   </div>
+</section>
+
+<div class="container-page py-6 lg:py-8">
 
   {% if official_shelves %}
-    <section class="mt-8">
-      <h2 class="font-display text-xl">Kutubxona tanlovi</h2>
+    <section class="mt-8 first:mt-0" data-reveal>
+      <h2 class="text-xl">Kutubxona tanlovi</h2>
       <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {% for shelf in official_shelves %}{% include "opac/_shelf_card.html" %}{% endfor %}
       </div>
     </section>
   {% endif %}
 
-  <section class="mt-8">
-    <h2 class="font-display text-xl">Mening ro'yxatlarim</h2>
+  <section class="mt-8 first:mt-0" data-reveal>
+    <h2 class="text-xl">Mening ro'yxatlarim</h2>
     {% if my_shelves %}
       <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {% for shelf in my_shelves %}{% include "opac/_shelf_card.html" %}{% endfor %}
@@ -37,8 +44,8 @@
   </section>
 
   {% if other_shelves %}
-    <section class="mt-10">
-      <h2 class="font-display text-xl">Boshqalarning ochiq ro'yxatlari</h2>
+    <section class="mt-10" data-reveal>
+      <h2 class="text-xl">Boshqalarning ochiq ro'yxatlari</h2>
       <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {% for shelf in other_shelves %}{% include "opac/_shelf_card.html" with show_owner=1 %}{% endfor %}
       </div>

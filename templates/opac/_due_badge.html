@@ -1,0 +1,12 @@
+{% comment %}Muddat belgisi. Kirish: `rental` (view `days_left` beradi).{% endcomment %}
+{% if rental.is_overdue %}
+  {% include "ui/_badge.html" with text="Muddat o'tgan" variant="danger" dot=1 %}
+{% elif rental.days_left == 0 %}
+  {% include "ui/_badge.html" with text="Bugun qaytariladi" variant="warning" dot=1 %}
+{% elif rental.days_left is not None and rental.days_left <= 3 %}
+  <span class="badge badge-warning"><span class="dot dot-warning"></span> {{ rental.days_left }} kun qoldi</span>
+{% elif rental.days_left is not None %}
+  <span class="badge badge-success"><span class="dot dot-success"></span> {{ rental.days_left }} kun qoldi</span>
+{% else %}
+  {% include "ui/_badge.html" with text="Ijarada" variant="info" dot=1 %}
+{% endif %}

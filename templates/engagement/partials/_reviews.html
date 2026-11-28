@@ -1,4 +1,4 @@
-{% comment %}Sharhlar va baho formasi (HTMX target: #reviews).{% endcomment %}
+{% load ui_extras %}{% comment %}Sharhlar va baho formasi (HTMX target: #reviews).{% endcomment %}
 <div id="reviews">
   {% if review_message %}
     <div class="card card-body mb-4 border-l-4 border-l-[color:var(--color-success-500)]">
@@ -32,7 +32,7 @@
                 <button type="button" @click="rating = i" class="transition hover:scale-110"
                         :aria-label="i + ' yulduz'">
                   <svg class="size-7" viewBox="0 0 24 24" fill="currentColor"
-                       :class="i <= rating ? 'text-[color:var(--color-accent)]'
+                       :class="i <= rating ? 'text-[color:var(--color-sun-500)]'
                                            : 'text-[color:var(--color-line-strong)]'">
                     <path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8 6.8 19.2l1-5.8-4.3-4.1 5.9-.9z"/>
                   </svg>
@@ -57,7 +57,7 @@
     <div class="lg:col-span-2">
       {% if book.rating_count %}
         <div class="mb-4 flex items-center gap-2 text-sm">
-          <span class="text-lg text-[color:var(--color-accent)]">★</span>
+          <span class="text-lg text-[color:var(--color-sun-500)]">★</span>
           <b>{{ book.avg_rating }}</b>
           <span class="help">· {{ book.rating_count }} ta baho</span>
         </div>
@@ -67,8 +67,8 @@
         {% for review in reviews %}
           <div class="card card-body">
             <div class="flex items-center justify-between gap-3">
-              <p class="font-medium">{{ review.user.get_full_name }}</p>
-              <p class="text-sm text-[color:var(--color-accent)]">
+              <p class="flex items-center gap-2.5 font-bold"><span class="avatar !size-8 !text-xs">{{ review.user|initials }}</span> {{ review.user.get_full_name }}</p>
+              <p class="text-sm text-[color:var(--color-sun-500)]">
                 {% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}<span class="text-[color:var(--color-line-strong)]">★</span>{% endif %}{% endfor %}
               </p>
             </div>
@@ -76,7 +76,7 @@
             <p class="help mt-2">{{ review.created_at|date:"d.m.Y" }}</p>
           </div>
         {% empty %}
-          {% include "ui/_empty.html" with icon="inbox" title="Hali sharh yo'q" text="Birinchi bo'lib fikringizni qoldiring." %}
+          {% include "ui/_empty.html" with icon="star" title="Hali sharh yo'q" text="Birinchi bo'lib fikringizni qoldiring." %}
         {% endfor %}
       </div>
     </div>

@@ -1,18 +1,18 @@
-{% comment %}Fan ro'yxati kartasi.{% endcomment %}
-<a href="{{ reserve.get_absolute_url }}" class="card card-hover flex flex-col gap-2 p-4">
-  <div class="flex items-start justify-between gap-3">
-    <p class="font-display text-base leading-snug">{{ reserve.course_name }}</p>
+{% comment %}Fan ro'yxati kartasi. Kirish: `reserve`.{% endcomment %}
+<a href="{{ reserve.get_absolute_url }}" class="card card-hover group flex flex-col gap-3 p-5">
+  <span class="flex items-start justify-between gap-3">
+    <span class="icon-box icon-box-plum transition-transform duration-300 group-hover:-rotate-6">{% include "ui/_icon.html" with name="graduation" class="size-5.5" %}</span>
     {% if not reserve.is_active %}
       {% include "ui/_badge.html" with text="Yopilgan" variant="neutral" %}
     {% elif reserve.semester %}
       <span class="badge badge-info">{{ reserve.semester }}-semestr</span>
     {% endif %}
-  </div>
-  <p class="help">
-    {% if reserve.teacher %}{{ reserve.teacher.get_full_name }}{% else %}O'qituvchi ko'rsatilmagan{% endif %}
-  </p>
-  <p class="help">{{ reserve.faculty|default:"Barcha fakultetlar" }}</p>
-  <p class="help mt-auto">
-    {{ reserve.books_count }} ta adabiyot{% if reserve.required_count %} · {{ reserve.required_count }} tasi asosiy{% endif %}
-  </p>
+  </span>
+  <span class="font-display text-lg font-semibold leading-snug">{{ reserve.course_name }}</span>
+  <span class="help flex items-center gap-1.5">{% include "ui/_icon.html" with name="user" class="size-3.5" %} {% if reserve.teacher %}{{ reserve.teacher.get_full_name }}{% else %}O'qituvchi ko'rsatilmagan{% endif %}</span>
+  <span class="help flex items-center gap-1.5">{% include "ui/_icon.html" with name="building" class="size-3.5" %} {{ reserve.faculty|default:"Barcha fakultetlar" }}</span>
+  <span class="mt-auto flex items-center justify-between border-t border-[color:var(--color-line)] pt-3 text-xs font-bold text-[color:var(--color-content-muted)]">
+    <span>{{ reserve.books_count }} ta adabiyot{% if reserve.required_count %} · {{ reserve.required_count }} tasi asosiy{% endif %}</span>
+    <span class="text-[color:var(--color-link)] transition-transform duration-300 group-hover:translate-x-1">{% include "ui/_icon.html" with name="arrow-right" class="size-4" %}</span>
+  </span>
 </a>

@@ -1,0 +1,13 @@
+{% comment %}Qo'ldagi bitta kitob: muqova, muddat, qolgan kun. Kirish: `rental`.{% endcomment %}
+<a href="{% url 'book_app:student_book_detail' rental.copy.book_id %}" class="card card-hover flex items-center gap-4 p-3.5 sm:p-4">
+  <span class="w-14 flex-none">{% include "ui/_cover.html" with book=rental.copy.book cover_class="cover-xs" %}</span>
+  <span class="min-w-0 flex-1">
+    <span class="line-clamp-2 block font-bold leading-snug">{{ rental.copy.book.title }}</span>
+    <span class="help mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+      <span class="inline-flex items-center gap-1">{% include "ui/_icon.html" with name="barcode" class="size-3.5" %} {{ rental.copy.barcode|default:rental.copy.inventory_number }}</span>
+      <span class="inline-flex items-center gap-1">{% include "ui/_icon.html" with name="calendar" class="size-3.5" %} {{ rental.due_date|date:"d.m.Y"|default:"muddatsiz" }}</span>
+    </span>
+    <span class="mt-2 block sm:hidden">{% include "opac/_due_badge.html" %}</span>
+  </span>
+  <span class="max-sm:hidden">{% include "opac/_due_badge.html" %}</span>
+</a>

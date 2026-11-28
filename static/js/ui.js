@@ -2,11 +2,17 @@
    XIU Library — umumiy UI xatti-harakati (v3)
    Ikki qiyofada ham ishlaydi: OPAC va Staff.
 
+   Imkoniyatlar (qo'shimcha): mavzu tanlash, katalog ko'rinishi, yuqoriga qaytish.
+
    Imkoniyatlar:
      1. HTMX yuqori progress chizig'i
      2. toast("Matn", "success") — JS'dan yoki HTMX javobidan (HX-Trigger)
      3. Klaviatura: "/" yoki Ctrl+K — global qidiruv (staff panelida)
      4. data-confirm="..." — xavfli amal oldidan tasdiq
+     5. data-reveal — ko'rinishga kirganda ochilish
+     6. data-count="N" — sonlar sanab chiqiladi
+     7. .site-header — aylantirilganda soya
+     8. data-rail — gorizontal lentani tugma bilan surish
 =========================================================================== */
 (function () {
   'use strict';
@@ -82,13 +88,189 @@
     }
   });
 
+  /* --- 5. Reveal ------------------------------------------------------- */
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const canObserve = 'IntersectionObserver' in window;
+
+  const settle = (el) => {
+    // Ochilib bo'lgach atribut olib tashlanadi — hover transformlari erkin qoladi
+    const done = (event) => {
+      if (event && event.target !== el) return;
+      el.removeAttribute('data-reveal');
+      el.classList.remove('is-in');
+      el.removeEventListener('transitionend', done);
+    };
+    el.addEventListener('transitionend', done);
+    window.setTimeout(done, 1800);
+  };
+
+  const revealer = canObserve && new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      revealer.unobserve(entry.target);
+      entry.target.classList.add('is-in');
+      settle(entry.target);
+    });
+  }, { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+
+  /* --- 6. Sanagich ----------------------------------------------------- */
+  const format = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+
+  const countUp = (el) => {
+    const target = parseInt(el.dataset.count, 10);
+    if (!Number.isFinite(target) || reducedMotion) return;
+    const duration = 1400;
+    let start = null;
+    const step = (time) => {
+      start = start || time;
+      const t = Math.min((time - start) / duration, 1);
+      el.textContent = format(target * (1 - Math.pow(1 - t, 4)));
+      if (t < 1) window.requestAnimationFrame(step);
+    };
+    el.textContent = '0';
+    window.requestAnimationFrame(step);
+    // Yashirin tabda rAF to'xtaydi — son baribir to'g'ri qolsin
+    window.setTimeout(() => { el.textContent = format(target); }, duration + 300);
+  };
+
+  const counter = canObserve && new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      counter.unobserve(entry.target);
+      countUp(entry.target);
+    });
+  }, { threshold: 0.4 });
+
+  function enhance(root) {
+    root.querySelectorAll('[data-reveal]').forEach((el) => {
+      if (revealer) revealer.observe(el); else el.removeAttribute('data-reveal');
+    });
+    if (counter) root.querySelectorAll('[data-count]').forEach((el) => counter.observe(el));
+  }
+
+  enhance(document);
+  document.body.addEventListener('htmx:afterSettle', (event) => enhance(event.target.parentElement || document));
+  window.__uiReady = true;
+
+  /* --- 7. Header soyasi ------------------------------------------------ */
+  const header = document.querySelector('.site-header');
+  if (header) {
+    const sync = () => header.classList.toggle('is-scrolled', window.scrollY > 8);
+    window.addEventListener('scroll', sync, { passive: true });
+    sync();
+  }
+
+  /* --- 8. Lenta tugmalari: data-rail="ID" data-dir="1|-1" -------------- */
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-rail]');
+    if (!button) return;
+    const rail = document.getElementById(button.dataset.rail);
+    if (rail) rail.scrollBy({ left: Number(button.dataset.dir || 1) * rail.clientWidth * 0.8 });
+  });
+
+  /* --- Mehmon himoyalangan havolani bossa — kirish oynasi -------------- */
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('[data-login]')) return;
+    event.preventDefault();
+    window.dispatchEvent(new CustomEvent('open-login'));
+  });
+
   /* --- 4. Tasdiq (data-confirm) ---------------------------------------- */
+  const askConfirm = (message, label) => new Promise((resolve) => {
+    if (typeof HTMLDialogElement !== 'function') { resolve(window.confirm(message)); return; }
+    const dialog = document.createElement('dialog');
+    dialog.className = 'confirm';
+    dialog.innerHTML = '<span class="icon-box icon-box-lg icon-box-danger">'
+      + '<svg viewBox="0 0 24 24" class="size-7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+      + '<path d="M10.3 4.5 2.8 17.5a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.5a2 2 0 0 0-3.4 0Z"/><path d="M12 9.500v4M12 17v.01"/></svg></span>'
+      + '<p class="mt-4 text-base font-bold" data-text></p>'
+      + '<div class="confirm-actions">'
+      + '<button type="button" class="btn btn-secondary" value="no">Bekor qilish</button>'
+      + '<button type="button" class="btn btn-danger" value="yes"></button></div>';
+    dialog.querySelector('[data-text]').textContent = message;   // XSS'dan himoya
+    dialog.querySelector('[value="yes"]').textContent = label || 'Tasdiqlash';
+    const close = (answer) => { dialog.close(); dialog.remove(); resolve(answer); };
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) close(false);
+      const button = event.target.closest('button');
+      if (button) close(button.value === 'yes');
+    });
+    dialog.addEventListener('cancel', (event) => { event.preventDefault(); close(false); });
+    document.body.appendChild(dialog);
+    dialog.showModal();
+    dialog.querySelector('[value="no"]').focus();
+  });
+
   document.body.addEventListener('click', (event) => {
     const trigger = event.target.closest('[data-confirm]');
-    if (!trigger) return;
-    if (!window.confirm(trigger.getAttribute('data-confirm'))) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
+    if (!trigger || trigger.dataset.confirmed) return;
+    event.preventDefault();
+    event.stopPropagation();
+    askConfirm(trigger.getAttribute('data-confirm'), trigger.dataset.confirmLabel).then((ok) => {
+      if (!ok) return;
+      trigger.dataset.confirmed = '1';
+      trigger.click();                       // forma yuborilishi yoki HTMX so'rovi
+      delete trigger.dataset.confirmed;
+    });
   }, true);
+
+  /* --- 10. Mavzu: yorug' / tungi / tizimcha ----------------------------- */
+  const root = document.documentElement;
+  const darkMedia = window.matchMedia('(prefers-color-scheme: dark)');
+
+  const paintCharts = () => {
+    if (!window.Chart) return;
+    const styles = getComputedStyle(root);
+    window.Chart.defaults.color = styles.getPropertyValue('--color-content-muted').trim();
+    window.Chart.defaults.borderColor = styles.getPropertyValue('--color-line').trim();
+    Object.values(window.Chart.instances || {}).forEach((chart) => chart.update());
+  };
+
+  const applyTheme = (choice, animate) => {
+    const dark = choice === 'dark' || (choice === 'system' && darkMedia.matches);
+    const paint = () => {
+      root.setAttribute('data-theme', dark ? 'dark' : 'light');
+      root.setAttribute('data-theme-choice', choice);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', dark ? '#0b1312' : '#0f524a');
+      paintCharts();
+    };
+    if (animate && !reducedMotion && document.startViewTransition) document.startViewTransition(paint);
+    else paint();
+  };
+
+  applyTheme(root.getAttribute('data-theme-choice') || 'system');
+  darkMedia.addEventListener('change', () => {
+    if (root.getAttribute('data-theme-choice') === 'system') applyTheme('system', true);
+  });
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'xiu-theme') applyTheme(event.newValue || 'system');
+  });
+
+  const remember = (key, value) => {
+    try { window.localStorage.setItem(key, value); } catch (e) { /* saqlanmasa ham ishlaydi */ }
+  };
+
+  document.addEventListener('click', (event) => {
+    const theme = event.target.closest('[data-theme-set]');
+    if (theme) {
+      remember('xiu-theme', theme.dataset.themeSet);
+      applyTheme(theme.dataset.themeSet, true);
+    }
+    /* --- 11. Katalog ko'rinishi: to'r / ro'yxat --- */
+    const view = event.target.closest('[data-view-set]');
+    if (view) {
+      remember('xiu-view', view.dataset.viewSet);
+      root.setAttribute('data-view', view.dataset.viewSet);
+    }
+  });
+
+  /* --- 12. Yuqoriga qaytish -------------------------------------------- */
+  const toTop = document.querySelector('[data-to-top]');
+  if (toTop) {
+    const sync = () => toTop.classList.toggle('show', window.scrollY > 700);
+    window.addEventListener('scroll', sync, { passive: true });
+    toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }));
+    sync();
+  }
 })();

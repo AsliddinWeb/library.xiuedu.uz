@@ -3,14 +3,14 @@
 <section class="mt-10" x-data="{ copied: false }">
   <div class="flex flex-wrap items-end justify-between gap-3">
     <div>
-      <h2 class="font-display text-xl">Adabiyotlar ro'yxati</h2>
+      <h2 class="text-xl">Adabiyotlar ro'yxati</h2>
       <p class="page-sub">Referat, kurs ishi yoki silabus uchun tayyor bibliografik tavsif.</p>
     </div>
     <button type="button" class="btn btn-secondary btn-sm"
             @click="navigator.clipboard.writeText(
                       Array.from($refs.list.children).map((li, i) => (i + 1) + '. ' + li.innerText.trim()).join('\n'));
                     copied = true; toast('Ro\'yxat nusxalandi', 'success'); setTimeout(() => copied = false, 2000)">
-      {% include "ui/_icon.html" with name="check" class="size-4" %}
+      {% include "ui/_icon.html" with name="copy" class="size-4" %}
       <span x-text="copied ? 'Nusxalandi' : 'Nusxalash'">Nusxalash</span>
     </button>
   </div>

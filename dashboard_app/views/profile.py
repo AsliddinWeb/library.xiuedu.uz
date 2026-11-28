@@ -4,17 +4,21 @@ from django.shortcuts import render
 from book_app.models import Rental
 from engagement.models import Favorite, Review
 from reading.models import ReadingHistory
+from user_app.services import get_or_create_patron
 
 
 @login_required
 def profile(request):
     student = getattr(request.user, 'student_profile', None)
-    stats = {}
-    if student is not None:
-        stats = {
-            'rentals': Rental.objects.filter(patron__user=request.user).count(),
-            'favorites': Favorite.objects.filter(user=request.user).count(),
-            'reviews': Review.objects.filter(user=request.user).count(),
-            'reads': ReadingHistory.objects.filter(user=request.user).count(),
-        }
-    return render(request, 'student/profile.html', {'student': student, 'stats': stats})
+    # Talaba ham, xodim ham a'zo — ko'rsatkichlar ikkalasi uchun
+    stats = {
+        'rentals': Rental.objects.filter(patron__user=request.user).count(),
+        'favorites': Favorite.objects.filter(user=request.user).count(),
+        'reviews': Review.objects.filter(user=request.user).count(),
+        'reads': ReadingHistory.objects.filter(user=request.user).count(),
+    }
+    return render(request, 'student/profile.html', {
+        'student': student,
+        'stats': stats,
+        'patron': get_or_create_patron(request.user),
+    })

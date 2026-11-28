@@ -10,7 +10,7 @@
   </p>
   <div class="pager-links">
     {% if page_obj.has_previous %}
-      <a class="pager-link" {% if hx_get %}hx-get="{{ hx_get }}?page={{ page_obj.previous_page_number }}{{ query }}" hx-target="{{ hx_target }}"{% else %}href="?page={{ page_obj.previous_page_number }}{{ query }}"{% endif %}>
+      <a class="pager-link" {% if hx_get %}hx-get="{{ hx_get }}?page={{ page_obj.previous_page_number }}{{ query }}" hx-target="{{ hx_target }}" hx-swap="innerHTML show:top" hx-push-url="true"{% else %}href="?page={{ page_obj.previous_page_number }}{{ query }}"{% endif %}>
         {% include "ui/_icon.html" with name="chevron-left" class="size-4" %}
       </a>
     {% else %}
@@ -21,12 +21,12 @@
       {% if num == page_obj.number %}
         <span class="pager-link pager-link-active">{{ num }}</span>
       {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
-        <a class="pager-link" {% if hx_get %}hx-get="{{ hx_get }}?page={{ num }}{{ query }}" hx-target="{{ hx_target }}"{% else %}href="?page={{ num }}{{ query }}"{% endif %}>{{ num }}</a>
+        <a class="pager-link" {% if hx_get %}hx-get="{{ hx_get }}?page={{ num }}{{ query }}" hx-target="{{ hx_target }}" hx-swap="innerHTML show:top" hx-push-url="true"{% else %}href="?page={{ num }}{{ query }}"{% endif %}>{{ num }}</a>
       {% endif %}
     {% endfor %}
 
     {% if page_obj.has_next %}
-      <a class="pager-link" {% if hx_get %}hx-get="{{ hx_get }}?page={{ page_obj.next_page_number }}{{ query }}" hx-target="{{ hx_target }}"{% else %}href="?page={{ page_obj.next_page_number }}{{ query }}"{% endif %}>
+      <a class="pager-link" {% if hx_get %}hx-get="{{ hx_get }}?page={{ page_obj.next_page_number }}{{ query }}" hx-target="{{ hx_target }}" hx-swap="innerHTML show:top" hx-push-url="true"{% else %}href="?page={{ page_obj.next_page_number }}{{ query }}"{% endif %}>
         {% include "ui/_icon.html" with name="chevron-right" class="size-4" %}
       </a>
     {% else %}

@@ -17,6 +17,9 @@
 /* Dizayn tizimi */
 @import "./tokens.css";
 @import "./components.css";
+@import "./motion.css";
+@import "./site.css";
+@import "./dark.css";
 
 /* ===========================================================================
    ESKI (v2) YORDAMCHILAR — hali ko'chirilmagan sahifalar uchun.
@@ -24,13 +27,6 @@
    ko'chgandan keyin bu blok va `tokens.css`dagi v2 palitra o'chiriladi.
 =========================================================================== */
 @layer components {
-  /* `.rule-accent` ning eski nomi */
-  .gold-rule {
-    height: 2px;
-    width: 3rem;
-    background: linear-gradient(90deg, var(--color-gold-400), transparent);
-  }
-
   /* v2 sahifalaridagi o'chirilgan tugma ko'rinishi */
-  button:disabled, select:disabled, [disabled] { opacity: .55; cursor: wait; }
+  button:disabled, select:disabled, [disabled] { opacity: .55; cursor: not-allowed; }
 }

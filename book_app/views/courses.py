@@ -78,7 +78,7 @@ def course_detail(request, pk):
         raise Http404
 
     items = list(reserve.items
-                 .select_related('book__publisher', 'book__series')
+                 .select_related('book__category', 'book__publisher', 'book__series')
                  .prefetch_related('book__authors'))
     required = CourseReserveItem.Importance.REQUIRED
     groups = [

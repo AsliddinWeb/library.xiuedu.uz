@@ -1,95 +1,124 @@
-{% comment %}
-  OPAC navbar (v3): logo + qidiruv + havolalar + bildirishnoma + profil.
-  Mobilda qidiruv pastga tushadi, havolalar menyuga yig'iladi.
+{% load ui_extras %}{% comment %}
+  OPAC header: logo · asosiy menyu · qidiruv paneli · bildirishnoma · profil.
+  Telefonda asosiy menyu pastki panelga (`_opac_tabbar.html`) ko'chadi.
+  "/" tugmasi qidiruvni ochadi.
 {% endcomment %}
-<header x-data="{ menu: false }"
-        class="sticky top-0 z-30 border-b border-[color:var(--color-line)] bg-[color:var(--color-surface-raised)]/95 backdrop-blur">
-  <div class="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+{% with page=request.resolver_match.url_name space=request.resolver_match.namespace %}
+<header class="site-header"
+        x-data="{ search: false }"
+        @keydown.escape.window="search = false"
+        @keydown.window="if ($event.key === '/' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) { $event.preventDefault(); search = true; $nextTick(() => $refs.q.focus()) }">
+  <div class="container-page site-header-row">
 
-    {# Logo #}
-    <a href="/" class="flex items-center gap-2.5 font-display text-lg leading-none">
-      <span class="text-[color:var(--color-brand)]">{% include "ui/_icon.html" with name="library" class="size-6" %}</span>
-      <span class="hidden sm:inline">XIU <span class="text-[color:var(--color-content-muted)]">Kutubxona</span></span>
-    </a>
+    {% include "layouts/v3/_brand.html" %}
 
-    {# Qidiruv — markazda, eng ko'p ishlatiladigan element #}
-    <form action="{% url 'book_app:student_book_list' %}" method="get" class="hidden flex-1 md:block">
-      <label class="search mx-auto max-w-xl">
-        <span class="text-[color:var(--color-content-subtle)]">{% include "ui/_icon.html" with name="search" class="size-4" %}</span>
-        <input type="search" name="q" value="{{ request.GET.q|default:'' }}"
-               placeholder="Kitob, muallif yoki mavzu..." aria-label="Katalogdan qidirish">
-      </label>
-    </form>
+    <nav class="site-nav ml-4" aria-label="Asosiy menyu">
+      <a href="{% url 'book_app:student_book_list' %}" class="site-nav-link"
+         {% if page == 'student_book_list' or page == 'student_book_detail' %}aria-current="page"{% endif %}>
+        {% include "ui/_icon.html" with name="library" class="size-4.5" %} Katalog
+      </a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'book_app:course_list' %}" class="site-nav-link"
+           {% if page|slice:":6" == 'course' %}aria-current="page"{% endif %}>
+          {% include "ui/_icon.html" with name="graduation" class="size-4.5" %} Fan adabiyoti
+        </a>
+        <a href="{% url 'engagement:shelf_list' %}" class="site-nav-link"
+           {% if page|slice:":5" == 'shelf' %}aria-current="page"{% endif %}>
+          {% include "ui/_icon.html" with name="bookmark" class="size-4.5" %} Ro'yxatlar
+        </a>
+        <a href="{% url 'dashboard' %}" class="site-nav-link"
+           {% if page == 'dashboard' %}aria-current="page"{% endif %}>
+          {% include "ui/_icon.html" with name="grid" class="size-4.5" %} Kabinet
+        </a>
+      {% else %}
+        <a href="/#imkoniyatlar" class="site-nav-link">{% include "ui/_icon.html" with name="sparkles" class="size-4.5" %} Imkoniyatlar</a>
+        <a href="/#qanday" class="site-nav-link">{% include "ui/_icon.html" with name="lightbulb" class="size-4.5" %} Qanday ishlaydi</a>
+      {% endif %}
+    </nav>
 
-    <div class="ml-auto flex items-center gap-1">
-      <a href="{% url 'book_app:student_book_list' %}" class="btn btn-ghost btn-sm hidden sm:inline-flex">Katalog</a>
+    <div class="ml-auto flex items-center gap-1 sm:gap-1.5">
+      <button type="button" class="btn btn-ghost btn-icon xl:hidden{% if not user.is_authenticated %} max-sm:hidden{% endif %}" aria-label="Qidirish" data-tip="Qidirish" :aria-expanded="search"
+              @click="search = !search; if (search) $nextTick(() => $refs.q.focus())">
+        {% include "ui/_icon.html" with name="search" class="size-5" %}
+      </button>
+      <button type="button" class="search hidden w-60 cursor-text text-left text-[color:var(--color-content-subtle)] xl:flex"
+              @click="search = true; $nextTick(() => $refs.q.focus())">
+        {% include "ui/_icon.html" with name="search" class="size-4" %}
+        <span class="flex-1 text-sm">Kitob qidirish…</span>
+        <span class="kbd">/</span>
+      </button>
 
       {% if user.is_authenticated %}
-        <a href="{% url 'book_app:course_list' %}" class="btn btn-ghost btn-sm hidden lg:inline-flex">Fan adabiyoti</a>
-        <a href="/dashboard/" class="btn btn-ghost btn-sm hidden sm:inline-flex">Kabinet</a>
-
-        {# Bildirishnoma #}
-        <div x-data="{ open: false }" class="relative">
-          <button type="button" class="btn btn-ghost btn-icon btn-sm relative" @click="open = !open"
-                  hx-get="{% url 'notifications:dropdown' %}" hx-target="#opac-notif" hx-trigger="click once"
-                  aria-label="Bildirishnomalar">
-            {% include "ui/_icon.html" with name="bell" class="size-5" %}
-            {% if unread_notifications %}
-              <span class="absolute right-1 top-1 size-2 rounded-full bg-[color:var(--color-accent)]"></span>
-            {% endif %}
+        {% include "ui/_theme_toggle.html" with class="max-sm:hidden" %}
+        {# --- Bildirishnoma --- #}
+        <div x-data="{ open: false }" class="sm:relative">
+          <button type="button" class="btn btn-ghost btn-icon relative" aria-label="Bildirishnomalar" data-tip="Bildirishnomalar" :aria-expanded="open"
+                  @click="open = !open"
+                  hx-get="{% url 'notifications:dropdown' %}" hx-target="#opac-notif" hx-trigger="click">
+            <span {% if unread_notifications %}class="bell-ring"{% endif %}>{% include "ui/_icon.html" with name="bell" class="size-5" %}</span>
+            {% if unread_notifications %}<span class="count-dot">{% if unread_notifications > 9 %}9+{% else %}{{ unread_notifications }}{% endif %}</span>{% endif %}
           </button>
-          <div x-show="open" x-cloak @click.outside="open = false"
-               class="card absolute right-0 mt-2 w-80 overflow-hidden shadow-[var(--shadow-md)]">
-            <div id="opac-notif" class="max-h-96 overflow-y-auto">
-              <div class="empty"><p class="empty-text">Yuklanmoqda...</p></div>
-            </div>
+          <div x-show="open" x-cloak @click.outside="open = false" @keydown.escape.window="open = false"
+               class="menu-panel overflow-hidden !py-0 max-sm:!fixed max-sm:!inset-x-3 max-sm:!top-[4.5rem] max-sm:!w-auto sm:!w-96">
+            <div id="opac-notif" data-notif-panel><div class="space-y-3 p-4"><div class="skeleton h-12"></div><div class="skeleton h-12"></div></div></div>
           </div>
         </div>
 
-        {# Profil #}
+        {# --- Profil --- #}
         <div x-data="{ open: false }" class="relative">
-          <button type="button" class="btn btn-ghost btn-sm gap-2" @click="open = !open">
-            {% include "ui/_icon.html" with name="user" class="size-5" %}
-            <span class="hidden max-w-32 truncate lg:inline">{{ user.get_full_name }}</span>
-            {% include "ui/_icon.html" with name="chevron-down" class="size-3.5" %}
+          <button type="button" class="flex items-center gap-2 rounded-[var(--radius-md)] p-0.5 transition-transform active:scale-95"
+                  @click="open = !open" :aria-expanded="open" aria-label="Profil menyusi">
+            <span class="avatar">{% if user.image %}<img src="{{ user.image.url }}" alt="">{% else %}{{ user|initials }}{% endif %}</span>
+            <span class="hidden text-[color:var(--color-content-subtle)] sm:block">{% include "ui/_icon.html" with name="chevron-down" class="size-4" %}</span>
           </button>
-          <div x-show="open" x-cloak @click.outside="open = false"
-               class="card absolute right-0 mt-2 w-56 overflow-hidden py-1 shadow-[var(--shadow-md)]">
-            <a href="/dashboard/" class="nav-item">Kabinet</a>
-            <a href="/circulation/my-rentals/" class="nav-item">Ijaralarim</a>
-            <a href="/engagement/my-library/" class="nav-item">Kutubxonam</a>
-            <a href="{% url 'engagement:shelf_list' %}" class="nav-item">Ro'yxatlar</a>
-            <a href="{% url 'book_app:course_list' %}" class="nav-item">Fan adabiyoti</a>
-            <a href="/profil/" class="nav-item">Profil</a>
-            <div class="my-1 border-t border-[color:var(--color-line)]"></div>
-            <a href="{% url 'logout' %}" class="nav-item text-[color:var(--color-danger-700)]">Chiqish</a>
+          <div x-show="open" x-cloak @click.outside="open = false" @keydown.escape.window="open = false" class="menu-panel">
+            <div class="flex items-center gap-3 px-4 pb-3 pt-2">
+              <span class="avatar">{% if user.image %}<img src="{{ user.image.url }}" alt="">{% else %}{{ user|initials }}{% endif %}</span>
+              <span class="min-w-0">
+                <span class="block truncate text-sm font-bold">{{ user.get_full_name }}</span>
+                <span class="block text-xs text-[color:var(--color-content-subtle)]">{{ user.get_user_type_display }}</span>
+              </span>
+            </div>
+            <div class="menu-sep"></div>
+            <a href="{% url 'dashboard' %}" class="nav-item">{% include "ui/_icon.html" with name="grid" class="size-4.5" %} Kabinet</a>
+            <a href="{% url 'circulation:my_rentals' %}" class="nav-item">{% include "ui/_icon.html" with name="history" class="size-4.5" %} Ijaralarim</a>
+            <a href="{% url 'engagement:my_library' %}" class="nav-item">{% include "ui/_icon.html" with name="heart" class="size-4.5" %} Kutubxonam</a>
+            <a href="{% url 'engagement:shelf_list' %}" class="nav-item">{% include "ui/_icon.html" with name="bookmark" class="size-4.5" %} Ro'yxatlar</a>
+            <a href="{% url 'book_app:course_list' %}" class="nav-item">{% include "ui/_icon.html" with name="graduation" class="size-4.5" %} Fan adabiyoti</a>
+            <a href="{% url 'profile' %}" class="nav-item">{% include "ui/_icon.html" with name="user" class="size-4.5" %} Profil</a>
+            {% if lib_stats %}
+              <div class="menu-sep"></div>
+              <a href="/panel/" class="nav-item">{% include "ui/_icon.html" with name="chart" class="size-4.5" %} Kutubxonachi paneli</a>
+            {% endif %}
+            <div class="menu-sep"></div>
+            <div class="px-3 py-1.5 sm:hidden">{% include "ui/_theme_segment.html" %}</div>
+            <a href="{% url 'logout' %}" class="nav-item !text-[color:var(--color-danger-700)]">{% include "ui/_icon.html" with name="logout" class="size-4.5" %} Chiqish</a>
           </div>
         </div>
       {% else %}
-        <a href="{% url 'student_login' %}" class="btn btn-primary btn-sm">Kirish</a>
+        {% include "ui/_theme_toggle.html" %}
+        <a href="{% url 'student_login' %}" class="btn btn-primary btn-pill header-cta" @click.prevent="$dispatch('open-login')">
+          {% include "ui/_icon.html" with name="login" class="size-4.5" %} Kirish
+        </a>
       {% endif %}
-
-      <button type="button" class="btn btn-ghost btn-icon btn-sm md:hidden" @click="menu = !menu" aria-label="Menyu">
-        {% include "ui/_icon.html" with name="menu" class="size-5" %}
-      </button>
     </div>
   </div>
 
-  {# Mobil: qidiruv + havolalar #}
-  <div x-show="menu" x-cloak class="border-t border-[color:var(--color-line)] px-4 py-3 md:hidden">
-    <form action="{% url 'book_app:student_book_list' %}" method="get">
-      <label class="search">
-        <span class="text-[color:var(--color-content-subtle)]">{% include "ui/_icon.html" with name="search" class="size-4" %}</span>
-        <input type="search" name="q" placeholder="Kitob yoki muallif..." aria-label="Qidirish">
-      </label>
-    </form>
-    <div class="mt-2 flex flex-col">
-      <a href="{% url 'book_app:student_book_list' %}" class="nav-item">Katalog</a>
-      {% if user.is_authenticated %}
-        <a href="/dashboard/" class="nav-item">Kabinet</a>
-        <a href="{% url 'book_app:course_list' %}" class="nav-item">Fan adabiyoti</a>
-        <a href="{% url 'engagement:shelf_list' %}" class="nav-item">Ro'yxatlar</a>
-      {% endif %}
+  {# --- Qidiruv paneli --- #}
+  <div x-show="search" x-cloak
+       x-transition:enter="transition duration-200 ease-out" x-transition:enter-start="-translate-y-2 opacity-0"
+       x-transition:leave="transition duration-150 ease-in" x-transition:leave-end="-translate-y-2 opacity-0"
+       @click.outside="search = false"
+       class="absolute inset-x-0 top-full border-y border-[color:var(--color-line)] bg-[color:var(--color-surface-raised)] shadow-[var(--shadow-lg)]">
+    <div class="container-page container-narrow py-4">
+      <form action="{% url 'book_app:student_book_list' %}" method="get" class="hero-search">
+        <span class="text-[color:var(--color-content-subtle)]">{% include "ui/_icon.html" with name="search" class="size-5" %}</span>
+        <input x-ref="q" type="search" name="q" value="{{ request.GET.q|default:'' }}" autocomplete="off"
+               placeholder="Kitob, muallif, mavzu yoki ISBN…" aria-label="Katalogdan qidirish">
+        <button type="submit" class="btn btn-primary btn-pill">Qidirish</button>
+      </form>
+      <p class="mt-2.5 text-center text-xs text-[color:var(--color-content-subtle)]">Kirill yoki lotin — farqi yo'q. Xato yozilsa ham topiladi.</p>
     </div>
   </div>
 </header>
+{% endwith %}

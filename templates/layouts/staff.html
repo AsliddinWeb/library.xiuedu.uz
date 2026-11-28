@@ -20,8 +20,11 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..700&family=Plus+Jakarta+Sans:wght@400..800&display=swap" rel="stylesheet">
 
+    <meta name="theme-color" content="#0f524a">
+    <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}">
+    {% include "ui/_theme_init.html" %}
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     {% block extra_head %}{% endblock %}
 </head>
@@ -34,8 +37,8 @@
     <div class="flex h-full">
         {# --- Sidebar: desktopda doimiy, mobilda drawer --- #}
         <div x-show="nav" x-cloak @click="nav = false" class="overlay lg:hidden"></div>
-        <aside :class="nav ? 'translate-x-0' : '-translate-x-full'"
-               class="shell-sidebar fixed inset-y-0 left-0 z-40 transform overflow-y-auto transition-transform duration-200 lg:static lg:translate-x-0">
+        <aside :class="nav && '!translate-x-0'"
+               class="shell-sidebar fixed inset-y-0 left-0 z-40 -translate-x-full overflow-y-auto transition-transform duration-300 ease-[var(--ease-out-soft)] lg:static lg:translate-x-0">
             {% block sidebar %}{% include "layouts/v3/_staff_sidebar.html" %}{% endblock %}
         </aside>
 

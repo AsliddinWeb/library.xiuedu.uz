@@ -33,6 +33,8 @@ def mark_read(request, pk):
 @login_required
 def read_all(request):
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    if not getattr(request, 'htmx', False):          # ro'yxat sahifasidagi oddiy forma
+        return redirect('notifications:list')
     items = Notification.objects.filter(user=request.user)[:8]
     return render(request, 'notifications/partials/_dropdown.html',
                   {'items': items, 'unread': 0})

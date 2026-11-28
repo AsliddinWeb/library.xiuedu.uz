@@ -47,3 +47,53 @@ class ShellTemplateTests(TestCase):
                       render_to_string('ui/_stat.html', {'label': 'Ijara', 'value': 5}))
         self.assertIn('empty-title', render_to_string('ui/_empty.html', {'title': "Bo'sh"}))
         self.assertIn('<svg', render_to_string('ui/_icon.html', {'name': 'search'}))
+
+
+class UiFilterTests(TestCase):
+    """Interfeys filtrlari (`ui_extras`)."""
+
+    def test_genre_icon_works_for_latin_and_cyrillic(self):
+        from book_app.templatetags.ui_extras import genre_icon
+
+        self.assertEqual(genre_icon("Iqtisodiyot"), 'trending')
+        self.assertEqual(genre_icon("Иқтисодиёт"), 'trending')
+        self.assertEqual(genre_icon("Axborot texnologiyalari"), 'code')
+        self.assertEqual(genre_icon("Noma'lum bo'lim"), 'book-open')
+        self.assertEqual(genre_icon(""), 'book-open')
+
+    def test_cover_tone_is_stable_and_in_range(self):
+        from book_app.templatetags.ui_extras import COVER_TONES, cover_tone
+        from core.testing import make_book
+
+        book = make_book()
+        self.assertEqual(cover_tone(book), cover_tone(book))
+        self.assertIn(cover_tone(book), range(COVER_TONES))
+
+    def test_initials_and_spaced(self):
+        from book_app.templatetags.ui_extras import initials, spaced
+        from core.testing import make_student
+
+        user = make_student(username='zz-user', first_name='Anvar', second_name='Karimov')
+        self.assertEqual(initials(user), 'KA')
+        self.assertEqual(initials(make_student(username='qx')), 'QX')
+        self.assertEqual(spaced(2392), '2 392')
+
+    def test_every_listed_icon_exists(self):
+        """Noma'lum nom bo'sh doira chizadi — ro'yxatdagi hech biri shunday bo'lmasin."""
+        from core.views import ICONS
+
+        fallback = render_to_string('ui/_icon.html', {'name': 'yoq-ikonka'})
+        for name in ICONS:
+            with self.subTest(name):
+                self.assertNotEqual(render_to_string('ui/_icon.html', {'name': name}), fallback)
+
+
+class ErrorPageTests(TestCase):
+    def test_custom_404_renders(self):
+        with self.settings(DEBUG=False):
+            response = self.client.get('/bunday-sahifa-yoq/')
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(response, "javonda", status_code=404)
+
+    def test_500_template_needs_no_context(self):
+        self.assertIn("500", render_to_string('500.html'))

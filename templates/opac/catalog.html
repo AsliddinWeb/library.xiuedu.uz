@@ -1,57 +1,80 @@
 {% extends "layouts/opac.html" %}
+{% load ui_extras %}
 {% comment %}
   OPAC katalogi — qidiruv va fasetli filtrlar.
   Qidiruv kirill/lotin farqini bilmaydi va xato yozilgan so'zni ham topadi
-  (`book_app/search.py`).
+  (`book_app/search.py`). Telefonda filtrlar tugma orqali ochiladi.
 {% endcomment %}
 
 {% block title %}Katalog — XIU Kutubxona{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+<section class="page-hero">
+  <div class="container-page">
+    <div class="flex items-center gap-3.5">
+      <span class="icon-box max-sm:hidden">{% include "ui/_icon.html" with name="library" class="size-6" %}</span>
+      <div class="enter">
+        <h1>Katalog</h1>
+        <p class="mt-1 text-sm">{{ total|spaced }} ta yozuv · kirill yoki lotin — farqi yo'q, xato yozsangiz ham topiladi</p>
+      </div>
+    </div>
 
-  {# ---------------- Qidiruv ---------------- #}
-  <div class="mx-auto max-w-3xl text-center">
-    <h1 class="font-display text-3xl sm:text-4xl">Katalog</h1>
-    <p class="page-sub mt-2">
-      {{ total }} ta yozuv · kirill yoki lotin — farqi yo'q, xato yozsangiz ham topiladi
-    </p>
-
-    <label class="search mt-6 h-14 text-base">
-      <span class="text-[color:var(--color-content-subtle)]">
-        {% include "ui/_icon.html" with name="search" class="size-5" %}
-      </span>
-      <input type="search" name="q" value="{{ query }}" autocomplete="off" autofocus
-             placeholder="Kitob nomi, muallif, mavzu yoki ISBN..."
+    <label class="enter hero-search mt-5 max-w-3xl text-[color:var(--color-content)]" style="--i:1">
+      <span class="text-[color:var(--color-link)]">{% include "ui/_icon.html" with name="search" class="size-5" %}</span>
+      <input id="catalog-q" type="search" name="q" value="{{ query }}" autocomplete="off"
+             placeholder="Kitob nomi, muallif, mavzu yoki ISBN…" aria-label="Katalogdan qidirish"
              hx-get="{% url 'book_app:student_book_list' %}"
              hx-target="#results" hx-include="#facets"
              hx-trigger="input changed delay:350ms, search"
              hx-push-url="true" hx-indicator="#search-indicator">
-      <span id="search-indicator" class="htmx-indicator text-xs text-[color:var(--color-content-subtle)]">
-        qidirilmoqda…
-      </span>
+      <span id="search-indicator" class="htmx-indicator pr-3 text-xs font-semibold text-[color:var(--color-content-subtle)]">qidirilmoqda…</span>
     </label>
-  </div>
 
-  <div class="mt-8 grid gap-6 lg:grid-cols-[16rem_1fr]">
+    {% if categories %}
+      <div class="enter -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]" style="--i:2">
+        <a href="{% url 'book_app:student_book_list' %}" class="hero-chip flex-none {% if not applied.category %}hero-chip-active{% endif %}">
+          {% include "ui/_icon.html" with name="grid" class="size-3.5" %} Hammasi
+        </a>
+        {% for c in categories %}
+          <a href="{% url 'book_app:student_book_list' %}?category={{ c.id }}"
+             class="hero-chip flex-none {% if applied.category == c.id|stringformat:'s' %}hero-chip-active{% endif %}">
+            {% include "ui/_icon.html" with name=c.name|genre_icon class="size-3.5" %} {{ c.name }}
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<div class="container-page py-6 lg:py-8" x-data="{ filters: false }">
+  <button type="button" class="btn btn-secondary btn-block mb-4 lg:hidden" @click="filters = !filters" :aria-expanded="filters">
+    {% include "ui/_icon.html" with name="sliders" class="size-4.5" %}
+    <span x-text="filters ? 'Filtrlarni yopish' : 'Filtr va saralash'">Filtr va saralash</span>
+    {% if has_filters %}<span class="badge badge-accent">{{ applied|length }}</span>{% endif %}
+  </button>
+
+  <div class="grid items-start gap-6 lg:grid-cols-[17rem_1fr] lg:gap-8">
 
     {# ---------------- Fasetlar ---------------- #}
-    <aside id="facets" class="space-y-5">
+    <aside id="facets" class="card card-body hidden space-y-5 lg:sticky lg:top-24 lg:block lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto"
+           :class="filters && '!block panel-in'">
       <div class="flex items-center justify-between">
-        <p class="text-sm font-semibold">Filtrlar</p>
+        <p class="flex items-center gap-2 text-sm font-bold">
+          <span class="text-[color:var(--color-link)]">{% include "ui/_icon.html" with name="filter" class="size-4.5" %}</span> Filtrlar
+        </p>
         {% if has_filters %}
-          <a href="{% url 'book_app:student_book_list' %}{% if query %}?q={{ query }}{% endif %}"
-             class="text-xs text-[color:var(--color-content-muted)] hover:underline">Tozalash</a>
+          <a href="{% url 'book_app:student_book_list' %}{% if query %}?q={{ query|urlencode }}{% endif %}"
+             class="text-xs font-bold text-[color:var(--color-accent-ink)] hover:underline">Tozalash</a>
         {% endif %}
       </div>
 
-      {% include "opac/_facet_select.html" with name="sort" label="Saralash" options=sorts current=sort plain=1 %}
+      {% include "opac/_facet_select.html" with name="sort" label="Saralash" options=sorts current=sort_choice auto="Avtomatik" %}
 
       <div class="field">
-        <label class="label">Turi</label>
-        <select name="format" class="select"
+        <label class="label" for="facet-format">Turi</label>
+        <select id="facet-format" name="format" class="select"
                 hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
-                hx-include="[name='q'],#facets" hx-trigger="change" hx-push-url="true">
+                hx-include="#catalog-q,#facets" hx-trigger="change" hx-push-url="true">
           <option value="">Hammasi</option>
           {% for value, label in formats.items %}
             <option value="{{ value }}" {% if applied.format == value %}selected{% endif %}>{{ label }}</option>
@@ -59,20 +82,20 @@
         </select>
       </div>
 
-      <label class="check-row">
+      <label class="check-row rounded-[var(--radius-sm)] bg-[color:var(--color-brand-soft)] px-3 py-2.5 font-semibold">
         <input type="checkbox" name="available" value="1" class="checkbox"
                {% if applied.available %}checked{% endif %}
                hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
-               hx-include="[name='q'],#facets" hx-trigger="change" hx-push-url="true">
+               hx-include="#catalog-q,#facets" hx-trigger="change" hx-push-url="true">
         Faqat hozir mavjudlari
       </label>
 
       {% if categories %}
       <div class="field">
-        <label class="label">Katalog</label>
-        <select name="category" class="select"
+        <label class="label" for="facet-category">Katalog</label>
+        <select id="facet-category" name="category" class="select"
                 hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
-                hx-include="[name='q'],#facets" hx-trigger="change" hx-push-url="true">
+                hx-include="#catalog-q,#facets" hx-trigger="change" hx-push-url="true">
           <option value="">Hammasi</option>
           {% for c in categories %}
             <option value="{{ c.id }}" {% if applied.category == c.id|stringformat:'s' %}selected{% endif %}>
@@ -85,10 +108,10 @@
 
       {% if subjects %}
       <div class="field">
-        <label class="label">Mavzu</label>
-        <select name="subject" class="select"
+        <label class="label" for="facet-subject">Mavzu</label>
+        <select id="facet-subject" name="subject" class="select"
                 hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
-                hx-include="[name='q'],#facets" hx-trigger="change" hx-push-url="true">
+                hx-include="#catalog-q,#facets" hx-trigger="change" hx-push-url="true">
           <option value="">Hammasi</option>
           {% for s in subjects %}
             <option value="{{ s.id }}" {% if applied.subject == s.id|stringformat:'s' %}selected{% endif %}>
@@ -101,13 +124,13 @@
 
       {% if languages %}
       <div class="field">
-        <label class="label">Til</label>
-        <select name="language" class="select"
+        <label class="label" for="facet-language">Til</label>
+        <select id="facet-language" name="language" class="select"
                 hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
-                hx-include="[name='q'],#facets" hx-trigger="change" hx-push-url="true">
+                hx-include="#catalog-q,#facets" hx-trigger="change" hx-push-url="true">
           <option value="">Hammasi</option>
           {% for row in languages %}
-            <option value="{{ row.language }}" {% if applied.language == row.language %}selected{% endif %}>
+            <option value="{{ row.language|default:'' }}" {% if applied.language and applied.language == row.language %}selected{% endif %}>
               {{ row.language|default:"—" }} ({{ row.n }})
             </option>
           {% endfor %}
@@ -116,25 +139,25 @@
       {% endif %}
 
       <div class="field">
-        <label class="label">Nashr yili</label>
+        <span class="label">Nashr yili</span>
         <div class="flex items-center gap-2">
           <input type="number" name="year_from" value="{{ applied.year_from|default:'' }}"
-                 placeholder="dan" class="input" min="1800" max="2100"
+                 placeholder="dan" aria-label="Nashr yili, dan" class="input" min="1800" max="2100"
                  hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
-                 hx-include="[name='q'],#facets" hx-trigger="change, keyup changed delay:600ms"
+                 hx-include="#catalog-q,#facets" hx-trigger="change, keyup changed delay:600ms"
                  hx-push-url="true">
           <span class="text-[color:var(--color-content-subtle)]">—</span>
           <input type="number" name="year_to" value="{{ applied.year_to|default:'' }}"
-                 placeholder="gacha" class="input" min="1800" max="2100"
+                 placeholder="gacha" aria-label="Nashr yili, gacha" class="input" min="1800" max="2100"
                  hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
-                 hx-include="[name='q'],#facets" hx-trigger="change, keyup changed delay:600ms"
+                 hx-include="#catalog-q,#facets" hx-trigger="change, keyup changed delay:600ms"
                  hx-push-url="true">
         </div>
       </div>
     </aside>
 
     {# ---------------- Natijalar ---------------- #}
-    <div id="results">
+    <div id="results" class="min-w-0 scroll-mt-24">
       {% include "opac/_results.html" %}
     </div>
   </div>

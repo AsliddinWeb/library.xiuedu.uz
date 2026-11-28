@@ -3,38 +3,39 @@
 {% block title %}{{ reserve.course_name }} — Fan adabiyoti{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-  <nav class="breadcrumb mb-6">
-    <a href="{% url 'book_app:course_list' %}">Fan adabiyoti</a>
-    <span>/</span>
-    <span>{{ reserve.course_name }}</span>
-  </nav>
-
-  <div class="page-head">
-    <div>
-      <h1 class="page-title">{{ reserve.course_name }}</h1>
-      <p class="page-sub">
-        {% if reserve.course_code %}<span class="font-mono">{{ reserve.course_code }}</span> · {% endif %}
-        {% if reserve.teacher %}{{ reserve.teacher.get_full_name }} · {% endif %}
-        {{ reserve.faculty|default:"Barcha fakultetlar" }}
-        {% if reserve.department %} · {{ reserve.department }}{% endif %}
-        {% if reserve.semester %} · {{ reserve.semester }}-semestr{% endif %}
-      </p>
-      {% if reserve.description %}<p class="mt-2 max-w-2xl text-sm">{{ reserve.description|linebreaksbr }}</p>{% endif %}
-    </div>
-    {% if can_edit %}
-      <div class="flex gap-2">
-        <a href="{% url 'book_app:course_edit' reserve.pk %}" class="btn btn-secondary btn-sm">Tahrirlash</a>
-        <form method="post" action="{% url 'book_app:course_delete' reserve.pk %}">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-ghost btn-sm text-[color:var(--color-danger-700)]"
-                  data-confirm="«{{ reserve.course_name }}» ro'yxati o'chirilsinmi? Kitoblarning o'zi o'chmaydi.">
-            O'chirish
-          </button>
-        </form>
+<section class="page-hero">
+  <div class="container-page container-narrow">
+    <nav class="breadcrumb mb-4"><a href="{% url 'book_app:course_list' %}">Fan adabiyoti</a><span>/</span><span>{{ reserve.course_name }}</span></nav>
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="enter flex min-w-0 items-center gap-3.5">
+        <span class="icon-box icon-box-lg max-sm:hidden">{% include "ui/_icon.html" with name="graduation" class="size-7" %}</span>
+        <div class="min-w-0">
+          <h1>{{ reserve.course_name }}</h1>
+          <p class="mt-1.5 flex flex-wrap items-center gap-2">
+            {% if reserve.course_code %}<span class="hero-chip font-mono">{{ reserve.course_code }}</span>{% endif %}
+            {% if reserve.teacher %}<span class="hero-chip">{% include "ui/_icon.html" with name="user" class="size-3.5" %} {{ reserve.teacher.get_full_name }}</span>{% endif %}
+            <span class="hero-chip">{% include "ui/_icon.html" with name="building" class="size-3.5" %} {{ reserve.faculty|default:"Barcha fakultetlar" }}</span>
+            {% if reserve.department %}<span class="hero-chip">{{ reserve.department }}</span>{% endif %}
+            {% if reserve.semester %}<span class="hero-chip">{% include "ui/_icon.html" with name="calendar" class="size-3.5" %} {{ reserve.semester }}-semestr</span>{% endif %}
+          </p>
+          {% if reserve.description %}<p class="mt-2.5 max-w-2xl text-sm">{{ reserve.description|linebreaksbr }}</p>{% endif %}
+        </div>
       </div>
-    {% endif %}
+      <div class="enter flex flex-wrap gap-2" style="--i:1">
+        {% if can_edit %}
+          <a href="{% url 'book_app:course_edit' reserve.pk %}" class="btn btn-light btn-sm btn-pill">{% include "ui/_icon.html" with name="pencil" class="size-4" %} Tahrirlash</a>
+          <form method="post" action="{% url 'book_app:course_delete' reserve.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-glass btn-sm btn-pill" data-confirm-label="O'chirish"
+                    data-confirm="«{{ reserve.course_name }}» ro'yxati o'chirilsinmi? Kitoblarning o'zi o'chmaydi.">{% include "ui/_icon.html" with name="trash" class="size-4" %} O'chirish</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
   </div>
+</section>
+
+<div class="container-page container-narrow py-6 lg:py-8">
 
   {% if not reserve.is_active %}
     <div class="card card-body mt-4 border-l-4 border-l-[color:var(--color-warning-500)]">
@@ -44,7 +45,7 @@
 
   {# ======================= Kitob qo'shish ======================= #}
   {% if can_edit %}
-    <section id="add-book" class="card card-body mt-6">
+    <section id="add-book" class="card card-body scroll-mt-24">
       <form method="get" action="{{ reserve.get_absolute_url }}#add-book">
         <label class="search">
           <span class="text-[color:var(--color-content-subtle)]">{% include "ui/_icon.html" with name="search" class="size-4" %}</span>
@@ -62,10 +63,13 @@
   {# ======================= Adabiyotlar ======================= #}
   {% for title, group in groups %}
     <section class="mt-8">
-      <h2 class="font-display text-xl">{{ title }}</h2>
+      <h2 class="text-xl">{{ title }}</h2>
       <div class="mt-4 space-y-3">
         {% for item in group %}
-          <div class="card card-body" x-data="{ editing: false }">
+          <div class="card card-body" x-data="{ editing: false }" data-reveal style="--i: {{ forloop.counter0 }}">
+            <div class="flex gap-4">
+            <span class="w-14 flex-none max-sm:hidden">{% include "ui/_cover.html" with book=item.book cover_class="cover-xs" %}</span>
+            <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div class="w-full min-w-0 sm:w-auto sm:flex-1">
                 <a href="{% url 'book_app:student_book_detail' item.book_id %}" class="font-display text-base hover:underline">
@@ -109,6 +113,8 @@
                 <button type="submit" class="btn btn-primary btn-sm">Saqlash</button>
               </form>
             {% endif %}
+            </div>
+            </div>
           </div>
         {% endfor %}
       </div>

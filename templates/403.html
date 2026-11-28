@@ -1,18 +1,7 @@
-{% extends "layouts/base.html" %}
+{% extends "layouts/opac.html" %}
 
 {% block title %}Ruxsat yo'q — XIU Kutubxona{% endblock %}
 
 {% block content %}
-<section class="flex min-h-[65vh] items-center justify-center px-4">
-    <div class="text-center">
-        <p class="font-serif text-8xl font-semibold text-navy-900">403</p>
-        <div class="mx-auto mt-4 gold-rule"></div>
-        <h1 class="mt-5 font-serif text-2xl font-semibold text-navy-900">Bu bo'limga ruxsatingiz yo'q</h1>
-        <p class="mt-2 text-navy-600">Ushbu sahifani ko'rish uchun yetarli huquqqa ega emassiz.</p>
-        <div class="mt-8 flex items-center justify-center gap-3">
-            <a href="/dashboard/" class="rounded-full bg-navy-900 px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-navy-800">Kabinetga qaytish</a>
-            <a href="/" class="rounded-full border border-navy-200 bg-paper px-6 py-3 text-sm font-semibold text-navy-800 transition hover:bg-white">Bosh sahifa</a>
-        </div>
-    </div>
-</section>
+{% include "ui/_error.html" with code="403" icon="shield" title="Bu bo'limga ruxsatingiz yo'q" text="Sahifani ko'rish uchun qo'shimcha huquq kerak. Xato deb hisoblasangiz, kutubxona xodimiga murojaat qiling." %}
 {% endblock %}

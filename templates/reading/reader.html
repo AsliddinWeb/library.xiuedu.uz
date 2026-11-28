@@ -1,44 +1,66 @@
-{% extends "layouts/base.html" %}
+{% extends "layouts/opac.html" %}
 {% load static %}
+{% comment %}
+  To'liq ekran o'qish rejimi: sahifa raqamiga o'tish, kattalashtirish, qog'oz
+  rangi (oq / sariqroq / tungi), barmoq bilan varaqlash, to'liq ekran.
+{% endcomment %}
 
 {% block title %}{{ book.title }} — O'qish{% endblock %}
+{% block body_class %}reader-body{% endblock %}
 {% block header %}{% endblock %}
 {% block footer %}{% endblock %}
+{% block tabbar %}{% endblock %}
+{% block to_top %}{% endblock %}
 
 {% block content %}
-<div id="reader-root" class="flex min-h-screen flex-col bg-navy-950">
-    {# Toolbar #}
-    <div class="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-navy-800 bg-navy-950/90 px-4 py-3 backdrop-blur">
-        <a href="{% url 'book_app:student_book_detail' book.pk %}" class="inline-flex flex-none items-center gap-1.5 text-sm font-medium text-navy-300 transition hover:text-white">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
-            <span class="hidden sm:inline">Chiqish</span>
-        </a>
-        <p class="hidden min-w-0 flex-1 truncate text-center font-serif text-sm font-semibold text-white md:block">{{ book.title }}</p>
-        <div class="flex flex-none items-center gap-1.5 text-sm text-navy-200">
-            <button id="zoomOut" class="rounded-lg border border-navy-700 px-2.5 py-1.5 transition hover:bg-navy-800" title="Kichraytirish">−</button>
-            <span id="zoomPct" class="w-12 text-center text-xs tabular-nums text-navy-400">100%</span>
-            <button id="zoomIn" class="rounded-lg border border-navy-700 px-2.5 py-1.5 transition hover:bg-navy-800" title="Kattalashtirish">+</button>
-            <span class="mx-1 h-5 w-px bg-navy-700"></span>
-            <button id="prev" class="rounded-lg border border-navy-700 px-3 py-1.5 transition hover:bg-navy-800 disabled:opacity-40">‹</button>
-            <span class="tabular-nums"><span id="pageNum">–</span>/<span id="pageCount">–</span></span>
-            <button id="next" class="rounded-lg border border-navy-700 px-3 py-1.5 transition hover:bg-navy-800 disabled:opacity-40">›</button>
-            <span class="mx-1 h-5 w-px bg-navy-700"></span>
-            <button id="fs" class="rounded-lg border border-navy-700 p-1.5 transition hover:bg-navy-800" title="To'liq ekran">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/></svg>
-            </button>
-        </div>
-    </div>
+<div id="reader-root" class="reader" data-paper="light">
 
-    {# Progress #}
-    <div class="h-1 w-full bg-navy-800"><div id="progbar" class="h-full bg-gold-400 transition-all" style="width:0%"></div></div>
-
-    {# Canvas #}
-    <div class="flex flex-1 justify-center overflow-auto px-2 py-6">
-        <div id="status" class="mt-20 text-center text-navy-300">Yuklanmoqda…</div>
-        <canvas id="pdf-canvas" class="hidden h-fit max-w-full rounded-lg bg-white shadow-2xl" oncontextmenu="return false"></canvas>
+  <div class="reader-bar">
+    <a href="{% url 'book_app:student_book_detail' book.pk %}" class="btn btn-ghost btn-sm flex-none" aria-label="Kitobga qaytish">
+      {% include "ui/_icon.html" with name="arrow-left" class="size-4.5" %}<span class="max-sm:hidden">Chiqish</span>
+    </a>
+    <p class="min-w-0 flex-1 truncate text-center font-display text-sm font-semibold sm:text-base">{{ book.title }}</p>
+    <div class="view-switch flex-none" role="group" aria-label="Qog'oz rangi">
+      <button type="button" data-paper-set="light" aria-label="Oq qog'oz" data-tip="Oq">{% include "ui/_icon.html" with name="sun" class="size-4" %}</button>
+      <button type="button" data-paper-set="sepia" aria-label="Sariqroq qog'oz" data-tip="Iliq">{% include "ui/_icon.html" with name="book-open" class="size-4" %}</button>
+      <button type="button" data-paper-set="dark" aria-label="Tungi o'qish" data-tip="Tungi">{% include "ui/_icon.html" with name="moon" class="size-4" %}</button>
     </div>
+    <button type="button" id="fs" class="btn btn-ghost btn-icon btn-sm flex-none max-sm:hidden" aria-label="To'liq ekran" data-tip="To'liq ekran">
+      {% include "ui/_icon.html" with name="maximize" class="size-4.5" %}
+    </button>
+  </div>
+
+  <div class="h-1 w-full flex-none bg-[color:var(--color-surface-sunken)]">
+    <div id="progbar" class="h-full bg-[color:var(--color-accent)] transition-[width] duration-300" style="width:0%"></div>
+  </div>
+
+  <div id="stage" class="reader-stage">
+    <div id="status" class="m-auto flex flex-col items-center gap-3 text-sm font-semibold text-[color:var(--color-content-muted)]">
+      <div class="skeleton h-96 w-64 max-w-[70vw]"></div>
+      <span id="statusText">Kitob yuklanmoqda…</span>
+    </div>
+    <canvas id="pdf-canvas" class="reader-page hidden" oncontextmenu="return false"></canvas>
+  </div>
+
+  <div class="reader-bar reader-bar-bottom">
+    <div class="flex items-center gap-1">
+      <button type="button" id="zoomOut" class="btn btn-ghost btn-icon btn-sm" aria-label="Kichraytirish" data-tip="Kichraytirish">{% include "ui/_icon.html" with name="zoom-out" class="size-4.5" %}</button>
+      <span id="zoomPct" class="w-11 text-center text-xs font-bold tabular-nums text-[color:var(--color-content-muted)]">100%</span>
+      <button type="button" id="zoomIn" class="btn btn-ghost btn-icon btn-sm" aria-label="Kattalashtirish" data-tip="Kattalashtirish">{% include "ui/_icon.html" with name="zoom-in" class="size-4.5" %}</button>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <button type="button" id="prev" class="btn btn-secondary btn-icon btn-sm" aria-label="Oldingi sahifa">{% include "ui/_icon.html" with name="chevron-left" class="size-4.5" %}</button>
+      <form id="jump" class="flex items-center gap-1.5 text-sm font-bold tabular-nums">
+        <input id="pageNum" type="number" min="1" inputmode="numeric" class="input !h-9 !w-16 !px-1 text-center" aria-label="Sahifa raqami">
+        <span class="text-[color:var(--color-content-subtle)]">/ <span id="pageCount">–</span></span>
+      </form>
+      <button type="button" id="next" class="btn btn-primary btn-icon btn-sm" aria-label="Keyingi sahifa">{% include "ui/_icon.html" with name="chevron-right" class="size-4.5" %}</button>
+    </div>
+  </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script type="module">
 import * as pdfjsLib from "{% static 'js/vendor/pdf.min.mjs' %}";
 pdfjsLib.GlobalWorkerOptions.workerSrc = "{% static 'js/vendor/pdf.worker.min.mjs' %}";
@@ -48,31 +70,42 @@ const progressUrl = "{% url 'reading:save_progress' book.pk %}";
 const csrf = "{{ csrf_token }}";
 const startPage = {{ start_page|default:0 }};
 
-const canvas = document.getElementById('pdf-canvas'), ctx = canvas.getContext('2d');
 const $ = (id) => document.getElementById(id);
+const canvas = $('pdf-canvas'), ctx = canvas.getContext('2d');
 let pdfDoc = null, pageNum = 1, rendering = false, pending = null, zoom = 1;
 
 function renderPage(num) {
     rendering = true;
     pdfDoc.getPage(num).then((page) => {
-        const containerWidth = Math.min(canvas.parentElement.clientWidth - 16, 900);
+        const width = Math.min($('stage').clientWidth - 24, 900);
         const unscaled = page.getViewport({ scale: 1 });
-        const scale = (containerWidth / unscaled.width) * zoom;
-        const viewport = page.getViewport({ scale });
+        const scale = (width / unscaled.width) * zoom;
+        // Retina ekranda matn xira chiqmasligi uchun
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const viewport = page.getViewport({ scale: scale * ratio });
         canvas.width = viewport.width; canvas.height = viewport.height;
+        canvas.style.width = (viewport.width / ratio) + 'px';
         page.render({ canvasContext: ctx, viewport }).promise.then(() => {
             rendering = false;
             if (pending !== null) { const p = pending; pending = null; renderPage(p); }
         });
     });
-    $('pageNum').textContent = num;
+    $('pageNum').value = num;
     $('prev').disabled = num <= 1;
     $('next').disabled = num >= pdfDoc.numPages;
     $('progbar').style.width = Math.round((num / pdfDoc.numPages) * 100) + '%';
     saveProgress(num);
 }
 function queueRender(num) { if (rendering) pending = num; else renderPage(num); }
-function go(n) { if (n >= 1 && n <= pdfDoc.numPages) { pageNum = n; queueRender(n); } }
+function go(n) {
+    if (!pdfDoc || n < 1 || n > pdfDoc.numPages) return;
+    pageNum = n; queueRender(n); $('stage').scrollTop = 0;
+}
+function setZoom(value) {
+    zoom = Math.min(Math.max(value, 0.6), 3);
+    $('zoomPct').textContent = Math.round(zoom * 100) + '%';
+    if (pdfDoc) queueRender(pageNum);
+}
 
 let saveTimer = null;
 function saveProgress(num) {
@@ -86,24 +119,47 @@ function saveProgress(num) {
 
 $('prev').addEventListener('click', () => go(pageNum - 1));
 $('next').addEventListener('click', () => go(pageNum + 1));
-$('zoomIn').addEventListener('click', () => { zoom = Math.min(zoom + 0.2, 3); $('zoomPct').textContent = Math.round(zoom*100)+'%'; queueRender(pageNum); });
-$('zoomOut').addEventListener('click', () => { zoom = Math.max(zoom - 0.2, 0.6); $('zoomPct').textContent = Math.round(zoom*100)+'%'; queueRender(pageNum); });
+$('zoomIn').addEventListener('click', () => setZoom(zoom + 0.2));
+$('zoomOut').addEventListener('click', () => setZoom(zoom - 0.2));
+$('jump').addEventListener('submit', (e) => { e.preventDefault(); go(parseInt($('pageNum').value, 10)); $('pageNum').blur(); });
+$('pageNum').addEventListener('change', () => go(parseInt($('pageNum').value, 10)));
 $('fs').addEventListener('click', () => {
-    const el = $('reader-root');
-    if (!document.fullscreenElement) el.requestFullscreen?.(); else document.exitFullscreen?.();
+    if (!document.fullscreenElement) $('reader-root').requestFullscreen?.(); else document.exitFullscreen?.();
 });
 document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
     if (e.key === 'ArrowLeft') go(pageNum - 1);
     if (e.key === 'ArrowRight') go(pageNum + 1);
 });
 
+// Barmoq bilan varaqlash (faqat kattalashtirilmaganda — aks holda surishga xalaqit beradi)
+let touchX = null, touchY = null;
+$('stage').addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; touchY = e.touches[0].clientY; }, { passive: true });
+$('stage').addEventListener('touchend', (e) => {
+    if (touchX === null || zoom > 1) return;
+    const dx = e.changedTouches[0].clientX - touchX, dy = e.changedTouches[0].clientY - touchY;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) go(pageNum + (dx < 0 ? 1 : -1));
+    touchX = null;
+}, { passive: true });
+
+// Qog'oz rangi
+function setPaper(value) {
+    $('reader-root').dataset.paper = value;
+    try { localStorage.setItem('xiu-paper', value); } catch (e) { /* saqlanmasa ham ishlaydi */ }
+}
+let paper = null;
+try { paper = localStorage.getItem('xiu-paper'); } catch (e) { /* */ }
+setPaper(paper || (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'));
+document.querySelectorAll('[data-paper-set]').forEach((b) => b.addEventListener('click', () => setPaper(b.dataset.paperSet)));
+
 pdfjsLib.getDocument(url).promise.then((pdf) => {
     pdfDoc = pdf;
     $('pageCount').textContent = pdf.numPages;
+    $('pageNum').max = pdf.numPages;
     pageNum = (startPage >= 1 && startPage <= pdf.numPages) ? startPage : 1;
     $('status').classList.add('hidden');
     canvas.classList.remove('hidden');
     renderPage(pageNum);
-}).catch((err) => { $('status').textContent = "Kitobni yuklab bo'lmadi."; console.error(err); });
+}).catch((err) => { $('statusText').textContent = "Kitobni yuklab bo'lmadi. Sahifani yangilab ko'ring."; console.error(err); });
 </script>
 {% endblock %}

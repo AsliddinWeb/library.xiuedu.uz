@@ -1,0 +1,11 @@
+{% comment %}Bitta bildirishnoma qatori. Kirish: `n`.{% endcomment %}
+<a href="{% url 'notifications:read' n.pk %}"
+   class="row-item border-b border-[color:var(--color-line)] last:border-0 {% if not n.is_read %}bg-[color:var(--color-accent-soft)]{% endif %}">
+  <span class="icon-box icon-box-sm {{ n.tone }}">{% include "ui/_icon.html" with name=n.icon class="size-4.5" %}</span>
+  <span class="min-w-0 flex-1">
+    <span class="block text-sm font-bold">{{ n.title }}</span>
+    {% if n.message %}<span class="mt-0.5 line-clamp-2 block text-[13px] text-[color:var(--color-content-muted)]">{{ n.message }}</span>{% endif %}
+    <span class="mt-1 block text-xs text-[color:var(--color-content-subtle)]">{{ n.created_at|timesince }} oldin</span>
+  </span>
+  {% if not n.is_read %}<span class="mt-1.5 size-2 flex-none rounded-full bg-[color:var(--color-accent)]" aria-label="O'qilmagan"></span>{% endif %}
+</a>

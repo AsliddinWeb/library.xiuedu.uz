@@ -1,42 +1,103 @@
 {% comment %}
-  Ikonka (chiziqli, 24x24, currentColor).
+  Ikonka (chiziqli, 24x24, currentColor, bir xil qalinlik).
 
   Ishlatish:
       {% include "ui/_icon.html" with name="search" %}
       {% include "ui/_icon.html" with name="bell" class="size-5" %}
 
   Yangi ikonka qo'shish: shu faylga `{% elif name == "..." %}` qo'shiladi.
-  Tashqi ikonka kutubxonasi ataylab ishlatilmaydi — faqat kerakli 20 ta ikonka
-  CSS/JS hajmini oshirmasdan shu yerda turadi.
+  Tashqi ikonka kutubxonasi ataylab ishlatilmaydi — faqat kerakli ikonkalar
+  shu yerda turadi.
 {% endcomment %}<svg class="{{ class|default:'size-4' }}" viewBox="0 0 24 24" fill="none"
-     stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+     stroke="currentColor" stroke-width="{{ stroke|default:'1.7' }}" stroke-linecap="round" stroke-linejoin="round"
      aria-hidden="true">
 {% if name == "search" %}<circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/>
-{% elif name == "bell" %}<path d="M6 11a6 6 0 1 1 12 0v3l1.5 2.5h-15L6 14v-3Z"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/>
-{% elif name == "user" %}<circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/>
-{% elif name == "users" %}<circle cx="9" cy="8.5" r="3"/><path d="M3 19c0-3 2.7-4.8 6-4.8s6 1.8 6 4.8"/><path d="M16 5.5a3 3 0 0 1 0 6"/><path d="M18 14.5c2 .6 3 2.2 3 4.5"/>
-{% elif name == "menu" %}<path d="M4 7h16M4 12h16M4 17h16"/>
+{% elif name == "bell" %}<path d="M6 10.5a6 6 0 1 1 12 0c0 3.2.8 4.6 1.8 5.8.4.5.1 1.2-.6 1.2H4.800c-.7 0-1-.7-.6-1.2 1-1.2 1.8-2.6 1.8-5.8Z"/><path d="M9.7 20.2a2.5 2.5 0 0 0 4.6 0"/>
+{% elif name == "user" %}<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c.6-3.7 3.6-5.8 7.500-5.8s6.900 2.100 7.500 5.8"/>
+{% elif name == "users" %}<circle cx="9" cy="8" r="3.5"/><path d="M2.8 19.5c.4-3.2 2.9-5 6.2-5s5.8 1.8 6.2 5"/><path d="M16 4.8a3.5 3.5 0 0 1 0 6.4"/><path d="M17.8 14.9c2 .7 3.100 2.300 3.400 4.600"/>
+{% elif name == "menu" %}<path d="M4 6.5h16M4 12h16M4 17.5h10"/>
 {% elif name == "close" %}<path d="M6 6l12 12M18 6 6 18"/>
-{% elif name == "check" %}<path d="m5 13 4 4L19 7"/>
+{% elif name == "check" %}<path d="m5 12.5 4.500 4.500L19 7.500"/>
+{% elif name == "check-circle" %}<circle cx="12" cy="12" r="9"/><path d="m8 12.300 2.800 2.800L16.200 9.500"/>
 {% elif name == "plus" %}<path d="M12 5v14M5 12h14"/>
 {% elif name == "minus" %}<path d="M5 12h14"/>
-{% elif name == "pencil" %}<path d="M4 20h4L20 8l-4-4L4 16v4Z"/><path d="m14 6 4 4"/>
-{% elif name == "trash" %}<path d="M4 7h16"/><path d="M9 7V4.8h6V7"/><path d="m6 7 1 13h10l1-13"/>
-{% elif name == "book" %}<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v18H6.5A1.5 1.5 0 0 1 5 19.5v-15Z"/><path d="M9 3v18"/>
-{% elif name == "library" %}<path d="M4 20V6l4-1v15"/><path d="M10 20V5l4 1v14"/><path d="M16 20V7l4 1v12"/>
+{% elif name == "pencil" %}<path d="M4 20h4L19.200 8.800a2.100 2.100 0 0 0-3-3L5 17v3"/><path d="m14.500 7.500 3 3"/>
+{% elif name == "trash" %}<path d="M4 7h16"/><path d="M9 7V5.500A1.500 1.500 0 0 1 10.500 4h3A1.500 1.500 0 0 1 15 5.500V7"/><path d="m6 7 .9 11.600A1.600 1.600 0 0 0 8.500 20h7a1.600 1.600 0 0 0 1.600-1.400L18 7"/><path d="M10 11v5M14 11v5"/>
+{% elif name == "book" %}<path d="M5 5.500A2.500 2.500 0 0 1 7.500 3H19v15H7.500A2.500 2.500 0 0 0 5 20.500v-15Z"/><path d="M5 20.500A2.500 2.500 0 0 0 7.500 23H19v-5"/><path d="M9 7h6"/>
+{% elif name == "book-open" %}<path d="M12 6.500C10.500 5 8.200 4.300 4 4.300a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1c4.200 0 6.500.7 8 2.200 1.500-1.500 3.800-2.200 8-2.200a1 1 0 0 0 1-1v-12a1 1 0 0 0-1-1c-4.200 0-6.500.7-8 2.200Z"/><path d="M12 6.500v14"/>
+{% elif name == "library" %}<path d="M4 4h3.500v16H4zM7.500 6.500H11V20H7.500z"/><path d="m13.200 5.600 3.400-.9 4 14.400-3.400.9-4-14.400Z"/><path d="M3 20h9"/>
+{% elif name == "headphones" %}<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><path d="M4 15.500A1.500 1.500 0 0 1 5.500 14H8v6H5.500A1.500 1.500 0 0 1 4 18.500v-3ZM20 15.500a1.500 1.500 0 0 0-1.500-1.500H16v6h2.500a1.500 1.500 0 0 0 1.500-1.500v-3Z"/>
+{% elif name == "heart" %}<path d="M12 20s-8-4.600-8-10.600A4.400 4.400 0 0 1 12 6.800a4.400 4.400 0 0 1 8 2.600C20 15.400 12 20 12 20Z"/>
+{% elif name == "bookmark" %}<path d="M6 4.500A1.500 1.500 0 0 1 7.500 3h9A1.500 1.500 0 0 1 18 4.500V21l-6-4-6 4V4.500Z"/>
+{% elif name == "list" %}<path d="M9 6.500h11M9 12h11M9 17.500h11"/><circle cx="4.5" cy="6.5" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="17.5" r="1"/>
+{% elif name == "grid" %}<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>
+{% elif name == "home" %}<path d="m3.500 10.500 8.500-7 8.500 7"/><path d="M5.500 9.500V19a1.500 1.500 0 0 0 1.500 1.500h10a1.500 1.500 0 0 0 1.500-1.500V9.500"/><path d="M10 20.500V15h4v5.500"/>
+{% elif name == "graduation" %}<path d="M2.500 9.500 12 5l9.500 4.500L12 14 2.500 9.500Z"/><path d="M6.500 11.500v4.700c0 1.200 2.500 2.800 5.500 2.800s5.500-1.600 5.500-2.800v-4.700"/><path d="M21.500 9.500V15"/>
+{% elif name == "filter" %}<path d="M4 5.500h16l-6.200 7.200v5.300l-3.600 1.500v-6.800L4 5.500Z"/>
+{% elif name == "sliders" %}<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.200"/><circle cx="10" cy="17" r="2.200"/>
+{% elif name == "arrow-right" %}<path d="M5 12h14M13 6l6 6-6 6"/>
+{% elif name == "arrow-left" %}<path d="M19 12H5M11 6l-6 6 6 6"/>
+{% elif name == "arrow-up-right" %}<path d="M7 17 17 7M8.500 7H17v8.500"/>
+{% elif name == "star" %}<path d="m12 3.500 2.600 5.300 5.900.9-4.250 4.100 1 5.800L12 16.900l-5.250 2.700 1-5.800L3.500 9.700l5.900-.9L12 3.500Z"/>
+{% elif name == "sparkles" %}<path d="M11 4.500 12.700 9.300 17.500 11l-4.800 1.700L11 17.500l-1.700-4.800L4.500 11l4.800-1.700L11 4.500Z"/><path d="M18.500 15.500l.7 1.800 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"/>
+{% elif name == "flame" %}<path d="M12 3.500c.5 3.5 6 5.5 6 10.500a6 6 0 0 1-12 0c0-2 .9-3.500 2-4.500.2 1.500.9 2.300 2 2.800C9.500 8.500 10.500 5.500 12 3.500Z"/>
+{% elif name == "clock" %}<circle cx="12" cy="12" r="8.800"/><path d="M12 7.500V12l3.200 2"/>
+{% elif name == "history" %}<path d="M3.800 9.500a8.500 8.500 0 1 1-.3 4"/><path d="M3.500 5v5h5"/><path d="M12 8v4.5l3 1.800"/>
+{% elif name == "calendar" %}<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.500 10h17M8 3v4M16 3v4"/>
+{% elif name == "download" %}<path d="M12 4v11M7.500 11l4.500 4.500 4.500-4.500"/><path d="M5 19.500h14"/>
+{% elif name == "copy" %}<rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.500 8.500V6a2.500 2.500 0 0 0-2.500-2.500H6A2.500 2.500 0 0 0 3.500 6v7A2.500 2.500 0 0 0 6 15.500h2.500"/>
+{% elif name == "quote" %}<path d="M9.500 7C6.500 8 5 10.500 5 13.500V17h5v-5H7.500c0-1.800.8-3 2.500-3.700L9.500 7ZM18.500 7c-3 1-4.500 3.500-4.500 6.500V17h5v-5h-2.500c0-1.800.8-3 2.500-3.700L18.500 7Z"/>
+{% elif name == "eye" %}<path d="M2.800 12S6.200 5.800 12 5.800 21.200 12 21.200 12 17.800 18.200 12 18.200 2.800 12 2.800 12Z"/><circle cx="12" cy="12" r="2.800"/>
+{% elif name == "play" %}<path d="M8 5.500v13l11-6.500-11-6.500Z"/>
+{% elif name == "pause" %}<path d="M8.500 5.500v13M15.500 5.500v13"/>
+{% elif name == "rewind" %}<path d="M4.500 12a7.500 7.500 0 1 0 2.200-5.300L4.500 9"/><path d="M4.500 4v5h5"/>
+{% elif name == "forward" %}<path d="M19.500 12a7.500 7.500 0 1 1-2.200-5.300L19.500 9"/><path d="M19.500 4v5h-5"/>
+{% elif name == "maximize" %}<path d="M8.500 3.500H5.500a2 2 0 0 0-2 2v3M15.500 3.500h3a2 2 0 0 1 2 2v3M20.500 15.500v3a2 2 0 0 1-2 2h-3M8.500 20.500h-3a2 2 0 0 1-2-2v-3"/>
+{% elif name == "zoom-in" %}<circle cx="11" cy="11" r="7"/><path d="m20 20-3.600-3.600M8 11h6M11 8v6"/>
+{% elif name == "zoom-out" %}<circle cx="11" cy="11" r="7"/><path d="m20 20-3.600-3.600M8 11h6"/>
+{% elif name == "map-pin" %}<path d="M12 21s-7-5.700-7-11a7 7 0 0 1 14 0c0 5.300-7 11-7 11Z"/><circle cx="12" cy="10" r="2.500"/>
+{% elif name == "globe" %}<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.500 2.500 3.8 5.5 3.8 9S14.500 18.500 12 21c-2.500-2.500-3.800-5.500-3.800-9S9.500 5.500 12 3Z"/>
+{% elif name == "send" %}<path d="M20.500 3.500 10 14"/><path d="m20.500 3.500-6.700 17-3.8-6.500L3.500 10.200l17-6.700Z"/>
+{% elif name == "mail" %}<rect x="3" y="5" width="18" height="14" rx="2.500"/><path d="m4 7 8 6 8-6"/>
+{% elif name == "shield" %}<path d="M12 3.200 19.500 6v5.500c0 4.600-3.100 8-7.500 9.300-4.400-1.300-7.500-4.700-7.500-9.300V6L12 3.200Z"/><path d="m8.800 12 2.200 2.200 4.200-4.200"/>
+{% elif name == "id-card" %}<rect x="3" y="5" width="18" height="14" rx="2.500"/><circle cx="8.500" cy="10.500" r="2"/><path d="M5.800 16c.4-1.600 1.400-2.400 2.700-2.400s2.300.8 2.700 2.400M14 10h4M14 14h4"/>
+{% elif name == "code" %}<path d="m8.500 7.500-5 4.500 5 4.500M15.500 7.500l5 4.500-5 4.500M13.500 5l-3 14"/>
+{% elif name == "calculator" %}<rect x="5" y="3" width="14" height="18" rx="2.500"/><path d="M8.500 7h7"/><path d="M8.500 11.500h.01M12 11.500h.01M15.500 11.500h.01M8.500 15h.01M12 15h.01M15.500 15v2.500M8.500 17.500h.01M12 17.500h.01"/>
+{% elif name == "scale" %}<path d="M12 4v16M7 20h10M5 7h14"/><path d="m5 7-2.500 6a2.800 2.800 0 0 0 5 0L5 7ZM19 7l-2.500 6a2.800 2.800 0 0 0 5 0L19 7Z"/>
+{% elif name == "atom" %}<circle cx="12" cy="12" r="1.600"/><ellipse cx="12" cy="12" rx="9.500" ry="4"/><ellipse cx="12" cy="12" rx="9.500" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9.500" ry="4" transform="rotate(120 12 12)"/>
+{% elif name == "flask" %}<path d="M9.500 3.500h5M10.500 3.500v6L5 18.200A1.600 1.600 0 0 0 6.400 20.500h11.200a1.600 1.600 0 0 0 1.400-2.300L13.500 9.500v-6"/><path d="M7.800 14h8.400"/>
+{% elif name == "heart-pulse" %}<path d="M12 20s-8-4.600-8-10.600A4.400 4.400 0 0 1 12 6.800a4.400 4.400 0 0 1 8 2.600C20 15.400 12 20 12 20Z"/><path d="M4.500 12.500H8l1.500-3 3 6 1.500-3h5.500"/>
+{% elif name == "briefcase" %}<rect x="3" y="7.500" width="18" height="12.500" rx="2.500"/><path d="M8.500 7.500V6A2.500 2.500 0 0 1 11 3.500h2A2.500 2.500 0 0 1 15.500 6v1.500M3 12.500h18"/>
+{% elif name == "trending" %}<path d="m3.500 16.500 6-6 4 4 7-7"/><path d="M15 7.500h5.500V13"/>
+{% elif name == "landmark" %}<path d="M3.500 9 12 4l8.500 5H3.500Z"/><path d="M6 9v8M10 9v8M14 9v8M18 9v8M3.500 20h17M5 17h14"/>
+{% elif name == "feather" %}<path d="M19.500 4.500c-5-1-12 2-12.5 10L5 19.500"/><path d="M19.500 4.500c1 5-2 10.500-9.500 10.500H7M10 12h5.500"/>
+{% elif name == "palette" %}<path d="M12 3a9 9 0 1 0 0 18c1.200 0 1.800-.8 1.800-1.700 0-1.300-1.200-1.500-1.200-2.600 0-.9.700-1.500 1.700-1.500H17a4 4 0 0 0 4-4C21 6.500 17 3 12 3Z"/><path d="M7.500 11h.01M10 7.500h.01M14.500 7.500h.01"/>
+{% elif name == "sprout" %}<path d="M12 21v-8"/><path d="M12 13c0-4-2.5-6.500-7.5-6.500 0 4.500 3 6.500 7.5 6.500ZM12 11c0-4 2.500-6.5 7.500-6.5 0 4.500-3 6.5-7.5 6.5Z"/>
+{% elif name == "lightbulb" %}<path d="M9 17.500h6M10 20.500h4"/><path d="M12 3.500a6 6 0 0 0-3.800 10.600c.5.5.8 1.100.8 1.900v.0h6v0c0-.8.3-1.4.8-1.900A6 6 0 0 0 12 3.500Z"/>
+{% elif name == "layers" %}<path d="m12 3.500 9 4.500-9 4.500L3 8l9-4.500Z"/><path d="m3.500 12.500 8.500 4.200 8.500-4.200M3.500 16.500 12 20.700l8.500-4.200"/>
+{% elif name == "inbox" %}<path d="M3.500 12.500 6 6a1.500 1.500 0 0 1 1.400-1h9.200A1.500 1.500 0 0 1 18 6l2.500 6.500V18a1.500 1.500 0 0 1-1.500 1.500H5A1.500 1.500 0 0 1 3.500 18v-5.500Z"/><path d="M3.500 12.500h5l1 2h5l1-2h5"/>
 {% elif name == "barcode" %}<path d="M4 6v12M7 6v12M10 6v9M13 6v12M16 6v9M20 6v12"/>
-{% elif name == "cash" %}<rect x="3" y="6.5" width="18" height="11" rx="2"/><circle cx="12" cy="12" r="2.4"/>
-{% elif name == "chart" %}<path d="M4 20h16"/><path d="M7 20v-6M12 20V7M17 20v-9"/>
-{% elif name == "clock" %}<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>
-{% elif name == "alert" %}<path d="M12 4.5 21 19.5H3L12 4.5Z"/><path d="M12 10v4"/><path d="M12 16.8v.2"/>
-{% elif name == "inbox" %}<path d="M3.5 12.5 6 6h12l2.5 6.5V18a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18v-5.5Z"/><path d="M3.5 12.5h5l1 2h5l1-2h5"/>
-{% elif name == "cog" %}<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/>
-{% elif name == "chevron-down" %}<path d="m6 9.5 6 6 6-6"/>
-{% elif name == "chevron-left" %}<path d="m14.5 6-6 6 6 6"/>
-{% elif name == "chevron-right" %}<path d="m9.5 6 6 6-6 6"/>
-{% elif name == "external" %}<path d="M14 5h5v5"/><path d="M19 5l-7 7"/><path d="M18 14v4.5A1.5 1.5 0 0 1 16.5 20h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>
-{% elif name == "printer" %}<path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="7" rx="1.5"/><path d="M7 16h10v4H7z"/>
-{% elif name == "logout" %}<path d="M15 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h8"/><path d="M18 12H10"/><path d="m15 9 3 3-3 3"/>
-{% else %}<circle cx="12" cy="12" r="8.5"/>
+{% elif name == "cash" %}<rect x="3" y="6" width="18" height="12" rx="2.500"/><circle cx="12" cy="12" r="2.600"/><path d="M6.500 9.500v.01M17.500 14.500v.01"/>
+{% elif name == "wallet" %}<path d="M18 7.500V6a1.500 1.500 0 0 0-1.500-1.500H5.500a2 2 0 0 0 0 4H19a1.500 1.500 0 0 1 1.500 1.500v8A1.500 1.500 0 0 1 19 19.500H5.500a2 2 0 0 1-2-2v-11"/><path d="M16.500 14h.01"/>
+{% elif name == "chart" %}<path d="M4 4v14.500A1.500 1.500 0 0 0 5.500 20H20"/><path d="M8.500 16v-4M12.500 16V8M16.500 16v-6"/>
+{% elif name == "alert" %}<path d="M10.300 4.500 2.800 17.500A2 2 0 0 0 4.500 20.500h15a2 2 0 0 0 1.700-3L13.700 4.500a2 2 0 0 0-3.400 0Z"/><path d="M12 9.500v4M12 17v.01"/>
+{% elif name == "info" %}<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/>
+{% elif name == "cog" %}<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.400-2.300 1a7 7 0 0 0-2.100-1.200L14.200 3h-4.400l-.3 2.700a7 7 0 0 0-2.100 1.200l-2.300-1-2 3.400 2 1.500a7 7 0 0 0 0 2.400l-2 1.500 2 3.400 2.300-1a7 7 0 0 0 2.100 1.200l.3 2.700h4.400l.3-2.700a7 7 0 0 0 2.100-1.200l2.3 1 2-3.400-2-1.500c.1-.4.1-.8.1-1.200Z"/>
+{% elif name == "folder" %}<path d="M3.500 7A1.500 1.500 0 0 1 5 5.500h4.500l2 2.500H19a1.500 1.500 0 0 1 1.500 1.500V18a1.500 1.500 0 0 1-1.500 1.500H5A1.500 1.500 0 0 1 3.500 18V7Z"/>
+{% elif name == "building" %}<path d="M5 20.500V5a1.500 1.500 0 0 1 1.500-1.500h7A1.500 1.500 0 0 1 15 5v15.500M15 9h3.500A1.500 1.500 0 0 1 20 10.500v10M3 20.500h18M8.500 7.500h3M8.500 11.500h3M8.500 15.500h3"/>
+{% elif name == "upload" %}<path d="M12 15V4M7.500 8 12 3.500 16.500 8"/><path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/>
+{% elif name == "sun" %}<circle cx="12" cy="12" r="4"/><path d="M12 2.500v2.200M12 19.300v2.200M2.500 12h2.200M19.300 12h2.200M5.300 5.300l1.500 1.500M17.200 17.200l1.500 1.500M18.700 5.300l-1.500 1.500M6.800 17.200l-1.500 1.500"/>
+{% elif name == "moon" %}<path d="M20 14.500A8.500 8.500 0 0 1 9.500 4a8.500 8.500 0 1 0 10.500 10.500Z"/>
+{% elif name == "monitor" %}<rect x="3" y="4" width="18" height="12.500" rx="2.500"/><path d="M8.500 20.500h7M12 16.500v4"/>
+{% elif name == "arrow-up" %}<path d="M12 19V5M6 11l6-6 6 6"/>
+{% elif name == "rows" %}<rect x="3.5" y="4.5" width="17" height="6" rx="2"/><rect x="3.5" y="13.5" width="17" height="6" rx="2"/>
+{% elif name == "chevron-down" %}<path d="m6 9.500 6 6 6-6"/>
+{% elif name == "chevron-left" %}<path d="m14.500 6-6 6 6 6"/>
+{% elif name == "chevron-right" %}<path d="m9.500 6 6 6-6 6"/>
+{% elif name == "external" %}<path d="M14 4.500h5.500V10"/><path d="M19.500 4.500 11 13"/><path d="M18 14v4.500a1.500 1.500 0 0 1-1.500 1.500h-11A1.500 1.500 0 0 1 4 18.500v-11A1.500 1.500 0 0 1 5.500 6H10"/>
+{% elif name == "printer" %}<path d="M7 9V3.500h10V9"/><path d="M7 17H5a1.500 1.500 0 0 1-1.500-1.500v-5A1.500 1.500 0 0 1 5 9h14a1.500 1.500 0 0 1 1.500 1.500v5A1.500 1.500 0 0 1 19 17h-2"/><path d="M7 14h10v6.500H7z"/>
+{% elif name == "login" %}<path d="M14 4.500h3.500a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H14"/><path d="M4 12h10M10.500 8.500 14 12l-3.500 3.500"/>
+{% elif name == "logout" %}<path d="M10 4.500H6.500a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2H10"/><path d="M20 12H10M16.500 8.500 20 12l-3.500 3.500"/>
+{% else %}<circle cx="12" cy="12" r="8.500"/>
 {% endif %}
 </svg>

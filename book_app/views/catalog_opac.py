@@ -4,6 +4,8 @@ OPAC — o'quvchi uchun katalog (qidiruv va kashfiyot).
 P5: transliteratsiyali qidiruv (`book_app.search`) + fasetli filtrlar.
 Eski `student_book_list` o'rniga shu view ishlaydi; URL o'zgarmadi.
 """
+from urllib.parse import urlencode
+
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
@@ -119,16 +121,20 @@ def catalog(request):
                  .annotate(n=Count('id')).filter(n__gt=0).order_by('-n')[:8])
 
     # Faol filtrlarni saqlagan holda havola yasash uchun
-    query_string = ''.join(
-        f"&{key}={value}" for key, value in
-        [('q', query), ('sort', sort)] + list(applied.items()) if value)
+    # Faqat o'quvchi o'zi tanlagan saralash saqlanadi; bo'sh bo'lsa "avtomatik"
+    sort_choice = request.GET.get('sort', '')
+    if sort_choice not in SORTS:
+        sort_choice = ''
+    params = [(key, value) for key, value in
+              [('q', query), ('sort', sort_choice)] + list(applied.items()) if value]
+    query_string = f"&{urlencode(params)}" if params else ''
 
     context = {
         'page_obj': page_obj,
         'books': page_obj,
         'total': page_obj.paginator.count,
         'query': query,
-        'sort': sort,
+        'sort_choice': sort_choice,
         'sorts': SORTS,
         'formats': FORMATS,
         'applied': applied,

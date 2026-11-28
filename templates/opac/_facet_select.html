@@ -1,9 +1,10 @@
 {% comment %}Oddiy faset tanlagich (saralash kabi lug'at uchun).{% endcomment %}
 <div class="field">
-  <label class="label">{{ label }}</label>
-  <select name="{{ name }}" class="select"
+  <label class="label" for="facet-{{ name }}">{{ label }}</label>
+  <select id="facet-{{ name }}" name="{{ name }}" class="select"
           hx-get="{% url 'book_app:student_book_list' %}" hx-target="#results"
-          hx-include="[name='q'],#facets" hx-trigger="change" hx-push-url="true">
+          hx-include="#catalog-q,#facets" hx-trigger="change" hx-push-url="true">
+    {% if auto %}<option value="">{{ auto }}</option>{% endif %}
     {% for value, text in options.items %}
       <option value="{{ value }}" {% if current == value %}selected{% endif %}>{{ text }}</option>
     {% endfor %}

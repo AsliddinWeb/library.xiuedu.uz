@@ -1,26 +1,34 @@
-{% comment %}Qidiruv natijalari (HTMX target).{% endcomment %}
-<div class="mb-4 flex items-center justify-between gap-3">
-  <p class="text-sm text-[color:var(--color-content-muted)]">
+{% load ui_extras %}{% comment %}Qidiruv natijalari (HTMX target).{% endcomment %}
+<div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+  <p class="text-sm font-medium text-[color:var(--color-content-muted)]">
     {% if query %}
-      «{{ query }}» bo'yicha <b>{{ total }}</b> ta natija
+      «{{ query }}» bo'yicha <b class="text-[color:var(--color-content)]">{{ total|spaced }}</b> ta natija
     {% else %}
-      <b>{{ total }}</b> ta yozuv
+      <b class="text-[color:var(--color-content)]">{{ total|spaced }}</b> ta yozuv
     {% endif %}
   </p>
+  <div class="view-switch" role="group" aria-label="Ko'rinish">
+    <button type="button" data-view-set="grid" aria-label="To'r ko'rinishi" data-tip="To'r">{% include "ui/_icon.html" with name="grid" class="size-4.5" %}</button>
+    <button type="button" data-view-set="list" aria-label="Ro'yxat ko'rinishi" data-tip="Ro'yxat">{% include "ui/_icon.html" with name="rows" class="size-4.5" %}</button>
+  </div>
 </div>
 
 {% if books %}
-  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+  <div class="book-grid">
     {% for book in books %}
-      {% include "opac/_book_card.html" with book=book %}
+      {% include "opac/_book_card.html" with book=book reveal=1 %}
     {% endfor %}
   </div>
 
-  {% include "ui/_pager.html" with page_obj=page_obj hx_get="/books/" hx_target="#results" query=query_string %}
+  <div class="mt-8">
+    {% include "ui/_pager.html" with page_obj=page_obj hx_get="/books/" hx_target="#results" query=query_string %}
+  </div>
 {% else %}
-  {% if query %}
-    {% include "ui/_empty.html" with icon="search" title="Hech narsa topilmadi" text="Boshqacha yozib ko'ring yoki filtrlarni tozalang. Qidiruv kirill va lotin yozuvni ham, kichik xatolarni ham tushunadi." %}
-  {% else %}
-    {% include "ui/_empty.html" with icon="library" title="Yozuv yo'q" text="Tanlangan filtrlarga mos kitob topilmadi." %}
-  {% endif %}
+  <div class="card">
+    {% if query %}
+      {% include "ui/_empty.html" with icon="search" title="Hech narsa topilmadi" text="Boshqacha yozib ko'ring yoki filtrlarni tozalang. Qidiruv kirill va lotin yozuvni ham, kichik xatolarni ham tushunadi." action_url="/books/" action_label="Butun katalog" %}
+    {% else %}
+      {% include "ui/_empty.html" with icon="library" title="Yozuv yo'q" text="Tanlangan filtrlarga mos kitob topilmadi." action_url="/books/" action_label="Filtrlarni tozalash" %}
+    {% endif %}
+  </div>
 {% endif %}

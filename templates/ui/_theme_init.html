@@ -1,0 +1,22 @@
+{% comment %}
+  Mavzu va ko'rinishni sahifa chizilishidan OLDIN o'rnatadi (miltillash bo'lmasin).
+  CSS'dan oldin, <head> ichida turishi shart.
+{% endcomment %}<script>
+    (function () {
+        var root = document.documentElement, choice = 'system', view = 'grid';
+        try {
+            choice = localStorage.getItem('xiu-theme') || 'system';
+            view = localStorage.getItem('xiu-view') || 'grid';
+        } catch (e) { /* maxfiy rejim — standart qiymat */ }
+        var dark = choice === 'dark' || (choice === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        root.setAttribute('data-theme', dark ? 'dark' : 'light');
+        root.setAttribute('data-theme-choice', choice);
+        root.setAttribute('data-view', view);
+        // Sahifalar orasidagi o'tish brauzer tomonidan bekor qilinsa, konsolga xato chiqmasin
+        window.addEventListener('pagereveal', function (event) {
+            if (!event.viewTransition) return;
+            event.viewTransition.ready.catch(function () {});
+            event.viewTransition.finished.catch(function () {});
+        });
+    }());
+</script>

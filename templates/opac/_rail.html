@@ -1,0 +1,24 @@
+{% comment %}
+  Gorizontal kitob lentasi sarlavha va surish tugmalari bilan.
+      {% include "opac/_rail.html" with rail_id="popular" eyebrow="Trendda" title="Ko'p o'qilayotganlar" books=popular_books icon="flame" %}
+  more_url — "Hammasi" havolasi (ixtiyoriy).
+{% endcomment %}
+<div class="section-head">
+  <div>
+    {% if eyebrow %}<p class="eyebrow">{{ eyebrow }}</p>{% endif %}
+    <h2 class="section-title">
+      {% if icon %}<span class="icon-box icon-box-sm {{ tone }}">{% include "ui/_icon.html" with name=icon class="size-4.5" %}</span>{% endif %}
+      {{ title }}
+    </h2>
+  </div>
+  <div class="flex items-center gap-2">
+    {% if more_url %}<a href="{{ more_url }}" class="link-more mr-2"{% if not user.is_authenticated %} data-login{% endif %}>Hammasi {% include "ui/_icon.html" with name="arrow-right" class="size-4" %}</a>{% endif %}
+    <button type="button" class="btn btn-secondary btn-icon btn-sm btn-pill max-sm:hidden" data-rail="{{ rail_id }}" data-dir="-1" aria-label="Orqaga">{% include "ui/_icon.html" with name="chevron-left" class="size-4" %}</button>
+    <button type="button" class="btn btn-secondary btn-icon btn-sm btn-pill max-sm:hidden" data-rail="{{ rail_id }}" data-dir="1" aria-label="Oldinga">{% include "ui/_icon.html" with name="chevron-right" class="size-4" %}</button>
+  </div>
+</div>
+<div class="rail" id="{{ rail_id }}" data-reveal>
+  {% for book in books %}
+    {% include "opac/_book_card.html" with book=book %}
+  {% endfor %}
+</div>

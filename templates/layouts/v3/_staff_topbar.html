@@ -1,4 +1,4 @@
-{% comment %}
+{% load ui_extras %}{% comment %}
   Staff topbar: sahifa sarlavhasi/breadcrumb + global qidiruv (Ctrl+K) +
   bildirishnoma + profil.
 {% endcomment %}
@@ -31,7 +31,9 @@
       </label>
     </form>
 
-    <a href="{% url 'notifications:list' %}" class="btn btn-ghost btn-icon btn-sm relative" aria-label="Bildirishnomalar">
+    {% include "ui/_theme_toggle.html" with small=1 %}
+
+    <a href="{% url 'notifications:list' %}" class="btn btn-ghost btn-icon btn-sm relative" aria-label="Bildirishnomalar" data-tip="Bildirishnomalar">
       {% include "ui/_icon.html" with name="bell" class="size-5" %}
       {% if unread_notifications %}
         <span class="absolute right-1 top-1 size-2 rounded-full bg-[color:var(--color-accent)]"></span>
@@ -39,17 +41,16 @@
     </a>
 
     <div x-data="{ open: false }" class="relative">
-      <button type="button" class="btn btn-ghost btn-sm gap-2" @click="open = !open">
-        {% include "ui/_icon.html" with name="user" class="size-4" %}
+      <button type="button" class="btn btn-ghost btn-sm gap-2 !px-1.5" @click="open = !open" :aria-expanded="open" aria-label="Profil menyusi">
+        <span class="avatar !size-7 !text-[11px]">{% if user.image %}<img src="{{ user.image.url }}" alt="">{% else %}{{ user|initials }}{% endif %}</span>
         <span class="hidden max-w-32 truncate lg:inline">{{ user.get_full_name }}</span>
         {% include "ui/_icon.html" with name="chevron-down" class="size-3.5" %}
       </button>
-      <div x-show="open" x-cloak @click.outside="open = false"
-           class="card absolute right-0 mt-2 w-48 overflow-hidden py-1 shadow-[var(--shadow-md)]">
-        <a href="/profil/" class="nav-item">Profil</a>
-        <a href="/" class="nav-item">Saytga o'tish</a>
-        <div class="my-1 border-t border-[color:var(--color-line)]"></div>
-        <a href="{% url 'logout' %}" class="nav-item text-[color:var(--color-danger-700)]">Chiqish</a>
+      <div x-show="open" x-cloak @click.outside="open = false" class="menu-panel !w-56">
+        <a href="/profil/" class="nav-item">{% include "ui/_icon.html" with name="user" class="size-4.5" %} Profil</a>
+        <a href="/" class="nav-item">{% include "ui/_icon.html" with name="home" class="size-4.5" %} Saytga o'tish</a>
+        <div class="menu-sep"></div>
+        <a href="{% url 'logout' %}" class="nav-item !text-[color:var(--color-danger-700)]">{% include "ui/_icon.html" with name="logout" class="size-4.5" %} Chiqish</a>
       </div>
     </div>
   </div>

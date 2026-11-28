@@ -1,91 +1,137 @@
 {% extends "layouts/opac.html" %}
+{% load static ui_extras %}
 {% comment %}
   O'quvchi kabineti — talaba va xodim uchun bir xil (ikkalasi ham Patron).
 
-  Tartib: eslatmalar (muhim narsa yuqorida) · davom ettirish · joriy ijaralar ·
-  tavsiyalar · yangi kelganlar · kataloglar.
+  Tartib: salom + a'zo kartasi · eslatmalar (muhim narsa yuqorida) · sonlar ·
+  davom ettirish · qo'ldagi kitoblar · fanlarim · tavsiyalar · yangi · bo'limlar.
 {% endcomment %}
 
 {% block title %}Kabinet — XIU Kutubxona{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-
-  {# ======================= Salomlashish ======================= #}
-  <div class="flex flex-wrap items-end justify-between gap-4">
-    <div>
-      <h1 class="font-display text-3xl">Assalomu alaykum, {{ user.first_name|default:user.get_full_name }}</h1>
-      {% if patron %}
-        <p class="page-sub">
-          <span class="font-mono">{{ patron.card_number }}</span> · {{ patron.category.name }}
-          {% if patron.category.loan_limit %}
-            · {{ patron.active_loans_count }}/{{ patron.category.loan_limit }} ta kitob
-          {% endif %}
-        </p>
-      {% endif %}
+<section class="page-hero !pb-8 lg:!pb-10">
+  <div class="container-page grid items-center gap-8 md:grid-cols-[1fr_auto]">
+    <div class="enter">
+      <p class="hero-chip">{% include "ui/_icon.html" with name="sparkles" class="size-3.5 text-[color:var(--color-sun-300)]" %} {% now "d F, l" %}</p>
+      <h1 class="mt-3">Assalomu alaykum, {{ user.first_name|default:user.get_full_name }}</h1>
+      <p class="mt-2 max-w-lg text-sm sm:text-base">
+        {% if overdue_count %}Qaytarish muddati o'tgan kitobingiz bor — pastdagi eslatmaga qarang.
+        {% elif continue_reading %}To'xtagan joyingizdan davom etishingiz mumkin.
+        {% else %}Bugun qaysi kitobni boshlaymiz?{% endif %}
+      </p>
+      <div class="mt-5 flex flex-wrap gap-2.5">
+        <a href="{% url 'book_app:student_book_list' %}" class="btn btn-accent btn-pill">{% include "ui/_icon.html" with name="search" class="size-4.5" %} Katalogdan qidirish</a>
+        <a href="{% url 'engagement:my_library' %}" class="btn btn-glass btn-pill">{% include "ui/_icon.html" with name="heart" class="size-4.5" %} Kutubxonam</a>
+      </div>
     </div>
-    <a href="{% url 'book_app:student_book_list' %}" class="btn btn-primary">
-      {% include "ui/_icon.html" with name="search" class="size-4" %}
-      Katalogdan qidirish
-    </a>
+
+    {% if patron %}
+      <div class="enter w-full md:w-[23rem]" style="--i:2">
+        <div class="member-card">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">Kitobxon bileti</p>
+              <p class="mt-1 truncate font-display text-lg font-bold">{{ user.get_full_name }}</p>
+              <p class="text-xs font-semibold text-white/75">{{ patron.category.name }}</p>
+            </div>
+            <span class="logo-chip grid size-12 flex-none place-items-center rounded-[var(--radius-md)]">
+              <img src="{% static 'img/xiu-mark.webp' %}" alt="" width="40" height="40">
+            </span>
+          </div>
+          {% if patron.category.loan_limit %}
+            <div>
+              <div class="flex justify-between text-xs font-bold">
+                <span class="text-white/75">Qo'ldagi kitoblar</span>
+                <span>{{ active_rentals_count }} / {{ patron.category.loan_limit }}</span>
+              </div>
+              <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-black/20">
+                <div class="grow-x h-full rounded-full bg-white" style="width: {% widthratio active_rentals_count patron.category.loan_limit 100 %}%"></div>
+              </div>
+            </div>
+          {% endif %}
+          <div>
+            <div class="barcode-art" aria-hidden="true"></div>
+            <p class="mt-1.5 text-center font-mono text-sm font-bold tracking-[0.2em]">{{ patron.card_number }}</p>
+          </div>
+        </div>
+      </div>
+    {% endif %}
   </div>
+</section>
+
+<div class="container-page py-6 lg:py-8">
 
   {# ======================= Eslatmalar ======================= #}
   {% if overdue_count or unpaid_fines or available_res %}
-  <div class="mt-6 grid gap-3 sm:grid-cols-3">
+  <div class="mb-6 grid gap-3 md:grid-cols-3">
     {% if overdue_count %}
-      <a href="{% url 'circulation:my_rentals' %}"
-         class="card card-body border-l-4 border-l-[color:var(--color-danger-500)]">
-        <p class="font-medium text-[color:var(--color-danger-700)]">{{ overdue_count }} ta kitob muddati o'tgan</p>
-        <p class="help mt-1">Iltimos, tezroq qaytaring — jarima hisoblanmoqda.</p>
+      <a href="{% url 'circulation:my_rentals' %}" class="card card-hover flex items-center gap-3.5 !border-[color:var(--color-danger-500)]/40 p-4" data-reveal>
+        <span class="icon-box icon-box-danger">{% include "ui/_icon.html" with name="alert" class="size-5.5" %}</span>
+        <span><span class="block font-bold text-[color:var(--color-danger-700)]">{{ overdue_count }} ta kitob muddati o'tgan</span>
+          <span class="help">Iltimos, tezroq qaytaring.</span></span>
       </a>
     {% endif %}
     {% if unpaid_fines %}
-      <a href="{% url 'circulation:my_rentals' %}"
-         class="card card-body border-l-4 border-l-[color:var(--color-warning-500)]">
-        <p class="font-medium text-[color:var(--color-warning-700)]">{{ unpaid_fines }} ta to'lanmagan jarima</p>
-        <p class="help mt-1">
-          {% if patron.balance %}Qarz: {{ patron.balance|floatformat:0 }} so'm{% else %}Kutubxonaga murojaat qiling.{% endif %}
-        </p>
+      <a href="{% url 'circulation:my_rentals' %}" class="card card-hover flex items-center gap-3.5 p-4" data-reveal style="--i:1">
+        <span class="icon-box icon-box-accent">{% include "ui/_icon.html" with name="wallet" class="size-5.5" %}</span>
+        <span><span class="block font-bold">{{ unpaid_fines }} ta to'lanmagan jarima</span>
+          <span class="help">{% if patron.balance %}Qarz: {{ patron.balance|floatformat:0 }} so'm{% else %}Kutubxonaga murojaat qiling.{% endif %}</span></span>
       </a>
     {% endif %}
     {% if available_res %}
-      <a href="{% url 'circulation:my_rentals' %}"
-         class="card card-body border-l-4 border-l-[color:var(--color-success-500)]">
-        <p class="font-medium text-[color:var(--color-success-700)]">Navbatdagi kitob bo'shadi</p>
-        <p class="help mt-1">{{ available_res }} ta kitobni olib ketishingiz mumkin.</p>
+      <a href="{% url 'circulation:my_rentals' %}" class="card card-hover flex items-center gap-3.5 p-4" data-reveal style="--i:2">
+        <span class="icon-box icon-box-sun">{% include "ui/_icon.html" with name="sparkles" class="size-5.5" %}</span>
+        <span><span class="block font-bold">Navbatdagi kitob bo'shadi</span>
+          <span class="help">{{ available_res }} ta kitobni olib ketishingiz mumkin.</span></span>
       </a>
     {% endif %}
   </div>
   {% endif %}
 
+  {# ======================= Sonlar ======================= #}
+  <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+    <a href="{% url 'circulation:my_rentals' %}" class="stat" data-reveal style="--i:0">
+      <span class="flex items-center justify-between"><span class="icon-box">{% include "ui/_icon.html" with name="book" class="size-5.5" %}</span>{% include "ui/_icon.html" with name="arrow-up-right" class="size-4 text-[color:var(--color-content-subtle)]" %}</span>
+      <span class="stat-value mt-1" data-count="{{ active_rentals_count }}">{{ active_rentals_count }}</span>
+      <span class="stat-label">Qo'lda kitob</span>
+    </a>
+    <a href="{% url 'engagement:my_library' %}" class="stat" data-reveal style="--i:1">
+      <span class="flex items-center justify-between"><span class="icon-box icon-box-info">{% include "ui/_icon.html" with name="book-open" class="size-5.5" %}</span>{% include "ui/_icon.html" with name="arrow-up-right" class="size-4 text-[color:var(--color-content-subtle)]" %}</span>
+      <span class="stat-value mt-1" data-count="{{ reading_count }}">{{ reading_count }}</span>
+      <span class="stat-label">O'qilayotgan</span>
+    </a>
+    <a href="{% url 'engagement:my_library' %}" class="stat" data-reveal style="--i:2">
+      <span class="flex items-center justify-between"><span class="icon-box icon-box-accent">{% include "ui/_icon.html" with name="heart" class="size-5.5" %}</span>{% include "ui/_icon.html" with name="arrow-up-right" class="size-4 text-[color:var(--color-content-subtle)]" %}</span>
+      <span class="stat-value mt-1" data-count="{{ favorites_count }}">{{ favorites_count }}</span>
+      <span class="stat-label">Sevimlilar</span>
+    </a>
+    <a href="{% url 'engagement:shelf_list' %}" class="stat" data-reveal style="--i:3">
+      <span class="flex items-center justify-between"><span class="icon-box icon-box-sun">{% include "ui/_icon.html" with name="bookmark" class="size-5.5" %}</span>{% include "ui/_icon.html" with name="arrow-up-right" class="size-4 text-[color:var(--color-content-subtle)]" %}</span>
+      <span class="stat-value mt-1" data-count="{{ shelves_count }}">{{ shelves_count }}</span>
+      <span class="stat-label">Ro'yxatlarim</span>
+    </a>
+  </div>
+
   {# ======================= Davom ettirish ======================= #}
   {% if continue_reading %}
-  <section class="mt-10">
-    <div class="flex items-end justify-between">
-      <h2 class="font-display text-xl">Davom ettirish</h2>
-      <a href="{% url 'engagement:my_library' %}" class="btn btn-ghost btn-sm">Kutubxonam</a>
+  <section class="mt-10" data-reveal>
+    <div class="section-head">
+      <h2 class="section-title !text-xl"><span class="icon-box icon-box-sm icon-box-info">{% include "ui/_icon.html" with name="book-open" class="size-4.5" %}</span> Davom ettirish</h2>
+      <a href="{% url 'engagement:my_library' %}" class="link-more">Kutubxonam {% include "ui/_icon.html" with name="arrow-right" class="size-4" %}</a>
     </div>
-    <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {% for progress in continue_reading %}
-        <a href="{% url 'reading:read' progress.book.pk %}" class="card card-hover flex gap-4 p-4">
-          <div class="h-24 w-16 flex-none overflow-hidden rounded-[var(--radius-sm)] bg-[color:var(--color-surface-sunken)]">
-            {% if progress.book.cover_image %}
-              <img src="{{ progress.book.cover_image.url }}" alt="" class="h-full w-full object-cover">
-            {% else %}
-              <div class="flex h-full items-center justify-center text-[color:var(--color-content-subtle)]">
-                {% include "ui/_icon.html" with name="book" class="size-6" %}
-              </div>
-            {% endif %}
-          </div>
-          <div class="min-w-0 flex-1">
-            <p class="font-display leading-snug">{{ progress.book.title|truncatechars:48 }}</p>
-            <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-[color:var(--color-surface-sunken)]">
-              <div class="h-full rounded-full bg-[color:var(--color-brand)]"
-                   style="width: {{ progress.percent }}%"></div>
-            </div>
-            <p class="help mt-1.5">{{ progress.percent }}% o'qildi</p>
-          </div>
+        <a href="{% if progress.mode == 'LISTEN' %}{% url 'reading:listen' progress.book.pk %}{% else %}{% url 'reading:read' progress.book.pk %}{% endif %}" class="card card-hover group flex items-center gap-4 p-4">
+          <span class="w-16 flex-none">{% include "ui/_cover.html" with book=progress.book cover_class="cover-xs" %}</span>
+          <span class="min-w-0 flex-1">
+            <span class="line-clamp-2 block font-bold leading-snug">{{ progress.book.title }}</span>
+            <span class="progress mt-3 block"><i class="grow-x" style="width: {{ progress.percent }}%"></i></span>
+            <span class="help mt-1.5 block">{{ progress.percent }}% {% if progress.mode == 'LISTEN' %}tinglandi{% else %}o'qildi{% endif %}</span>
+          </span>
+          <span class="grid size-10 flex-none place-items-center rounded-full bg-[color:var(--color-brand-soft)] text-[color:var(--color-brand-ink)] transition-transform duration-300 group-hover:scale-110">
+            {% if progress.mode == 'LISTEN' %}{% include "ui/_icon.html" with name="headphones" class="size-4.5" %}{% else %}{% include "ui/_icon.html" with name="play" class="size-4.5" %}{% endif %}
+          </span>
         </a>
       {% endfor %}
     </div>
@@ -93,77 +139,58 @@
   {% endif %}
 
   {# ======================= Joriy ijaralar ======================= #}
-  <section class="mt-10">
-    <div class="flex items-end justify-between">
-      <h2 class="font-display text-xl">Mening ijaralarim</h2>
-      <a href="{% url 'circulation:my_rentals' %}" class="btn btn-ghost btn-sm">Hammasi</a>
+  <section class="mt-10" data-reveal>
+    <div class="section-head">
+      <h2 class="section-title !text-xl"><span class="icon-box icon-box-sm">{% include "ui/_icon.html" with name="book" class="size-4.5" %}</span> Mening ijaralarim</h2>
+      <a href="{% url 'circulation:my_rentals' %}" class="link-more">Hammasi {% include "ui/_icon.html" with name="arrow-right" class="size-4" %}</a>
     </div>
-
     {% if active_rentals %}
-      <div class="table-wrap mt-4">
-        <table class="table">
-          <thead>
-            <tr><th>Kitob</th><th>Olingan</th><th>Qaytarish</th><th>Holat</th></tr>
-          </thead>
-          <tbody>
-            {% for rental in active_rentals %}
-            <tr>
-              <td class="font-medium">
-                <a href="{% url 'book_app:student_book_detail' rental.copy.book_id %}" class="hover:underline">
-                  {{ rental.copy.book.title|truncatechars:48 }}
-                </a>
-              </td>
-              <td>{{ rental.borrowed_date|default:"—" }}</td>
-              <td>{{ rental.due_date|default:"—" }}</td>
-              <td>
-                {% if rental.is_overdue %}
-                  {% include "ui/_badge.html" with text="Muddat o'tgan" variant="danger" dot=1 %}
-                {% else %}
-                  {% include "ui/_badge.html" with text="Ijarada" variant="info" dot=1 %}
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="grid gap-3 lg:grid-cols-2">
+        {% for rental in active_rentals %}{% include "opac/_loan_row.html" %}{% endfor %}
       </div>
     {% else %}
-      {% include "ui/_empty.html" with icon="book" title="Hozir ijarada kitob yo'q" text="Katalogdan kitob tanlab, ijaraga so'rashingiz mumkin." action_url="/books/" action_label="Katalogga o'tish" %}
+      <div class="card">
+        {% include "ui/_empty.html" with icon="book" title="Hozir ijarada kitob yo'q" text="Katalogdan kitob tanlab, ijaraga so'rashingiz mumkin." action_url="/books/" action_label="Katalogga o'tish" %}
+      </div>
     {% endif %}
   </section>
+
+  {# ======================= Fanlarim ======================= #}
+  {% if my_courses %}
+  <section class="mt-10" data-reveal>
+    <div class="section-head">
+      <h2 class="section-title !text-xl"><span class="icon-box icon-box-sm icon-box-plum">{% include "ui/_icon.html" with name="graduation" class="size-4.5" %}</span> Sizning fanlaringiz</h2>
+      <a href="{% url 'book_app:course_list' %}" class="link-more">Barcha fanlar {% include "ui/_icon.html" with name="arrow-right" class="size-4" %}</a>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {% for reserve in my_courses %}{% include "opac/_course_card.html" %}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
 
   {# ======================= Tavsiyalar ======================= #}
   {% if popular_books %}
   <section class="mt-12">
-    <h2 class="font-display text-xl">Siz uchun tavsiya</h2>
-    <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {% for book in popular_books|slice:":6" %}
-        {% include "opac/_book_card.html" with book=book %}
-      {% endfor %}
-    </div>
+    {% url 'book_app:student_book_list' as catalog_url %}
+    {% include "opac/_rail.html" with rail_id="recs" title="Siz uchun tavsiya" books=popular_books icon="flame" tone="icon-box-accent" more_url=catalog_url %}
   </section>
   {% endif %}
 
   {# ======================= Yangi kelganlar ======================= #}
   {% if recent_books %}
-  <section class="mt-12">
-    <h2 class="font-display text-xl">Yangi qo'shilganlar</h2>
-    <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {% for book in recent_books|slice:":6" %}
-        {% include "opac/_book_card.html" with book=book %}
-      {% endfor %}
-    </div>
+  <section class="mt-8">
+    {% include "opac/_rail.html" with rail_id="fresh" title="Yangi qo'shilganlar" books=recent_books icon="sparkles" tone="icon-box-sun" %}
   </section>
   {% endif %}
 
-  {# ======================= Kataloglar ======================= #}
+  {# ======================= Bo'limlar ======================= #}
   {% if genres %}
-  <section class="mt-12">
-    <h2 class="font-display text-xl">Bo'limlar</h2>
+  <section class="mt-8" data-reveal>
+    <h2 class="section-title !text-xl"><span class="icon-box icon-box-sm">{% include "ui/_icon.html" with name="layers" class="size-4.5" %}</span> Bo'limlar</h2>
     <div class="mt-4 flex flex-wrap gap-2">
       {% for genre in genres %}
         <a href="{% url 'book_app:student_book_list' %}?category={{ genre.id }}" class="chip">
-          {{ genre.name }}
+          {% include "ui/_icon.html" with name=genre.name|genre_icon class="size-4" %} {{ genre.name }}
         </a>
       {% endfor %}
     </div>

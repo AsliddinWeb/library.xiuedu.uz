@@ -27,5 +27,25 @@ class Notification(models.Model):
         ordering = ['-created_at']
         indexes = [models.Index(fields=['user', 'is_read'])]
 
+    #: Turi bo'yicha ko'rinish: (ikonka, rang qutisi klassi)
+    LOOKS = {
+        'REQUEST_APPROVED': ('check-circle', ''),
+        'REQUEST_REJECTED': ('close', 'icon-box-danger'),
+        'RESERVATION_AVAILABLE': ('sparkles', 'icon-box-sun'),
+        'DUE_SOON': ('clock', 'icon-box-sun'),
+        'OVERDUE': ('alert', 'icon-box-danger'),
+        'FINE': ('wallet', 'icon-box-accent'),
+        'REVIEW_APPROVED': ('star', 'icon-box-sun'),
+        'GENERAL': ('bell', 'icon-box-info'),
+    }
+
+    @property
+    def icon(self):
+        return self.LOOKS.get(self.type, self.LOOKS['GENERAL'])[0]
+
+    @property
+    def tone(self):
+        return self.LOOKS.get(self.type, self.LOOKS['GENERAL'])[1]
+
     def __str__(self):
         return f"{self.user.username} — {self.title}"

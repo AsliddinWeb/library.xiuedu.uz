@@ -6,33 +6,42 @@
 {% block title %}Kutubxonam — XIU Kutubxona{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8" x-data="{ tab: 'favorites' }">
-
-  <div class="page-head">
-    <div>
-      <h1 class="page-title">Mening kutubxonam</h1>
-      <p class="page-sub">Sevimlilar, ro'yxatlar, o'qish tarixi va sharhlaringiz.</p>
+<section class="page-hero">
+  <div class="container-page">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="enter flex min-w-0 items-center gap-3.5">
+        <span class="icon-box icon-box-lg max-sm:hidden">{% include "ui/_icon.html" with name="heart" class="size-7" %}</span>
+        <div class="min-w-0">
+          <h1>Mening kutubxonam</h1>
+          <p class="mt-1 text-sm">Sevimlilar, ro'yxatlar, o'qish tarixi va sharhlaringiz.</p>
+        </div>
+      </div>
+      <div class="enter flex flex-wrap gap-2" style="--i:1">
+        <a href="{% url 'book_app:student_book_list' %}" class="btn btn-light btn-pill">{% include "ui/_icon.html" with name="library" class="size-4.5" %} Katalog</a>
+      </div>
     </div>
-    <a href="{% url 'book_app:student_book_list' %}" class="btn btn-secondary">Katalog</a>
   </div>
+</section>
+
+<div class="container-page py-6 lg:py-8" x-data="{ tab: 'favorites' }">
 
   <div class="tabs">
     <button class="tab" :class="tab === 'favorites' && 'tab-active'" @click="tab = 'favorites'">
-      Sevimlilar{% if favorites %} <span class="badge badge-neutral ml-1">{{ favorites|length }}</span>{% endif %}
+      {% include "ui/_icon.html" with name="heart" class="size-4" %} Sevimlilar{% if favorites %} <span class="badge badge-neutral ml-1">{{ favorites|length }}</span>{% endif %}
     </button>
     <button class="tab" :class="tab === 'lists' && 'tab-active'" @click="tab = 'lists'">
-      Ro'yxatlarim{% if my_shelves %} <span class="badge badge-neutral ml-1">{{ my_shelves|length }}</span>{% endif %}
+      {% include "ui/_icon.html" with name="bookmark" class="size-4" %} Ro'yxatlarim{% if my_shelves %} <span class="badge badge-neutral ml-1">{{ my_shelves|length }}</span>{% endif %}
     </button>
-    <button class="tab" :class="tab === 'history' && 'tab-active'" @click="tab = 'history'">O'qish tarixi</button>
+    <button class="tab" :class="tab === 'history' && 'tab-active'" @click="tab = 'history'">{% include "ui/_icon.html" with name="history" class="size-4" %} O'qish tarixi</button>
     <button class="tab" :class="tab === 'reviews' && 'tab-active'" @click="tab = 'reviews'">
-      Sharhlarim{% if my_reviews %} <span class="badge badge-neutral ml-1">{{ my_reviews|length }}</span>{% endif %}
+      {% include "ui/_icon.html" with name="star" class="size-4" %} Sharhlarim{% if my_reviews %} <span class="badge badge-neutral ml-1">{{ my_reviews|length }}</span>{% endif %}
     </button>
   </div>
 
   {# --------- Sevimlilar --------- #}
-  <div x-show="tab === 'favorites'" class="mt-5">
+  <div x-show="tab === 'favorites'" class="panel-in mt-5">
     {% if favorites %}
-      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div class="book-grid">
         {% for favorite in favorites %}
           {% include "opac/_book_card.html" with book=favorite.book %}
         {% endfor %}
@@ -43,7 +52,7 @@
   </div>
 
   {# --------- Ro'yxatlar --------- #}
-  <div x-show="tab === 'lists'" x-cloak class="mt-5">
+  <div x-show="tab === 'lists'" x-cloak class="panel-in mt-5">
     <div class="flex flex-wrap justify-end gap-2">
       <a href="{% url 'engagement:shelf_list' %}" class="btn btn-ghost btn-sm">Barcha ro'yxatlar</a>
       <a href="{% url 'engagement:shelf_create' %}" class="btn btn-secondary btn-sm">Yangi ro'yxat</a>
@@ -58,7 +67,7 @@
   </div>
 
   {# --------- O'qish tarixi --------- #}
-  <div x-show="tab === 'history'" x-cloak class="mt-5">
+  <div x-show="tab === 'history'" x-cloak class="panel-in mt-5">
     {% if history %}
       <div class="table-wrap">
         <table class="table table-zebra">
@@ -83,7 +92,7 @@
   </div>
 
   {# --------- Sharhlar --------- #}
-  <div x-show="tab === 'reviews'" x-cloak class="mt-5">
+  <div x-show="tab === 'reviews'" x-cloak class="panel-in mt-5">
     {% if my_reviews %}
       <div class="space-y-2">
         {% for review in my_reviews %}

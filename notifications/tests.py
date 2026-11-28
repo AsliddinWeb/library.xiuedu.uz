@@ -59,3 +59,19 @@ class EventNotificationTests(TestCase):
         rental, _ = circ.approve_request(req)
         self.assertIsNotNone(rental)
         self.assertEqual(Notification.objects.count(), 0)
+
+
+class ReadAllTests(TestCase):
+    def setUp(self):
+        self.user = make_student()
+        notify(self.user, "Sinov", "Matn")
+        self.client.force_login(self.user)
+
+    def test_plain_form_returns_to_list(self):
+        response = self.client.post('/notifications/read-all/')
+        self.assertRedirects(response, '/notifications/')
+
+    def test_htmx_returns_dropdown(self):
+        response = self.client.post('/notifications/read-all/', HTTP_HX_REQUEST='true')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "<!doctype html>")
