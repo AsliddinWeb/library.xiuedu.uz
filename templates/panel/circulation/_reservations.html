@@ -1,36 +1,42 @@
-{% load static %}
-<div class="overflow-hidden rounded-xl border border-navy-100 bg-paper shadow-soft">
-    <table class="w-full text-left text-sm">
-        <thead class="border-b border-navy-100 bg-navy-50/50 text-xs uppercase tracking-wide text-navy-500">
-            <tr>
-                <th class="px-4 py-3 font-semibold">Kitob</th>
-                <th class="px-4 py-3 font-semibold">Talaba</th>
-                <th class="px-4 py-3 font-semibold">Sana</th>
-                <th class="px-4 py-3 font-semibold">Holat</th>
-                <th class="px-4 py-3 text-right font-semibold">Amal</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-navy-50">
-            {% for res in reservations %}
-            <tr class="transition hover:bg-navy-50/40">
-                <td class="px-4 py-3 font-medium text-navy-900">{{ res.book.title }}</td>
-                <td class="px-4 py-3 text-navy-600">{{ res.borrower_name }}</td>
-                <td class="px-4 py-3 text-navy-500">{{ res.created_at|date:"d.m.Y" }}</td>
-                <td class="px-4 py-3">
-                    {% if res.status == 'AVAILABLE' %}<span class="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Bo'shadi</span>
-                    {% else %}<span class="rounded-full bg-navy-50 px-2.5 py-0.5 text-xs font-medium text-navy-600">Navbatda</span>{% endif %}
-                </td>
-                <td class="px-4 py-3 text-right">
-                    <button hx-post="{% url 'panel:reservation_cancel' res.pk %}" hx-target="#res-table" hx-swap="innerHTML" hx-include="[name='q']"
-                            class="rounded-lg border border-navy-200 px-3.5 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50">Bekor</button>
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="5" class="px-4 py-16 text-center text-sm text-navy-400">Navbat yo'q.</td></tr>
-            {% endfor %}
-        </tbody>
+{% include "panel/circulation/_state.html" %}
+{% if page_obj.object_list %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Kitob</th><th>A'zo</th><th>Yozilgan</th><th>Holati</th><th></th></tr></thead>
+      <tbody>
+        {% for hold in page_obj %}
+          <tr>
+            <td class="min-w-56"><a href="{% url 'panel:book_detail' hold.book_id %}" class="hover:underline">{{ hold.book.title }}</a></td>
+            <td>{% include "panel/circulation/_borrower.html" with patron=hold.patron name=hold.borrower_name %}</td>
+            <td class="whitespace-nowrap text-[color:var(--color-content-muted)]">{{ hold.created_at|date:"d.m.Y H:i" }}</td>
+            <td>
+              {% if hold.status == 'AVAILABLE' %}
+                {% include "ui/_badge.html" with text="Tayyor" variant="success" dot=1 %}
+                {% if hold.hold_until %}<span class="help mt-1 block">{{ hold.hold_until|date:"d.m.Y" }} gacha saqlanadi</span>{% endif %}
+              {% elif hold.status == 'WAITING' %}
+                {% include "ui/_badge.html" with text="Navbatda" variant="info" dot=1 %}
+                <span class="help mt-1 block">{{ hold.position }}-o'rin</span>
+              {% else %}
+                {% include "ui/_badge.html" with text=hold.get_status_display variant="neutral" dot=1 %}
+              {% endif %}
+            </td>
+            <td>
+              {% if hold.status == 'AVAILABLE' or hold.status == 'WAITING' %}
+                <div class="table-actions">
+                  {% if hold.patron_id and "circ.checkout" in perms_flags %}
+                    <a href="{% url 'panel:desk' %}?patron={{ hold.patron_id }}" class="btn btn-secondary btn-sm">Deskda berish</a>
+                  {% endif %}
+                  <button type="button" class="btn btn-ghost btn-sm" hx-post="{% url 'panel:reservation_cancel' hold.pk %}" hx-include="#circ-view, #circ-page, #circ-q"
+                          data-confirm="{{ hold.borrower_name }} navbati bekor qilinsinmi?" data-confirm-label="Bekor qilish">Bekor qilish</button>
+                </div>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
     </table>
-</div>
-
-{% url 'panel:reservations' as pg_url %}
-{% include "panel/partials/_pager.html" with pager_url=pg_url pager_target="#res-table" pager_include="[name='q']" %}
+  </div>
+  {% include "ui/_pager.html" with page_obj=page_obj hx_get=request.path hx_target="#circ-table" query=query %}
+{% else %}
+  <div class="card">{% include "ui/_empty.html" with icon="clock" title="Navbat yo'q" text="Bu bo'limda navbat topilmadi." %}</div>
+{% endif %}

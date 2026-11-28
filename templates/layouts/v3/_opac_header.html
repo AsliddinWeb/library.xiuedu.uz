@@ -26,10 +26,16 @@
            {% if page|slice:":5" == 'shelf' %}aria-current="page"{% endif %}>
           {% include "ui/_icon.html" with name="bookmark" class="size-4.5" %} Ro'yxatlar
         </a>
-        <a href="{% url 'dashboard' %}" class="site-nav-link"
-           {% if page == 'dashboard' %}aria-current="page"{% endif %}>
-          {% include "ui/_icon.html" with name="grid" class="size-4.5" %} Kabinet
-        </a>
+        {% if account.is_staff %}
+          <a href="{{ account.home }}" class="site-nav-link">
+            {% include "ui/_icon.html" with name="chart" class="size-4.5" %} {% if account.home == '/admin/' %}Admin panel{% else %}Xodim paneli{% endif %}
+          </a>
+        {% else %}
+          <a href="{% url 'dashboard' %}" class="site-nav-link"
+             {% if page == 'dashboard' %}aria-current="page"{% endif %}>
+            {% include "ui/_icon.html" with name="grid" class="size-4.5" %} Kabinet
+          </a>
+        {% endif %}
       {% else %}
         <a href="/#imkoniyatlar" class="site-nav-link">{% include "ui/_icon.html" with name="sparkles" class="size-4.5" %} Imkoniyatlar</a>
         <a href="/#qanday" class="site-nav-link">{% include "ui/_icon.html" with name="lightbulb" class="size-4.5" %} Qanday ishlaydi</a>
@@ -76,19 +82,26 @@
               <span class="avatar">{% if user.image %}<img src="{{ user.image.url }}" alt="">{% else %}{{ user|initials }}{% endif %}</span>
               <span class="min-w-0">
                 <span class="block truncate text-sm font-bold">{{ user.get_full_name }}</span>
-                <span class="block text-xs text-[color:var(--color-content-subtle)]">{{ user.get_user_type_display }}</span>
+                <span class="block text-xs text-[color:var(--color-content-subtle)]">{{ account.label }}</span>
               </span>
             </div>
             <div class="menu-sep"></div>
-            <a href="{% url 'dashboard' %}" class="nav-item">{% include "ui/_icon.html" with name="grid" class="size-4.5" %} Kabinet</a>
-            <a href="{% url 'circulation:my_rentals' %}" class="nav-item">{% include "ui/_icon.html" with name="history" class="size-4.5" %} Ijaralarim</a>
-            <a href="{% url 'engagement:my_library' %}" class="nav-item">{% include "ui/_icon.html" with name="heart" class="size-4.5" %} Kutubxonam</a>
-            <a href="{% url 'engagement:shelf_list' %}" class="nav-item">{% include "ui/_icon.html" with name="bookmark" class="size-4.5" %} Ro'yxatlar</a>
-            <a href="{% url 'book_app:course_list' %}" class="nav-item">{% include "ui/_icon.html" with name="graduation" class="size-4.5" %} Fan adabiyoti</a>
-            <a href="{% url 'profile' %}" class="nav-item">{% include "ui/_icon.html" with name="user" class="size-4.5" %} Profil</a>
-            {% if lib_stats %}
-              <div class="menu-sep"></div>
-              <a href="/panel/" class="nav-item">{% include "ui/_icon.html" with name="chart" class="size-4.5" %} Kutubxonachi paneli</a>
+            {% if account.is_staff %}
+              {# Xodim va admin kitob olmaydi — o'quvchi bandlari yo'q #}
+              {% if account.is_admin and account.home == '/admin/' %}
+                <a href="/admin/" class="nav-item">{% include "ui/_icon.html" with name="shield" class="size-4.5" %} Admin panel</a>
+              {% endif %}
+              <a href="/panel/" class="nav-item">{% include "ui/_icon.html" with name="chart" class="size-4.5" %} Kutubxona paneli</a>
+              <a href="{% url 'engagement:shelf_list' %}" class="nav-item">{% include "ui/_icon.html" with name="bookmark" class="size-4.5" %} Ro'yxatlar</a>
+              <a href="{% url 'book_app:course_list' %}" class="nav-item">{% include "ui/_icon.html" with name="graduation" class="size-4.5" %} Fan adabiyoti</a>
+              <a href="{% url 'panel:profile' %}" class="nav-item">{% include "ui/_icon.html" with name="user" class="size-4.5" %} Mening hisobim</a>
+            {% else %}
+              <a href="{% url 'dashboard' %}" class="nav-item">{% include "ui/_icon.html" with name="grid" class="size-4.5" %} Kabinet</a>
+              <a href="{% url 'circulation:my_rentals' %}" class="nav-item">{% include "ui/_icon.html" with name="history" class="size-4.5" %} Ijaralarim</a>
+              <a href="{% url 'engagement:my_library' %}" class="nav-item">{% include "ui/_icon.html" with name="heart" class="size-4.5" %} Kutubxonam</a>
+              <a href="{% url 'engagement:shelf_list' %}" class="nav-item">{% include "ui/_icon.html" with name="bookmark" class="size-4.5" %} Ro'yxatlar</a>
+              <a href="{% url 'book_app:course_list' %}" class="nav-item">{% include "ui/_icon.html" with name="graduation" class="size-4.5" %} Fan adabiyoti</a>
+              <a href="{% url 'profile' %}" class="nav-item">{% include "ui/_icon.html" with name="user" class="size-4.5" %} Profil</a>
             {% endif %}
             <div class="menu-sep"></div>
             <div class="px-3 py-1.5 sm:hidden">{% include "ui/_theme_segment.html" %}</div>

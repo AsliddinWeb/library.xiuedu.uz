@@ -16,20 +16,34 @@
       </p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
-      <a href="{% url 'panel:member_edit' patron.pk %}" class="btn btn-secondary btn-sm">
-        {% include "ui/_icon.html" with name="pencil" class="size-4" %} Tahrirlash
-      </a>
-      <form method="post" action="{% url 'panel:member_renew' patron.pk %}">{% csrf_token %}
-        <button class="btn btn-secondary btn-sm">{% include "ui/_icon.html" with name="clock" class="size-4" %} Uzaytirish</button>
-      </form>
-      {% if patron.status == 'BLOCKED' %}
-        <form method="post" action="{% url 'panel:member_unblock' patron.pk %}">{% csrf_token %}
-          <button class="btn btn-primary btn-sm">{% include "ui/_icon.html" with name="check" class="size-4" %} Blokdan chiqarish</button>
+      {% if "circ.checkout" in perms_flags %}
+        <a href="{% url 'panel:desk' %}?patron={{ patron.pk }}" class="btn btn-primary btn-sm">
+          {% include "ui/_icon.html" with name="barcode" class="size-4" %} Kitob berish
+        </a>
+      {% endif %}
+      {% if "patrons.edit" in perms_flags %}
+        <a href="{% url 'panel:member_edit' patron.pk %}" class="btn btn-secondary btn-sm">
+          {% include "ui/_icon.html" with name="pencil" class="size-4" %} Tahrirlash
+        </a>
+        <form method="post" action="{% url 'panel:member_renew' patron.pk %}">{% csrf_token %}
+          <button class="btn btn-secondary btn-sm" data-tip="A'zolik muddatini uzaytirish">{% include "ui/_icon.html" with name="clock" class="size-4" %} A'zolikni uzaytirish</button>
         </form>
-      {% else %}
-        <button class="btn btn-danger btn-sm" @click="blockOpen = true">
-          {% include "ui/_icon.html" with name="alert" class="size-4" %} Bloklash
-        </button>
+      {% endif %}
+      {% if "patrons.block" in perms_flags %}
+        {% if patron.status == 'BLOCKED' %}
+          <form method="post" action="{% url 'panel:member_unblock' patron.pk %}">{% csrf_token %}
+            <button class="btn btn-secondary btn-sm">{% include "ui/_icon.html" with name="check" class="size-4" %} Blokdan chiqarish</button>
+          </form>
+        {% else %}
+          <button type="button" class="btn btn-danger btn-sm" @click="blockOpen = true">
+            {% include "ui/_icon.html" with name="alert" class="size-4" %} Bloklash
+          </button>
+        {% endif %}
+      {% endif %}
+      {% if can_delete and "patrons.edit" in perms_flags %}
+        <form method="post" action="{% url 'panel:member_delete' patron.pk %}">{% csrf_token %}
+          <button class="btn btn-ghost btn-icon btn-sm" aria-label="A'zoni o'chirish" data-tip="O'chirish" data-confirm="A'zo butunlay o'chirilsinmi?" data-confirm-label="O'chirish">{% include "ui/_icon.html" with name="trash" class="size-4" %}</button>
+        </form>
       {% endif %}
     </div>
   </div>
@@ -50,7 +64,7 @@
     {% include "ui/_stat.html" with label="Navbatlar" value=reservations|length icon="users" %}
   </div>
 
-  <div class="grid gap-4 lg:grid-cols-3">
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-3 [&>*]:min-w-0">
 
     {# ---------------- Chap: ma'lumotlar ---------------- #}
     <div class="space-y-4">
@@ -67,8 +81,8 @@
               {% else %}{% include "ui/_badge.html" with text="Yopilgan" variant="neutral" dot=1 %}{% endif %}
             </span>
           </div>
-          <div class="flex justify-between gap-3"><span class="text-[color:var(--color-content-muted)]">Ro'yxatga olingan</span><span>{{ patron.registered_on }}</span></div>
-          <div class="flex justify-between gap-3"><span class="text-[color:var(--color-content-muted)]">Amal qiladi</span><span>{{ patron.expires_on|default:"muddatsiz" }}</span></div>
+          <div class="flex justify-between gap-3"><span class="text-[color:var(--color-content-muted)]">Ro'yxatga olingan</span><span>{{ patron.registered_on|date:"d.m.Y" }}</span></div>
+          <div class="flex justify-between gap-3"><span class="text-[color:var(--color-content-muted)]">Amal qiladi</span><span>{{ patron.expires_on|date:"d.m.Y"|default:"muddatsiz" }}</span></div>
           <div class="flex justify-between gap-3"><span class="text-[color:var(--color-content-muted)]">Telefon</span><span>{{ patron.contact_phone|default:"—" }}</span></div>
           <div class="flex justify-between gap-3"><span class="text-[color:var(--color-content-muted)]">E-pochta</span><span class="truncate">{{ patron.contact_email|default:"—" }}</span></div>
           {% if patron.user.student_profile %}
@@ -119,9 +133,9 @@
                 {% for r in rentals %}
                 <tr>
                   <td class="font-medium">{{ r.copy.book.title|truncatechars:42 }}</td>
-                  <td class="font-mono text-xs">{{ r.copy.inventory_number }}</td>
-                  <td>{{ r.borrowed_date|default:"—" }}</td>
-                  <td>{{ r.due_date|default:"—" }}</td>
+                  <td class="font-mono text-xs">{{ r.copy.barcode|default:r.copy.inventory_number }}</td>
+                  <td>{{ r.borrowed_date|date:"d.m.Y"|default:"—" }}</td>
+                  <td>{{ r.due_date|date:"d.m.Y"|default:"—" }}</td>
                   <td>
                     {% if r.return_date %}{% include "ui/_badge.html" with text="Qaytarilgan" variant="neutral" %}
                     {% elif r.is_overdue %}{% include "ui/_badge.html" with text="Muddat o'tgan" variant="danger" dot=1 %}
@@ -137,7 +151,7 @@
         {% endif %}
       </div>
 
-      <div class="grid gap-4 md:grid-cols-2">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 [&>*]:min-w-0">
         <div class="card">
           <div class="card-head"><h2 class="card-title">So'rovlar</h2></div>
           <div class="card-body space-y-2 text-sm">
@@ -158,7 +172,11 @@
         <div class="card">
           <div class="card-head">
             <h2 class="card-title">Jarimalar</h2>
-            {% if unpaid_fines %}<span class="badge badge-danger">{{ unpaid_fines|length }} to'lanmagan</span>{% endif %}
+            {% if unpaid_fines %}
+              {% if "billing.charge" in perms_flags or "billing.collect" in perms_flags %}
+                <a href="{% url 'panel:fines' %}?q={{ patron.card_number|urlencode }}" class="badge badge-danger">{{ unpaid_fines|length }} to'lanmagan →</a>
+              {% else %}<span class="badge badge-danger">{{ unpaid_fines|length }} to'lanmagan</span>{% endif %}
+            {% endif %}
           </div>
           <div class="card-body space-y-2 text-sm">
             {% for fine in fines %}
@@ -199,7 +217,7 @@
             </div>
             <div class="field">
               <label class="label">Muddat (ixtiyoriy)</label>
-              <input type="date" name="until" class="input">
+              <input type="date" name="until" class="input" min="{% now 'Y-m-d' %}">
               <p class="help">Bo'sh qoldirilsa — muddatsiz blok.</p>
             </div>
           </div>

@@ -19,6 +19,18 @@
       <a href="{% url 'book_app:student_book_list' %}?category={{ book.category_id }}">{{ book.category.name }}</a>
     </nav>
 
+    {% if account.is_staff %}
+      <div class="card mb-6 flex flex-wrap items-center justify-between gap-3 p-4">
+        <p class="flex items-center gap-3 text-sm">
+          <span class="icon-box icon-box-sm icon-box-info">{% include "ui/_icon.html" with name="eye" class="size-4.5" %}</span>
+          <span><b>Xodim ko'rinishi.</b> O'quvchi bu yerda ijara so'raydi; xodim hisobida kitob olinmaydi.</span>
+        </p>
+        {% if "catalog.view" in perms_flags %}
+          <a href="{% url 'panel:book_detail' book.pk %}" class="btn btn-primary btn-sm">{% include "ui/_icon.html" with name="pencil" class="size-4" %} Panelda ochish</a>
+        {% endif %}
+      </div>
+    {% endif %}
+
     <div class="grid gap-8 md:grid-cols-[15rem_1fr] lg:grid-cols-[18rem_1fr] lg:gap-12">
       <div class="enter mx-auto w-48 sm:w-56 md:mx-0 md:w-full">
         <div class="book-3d">

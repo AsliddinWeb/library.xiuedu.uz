@@ -1,0 +1,32 @@
+{% extends "panel/base.html" %}
+
+{% block title %}{{ resource.title }} — Kutubxona paneli{% endblock %}
+
+{% block panel_content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">{{ resource.title }}</h1>
+    {% if resource.subtitle %}<p class="page-sub">{{ resource.subtitle }}</p>{% endif %}
+  </div>
+  <div class="flex flex-wrap gap-2">
+    {% if "reports.export" in perms_flags %}
+      <a href="?{{ export_query }}" class="btn btn-secondary" download>{% include "ui/_icon.html" with name="download" class="size-4" %} CSV</a>
+    {% endif %}
+    {% if can_edit %}
+      <a href="{{ create_url }}" class="btn btn-primary">{% include "ui/_icon.html" with name="plus" class="size-4" %} Yangi {{ resource.label }}</a>
+    {% endif %}
+  </div>
+</div>
+
+<form method="get" class="mb-4" role="search" hx-get="{{ list_url }}" hx-target="#crud-table" hx-push-url="true"
+      hx-trigger="submit, input changed delay:400ms from:#crud-q, search from:#crud-q">
+  <label class="search max-w-md">
+    <span class="text-[color:var(--color-content-subtle)]">{% include "ui/_icon.html" with name="search" class="size-4" %}</span>
+    <input id="crud-q" type="search" name="q" value="{{ q }}" placeholder="Qidirish..." autocomplete="off" aria-label="Qidiruv">
+  </label>
+</form>
+
+<div id="crud-table" hx-target="#crud-table" hx-swap="innerHTML" aria-live="polite">
+  {% include "panel/crud/_table.html" %}
+</div>
+{% endblock %}

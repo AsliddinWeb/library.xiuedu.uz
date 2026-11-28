@@ -1,21 +1,42 @@
 {% extends "panel/base.html" %}
+{% load static %}
 
-{% block title %}Boshqaruv paneli — Kutubxonachi{% endblock %}
+{% block title %}Boshqaruv paneli — Kutubxona{% endblock %}
 
 {% block panel_content %}
 {# ---------------- Salom va tez amallar ---------------- #}
 <div class="band-dark !rounded-[var(--radius-lg)] flex flex-wrap items-center justify-between gap-4 p-5 lg:p-6">
   <div>
     <h1 class="text-xl text-white sm:text-2xl">Assalomu alaykum, {{ user.first_name|default:user.username }}</h1>
-    <p class="mt-1 text-sm text-white/75">{% now "d F, l" %} · {% if stats.pending_requests %}{{ stats.pending_requests }} ta so'rov javob kutmoqda{% else %}kutayotgan so'rov yo'q{% endif %}</p>
+    <p class="mt-1 text-sm text-white/75">{% now "d F, l" %} · {% if stats.pending_requests %}{{ stats.pending_requests }} ta so'rov javob kutmoqda{% else %}javob kutayotgan so'rov yo'q{% endif %}</p>
   </div>
   <div class="flex flex-wrap gap-2">
-    <a href="{% url 'panel:requests' %}" class="btn btn-light btn-sm">{% include "ui/_icon.html" with name="inbox" class="size-4" %} So'rovlar</a>
-    <a href="/panel/books/" class="btn btn-glass btn-sm">{% include "ui/_icon.html" with name="book" class="size-4" %} Kitoblar</a>
-    <a href="/panel/members/" class="btn btn-glass btn-sm">{% include "ui/_icon.html" with name="users" class="size-4" %} A'zolar</a>
+    {% if "circ.checkout" in perms_flags or "circ.checkin" in perms_flags %}
+    <a href="{% url 'panel:desk' %}" class="btn btn-light btn-sm">{% include "ui/_icon.html" with name="barcode" class="size-4" %} Berish va qaytarish</a>
+    {% endif %}
+    {% if "catalog.edit" in perms_flags %}
+    <a href="{% url 'panel:book_create' %}" class="btn btn-glass btn-sm">{% include "ui/_icon.html" with name="plus" class="size-4" %} Yangi kitob</a>
+    {% endif %}
+    {% if "patrons.edit" in perms_flags %}
+    <a href="{% url 'panel:member_create' %}" class="btn btn-glass btn-sm">{% include "ui/_icon.html" with name="users" class="size-4" %} Yangi a'zo</a>
+    {% endif %}
+    {% if "catalog.import" in perms_flags %}
+    <a href="{% url 'panel:import_books' %}" class="btn btn-glass btn-sm">{% include "ui/_icon.html" with name="upload" class="size-4" %} Import</a>
+    {% endif %}
   </div>
 </div>
 
+{% if "circ.checkout" in perms_flags or "circ.checkin" in perms_flags %}
+{# ---------------- Bugun ---------------- #}
+<dl class="card mt-4 grid grid-cols-2 sm:grid-cols-4">
+  <div class="p-3.5 text-center"><dt class="help">Bugun berildi</dt><dd class="text-2xl font-extrabold tabular-nums">{{ stats.issued_today }}</dd></div>
+  <div class="border-l border-[color:var(--color-line)] p-3.5 text-center"><dt class="help">Bugun qaytdi</dt><dd class="text-2xl font-extrabold tabular-nums">{{ stats.returned_today }}</dd></div>
+  <div class="border-t border-[color:var(--color-line)] p-3.5 text-center sm:border-l sm:border-t-0"><dt class="help">Bugun muddati tugaydi</dt><dd class="text-2xl font-extrabold tabular-nums {% if stats.due_today %}text-[color:var(--color-warning-700)]{% endif %}">{{ stats.due_today }}</dd></div>
+  <div class="border-l border-t border-[color:var(--color-line)] p-3.5 text-center sm:border-t-0"><dt class="help">Olib ketilishi kutilmoqda</dt><dd class="text-2xl font-extrabold tabular-nums">{{ stats.ready_holds }}</dd></div>
+</dl>
+{% endif %}
+
+{% if "circ.checkout" in perms_flags %}
 {# ---------------- KPI kartalar ---------------- #}
 <div class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
     <a href="{% url 'panel:requests' %}" class="stat">
@@ -28,7 +49,7 @@
       <span class="stat-value mt-1" data-count="{{ stats.active_rentals }}">{{ stats.active_rentals }}</span>
       <span class="stat-label">Faol ijaralar</span>
     </a>
-    <a href="{% url 'panel:rentals' %}" class="stat">
+    <a href="{% url 'panel:rentals' %}?view=overdue" class="stat">
       <span class="flex items-center justify-between"><span class="icon-box icon-box-danger">{% include "ui/_icon.html" with name="alert" class="size-5.5" %}</span>{% include "ui/_icon.html" with name="arrow-up-right" class="size-4 text-[color:var(--color-content-subtle)]" %}</span>
       <span class="stat-value mt-1 {% if stats.overdue %}text-[color:var(--color-danger-700)]{% endif %}" data-count="{{ stats.overdue }}">{{ stats.overdue }}</span>
       <span class="stat-label">Kechikkanlar</span>
@@ -40,6 +61,8 @@
     </a>
 </div>
 
+{% endif %}
+
 {# ---------------- Grafiklar ---------------- #}
 <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
   <div class="card card-body lg:col-span-2">
@@ -47,11 +70,11 @@
       <h2 class="flex items-center gap-2.5 text-base"><span class="icon-box icon-box-sm">{% include "ui/_icon.html" with name="trending" class="size-4.5" %}</span> Ijaralar dinamikasi</h2>
       <span class="help">oxirgi 14 kun</span>
     </div>
-    <div class="mt-4 h-64"><canvas id="rentalsChart"></canvas></div>
+    <div class="mt-4 h-64"><canvas data-chart="line" data-source="rentals-data" aria-label="Oxirgi 14 kunda berilgan kitoblar" role="img"></canvas></div>
   </div>
   <div class="card card-body">
     <h2 class="flex items-center gap-2.5 text-base"><span class="icon-box icon-box-sm icon-box-plum">{% include "ui/_icon.html" with name="layers" class="size-4.5" %}</span> Kataloglar bo'yicha</h2>
-    <div class="mt-4 h-64"><canvas id="catsChart"></canvas></div>
+    <div class="mt-4 h-64"><canvas data-chart="doughnut" data-source="cats-data" aria-label="Kataloglar bo'yicha kitoblar" role="img"></canvas></div>
   </div>
 </div>
 
@@ -71,12 +94,13 @@
     </div>
     <div class="card flex items-center gap-3 p-3.5">
       <span class="icon-box icon-box-sm icon-box-plum">{% include "ui/_icon.html" with name="graduation" class="size-4.5" %}</span>
-      <span><span class="block text-lg font-extrabold leading-tight tabular-nums">{{ stats.students }}</span><span class="help">Talabalar</span></span>
+      <span><span class="block text-lg font-extrabold leading-tight tabular-nums">{{ stats.patrons }}</span><span class="help">A'zolar</span></span>
     </div>
 </div>
 
 {# ---------------- Jadvallar ---------------- #}
 <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+  {% if recent_requests is not None %}
   <section class="card overflow-hidden">
       <div class="card-head !pb-3">
         <h2 class="flex items-center gap-2.5 text-base"><span class="icon-box icon-box-sm icon-box-sun">{% include "ui/_icon.html" with name="inbox" class="size-4.5" %}</span> Kutilayotgan so'rovlar</h2>
@@ -96,11 +120,13 @@
       {% endfor %}
     </div>
   </section>
+  {% endif %}
 
+  {% if overdue is not None %}
   <section class="card overflow-hidden">
       <div class="card-head !pb-3">
         <h2 class="flex items-center gap-2.5 text-base"><span class="icon-box icon-box-sm icon-box-danger">{% include "ui/_icon.html" with name="alert" class="size-4.5" %}</span> Kechikkan ijaralar</h2>
-        <a href="{% url 'panel:rentals' %}" class="link-more !text-xs">Barchasi {% include "ui/_icon.html" with name="arrow-right" class="size-3.5" %}</a>
+        <a href="{% url 'panel:rentals' %}?view=overdue" class="link-more !text-xs">Barchasi {% include "ui/_icon.html" with name="arrow-right" class="size-3.5" %}</a>
       </div>
     <div class="divide-y divide-[color:var(--color-line)] border-t border-[color:var(--color-line)]">
       {% for rental in overdue %}
@@ -109,10 +135,49 @@
             <p class="truncate text-sm font-bold">{{ rental.copy.book.title }}</p>
             <p class="help">{{ rental.borrower_name }} · muddat {{ rental.due_date|date:"d.m.Y" }}</p>
           </div>
-          {% include "ui/_badge.html" with text="Kechikkan" variant="danger" dot=1 %}
+          {% if "circ.checkout" in perms_flags and rental.patron_id %}<a href="{% url 'panel:desk' %}?patron={{ rental.patron_id }}" class="btn btn-secondary btn-sm flex-none">Ochish</a>{% else %}{% include "ui/_badge.html" with text="Kechikkan" variant="danger" dot=1 %}{% endif %}
         </div>
       {% empty %}
         {% include "ui/_empty.html" with icon="check-circle" title="Kechikkan ijara yo'q" %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+
+<div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+  {% if ready_holds is not None %}
+  <section class="card overflow-hidden">
+    <div class="card-head !pb-3">
+      <h2 class="flex items-center gap-2.5 text-base"><span class="icon-box icon-box-sm icon-box-info">{% include "ui/_icon.html" with name="bookmark" class="size-4.5" %}</span> Olib ketilishi kutilayotgan</h2>
+      {% if "circ.holds" in perms_flags %}<a href="{% url 'panel:reservations' %}?view=ready" class="link-more !text-xs">Barchasi {% include "ui/_icon.html" with name="arrow-right" class="size-3.5" %}</a>{% endif %}
+    </div>
+    <div class="divide-y divide-[color:var(--color-line)] border-t border-[color:var(--color-line)]">
+      {% for hold in ready_holds %}
+        <div class="flex items-center justify-between gap-3 px-4 py-3">
+          <div class="min-w-0"><p class="truncate text-sm font-bold">{{ hold.book.title }}</p><p class="help">{{ hold.borrower_name }}{% if hold.hold_until %} · {{ hold.hold_until|date:"d.m" }} gacha{% endif %}</p></div>
+          {% if "circ.checkout" in perms_flags and hold.patron_id %}<a href="{% url 'panel:desk' %}?patron={{ hold.patron_id }}" class="btn btn-primary btn-sm flex-none">Berish</a>{% endif %}
+        </div>
+      {% empty %}
+        {% include "ui/_empty.html" with icon="check-circle" title="Kutayotgan kitob yo'q" %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="card overflow-hidden">
+    <div class="card-head !pb-3">
+      <h2 class="flex items-center gap-2.5 text-base"><span class="icon-box icon-box-sm">{% include "ui/_icon.html" with name="history" class="size-4.5" %}</span> So'nggi ishlarim</h2>
+      <a href="{% url 'panel:profile' %}" class="link-more !text-xs">Barchasi {% include "ui/_icon.html" with name="arrow-right" class="size-3.5" %}</a>
+    </div>
+    <div class="divide-y divide-[color:var(--color-line)] border-t border-[color:var(--color-line)]">
+      {% for log in my_actions %}
+        <div class="flex items-baseline justify-between gap-3 px-4 py-2.5">
+          <p class="min-w-0 truncate text-sm"><b>{{ log.get_action_display }}</b> <span class="text-[color:var(--color-content-muted)]">{{ log.note|default:log.object_repr }}</span></p>
+          <span class="help flex-none">{{ log.at|date:"d.m H:i" }}</span>
+        </div>
+      {% empty %}
+        {% include "ui/_empty.html" with icon="history" title="Hali amal yo'q" text="Bajargan ishlaringiz shu yerda ko'rinadi." %}
       {% endfor %}
     </div>
   </section>
@@ -120,32 +185,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-(function () {
-    const line = '#17a088', soft = 'rgba(23,160,136,.14)';
-    const rc = {{ rentals_chart|safe }};
-    new Chart(document.getElementById('rentalsChart'), {
-        type: 'line',
-        data: { labels: rc.labels, datasets: [{
-            data: rc.data, borderColor: line, backgroundColor: soft,
-            fill: true, tension: .35, pointRadius: 2, pointHoverRadius: 5, pointBackgroundColor: line, borderWidth: 2.5,
-        }]},
-        options: { responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 } },
-                      x: { grid: { display: false } } } }
-    });
-    const cc = {{ cats_chart|safe }};
-    new Chart(document.getElementById('catsChart'), {
-        type: 'doughnut',
-        data: { labels: cc.labels, datasets: [{
-            data: cc.data,
-            backgroundColor: ['#17a088', '#ec5b30', '#fdb924', '#3559b5', '#8247bd', '#0e8ba1'],
-            borderWidth: 0,
-        }]},
-        options: { responsive: true, maintainAspectRatio: false, cutout: '62%',
-            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
-    });
-})();
-</script>
+{{ rentals_chart|json_script:"rentals-data" }}
+{{ cats_chart|json_script:"cats-data" }}
+<script src="{% static 'js/panel-charts.js' %}"></script>
 {% endblock %}

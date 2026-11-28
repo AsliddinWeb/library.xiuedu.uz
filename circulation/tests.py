@@ -36,10 +36,12 @@ class MyRentalsAccessTests(TestCase):
         self.client.login(username=user.username, password='x')
         self.assertEqual(self.client.get('/circulation/my-rentals/').status_code, 200)
 
-    def test_librarian_can_open(self):
+    def test_librarian_is_sent_to_panel(self):
+        """Kutubxona xodimi kitob olmaydi — uning ish joyi panel."""
         user = make_librarian(password='x')
         self.client.login(username=user.username, password='x')
-        self.assertEqual(self.client.get('/circulation/my-rentals/').status_code, 200)
+        self.assertRedirects(self.client.get('/circulation/my-rentals/'), '/panel/',
+                             fetch_redirect_response=False)
 
     def test_anonymous_redirected(self):
         self.assertEqual(self.client.get('/circulation/my-rentals/').status_code, 302)

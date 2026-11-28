@@ -9,7 +9,7 @@
   <div class="grid gap-6 lg:grid-cols-3">
 
     {# --------- Baho qoldirish --------- #}
-    {% if request.user.is_authenticated %}
+    {% if request.user.is_authenticated and not account.is_staff %}
       <div class="card" x-data="{ rating: {{ my_review.rating|default:0 }} }">
         <div class="card-head">
           <h3 class="card-title">

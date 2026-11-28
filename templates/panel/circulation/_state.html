@@ -1,0 +1,17 @@
+{% comment %}Tablar va joriy holat: amaldan keyin ro'yxat shu filtrda qoladi.{% endcomment %}
+<input type="hidden" id="circ-view" name="view" value="{{ view }}">
+<input type="hidden" id="circ-page" name="page" value="{{ page_obj.number }}">
+<div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+<nav class="tabs" aria-label="Holat bo'yicha saralash">
+  {% for code, label, count in tabs %}
+    <a class="tab {% if code == view %}tab-active{% endif %}" {% if code == view %}aria-current="page"{% endif %}
+       href="?view={{ code }}{% if q %}&q={{ q|urlencode }}{% endif %}"
+       hx-get="{{ request.path }}?view={{ code }}{% if q %}&q={{ q|urlencode }}{% endif %}" hx-push-url="true">
+      {{ label }} <span class="badge badge-neutral">{{ count }}</span>
+    </a>
+  {% endfor %}
+</nav>
+{% if "reports.export" in perms_flags %}
+  <a href="?{{ export_query }}" class="btn btn-secondary btn-sm" download>{% include "ui/_icon.html" with name="download" class="size-4" %} CSV yuklab olish</a>
+{% endif %}
+</div>

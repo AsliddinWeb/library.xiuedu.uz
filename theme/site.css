@@ -34,14 +34,18 @@
 
   /* --- Logo -------------------------------------------------------------- */
   .brand { display: inline-flex; align-items: center; gap: 0.625rem; flex: none; }
+  /* Logo to'liq ko'rsatiladi (halqa va yozuv bilan) — qirqilmaydi */
   .brand-mark {
     display: grid; place-items: center; flex: none;
-    width: 2.625rem; height: 2.625rem;
-    background: #fff; border-radius: var(--radius-md);
+    width: 3rem; height: 3rem;
+    background: #fff; border-radius: 999px;
     box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--color-line);
     transition: transform .3s var(--ease-spring);
   }
-  .brand-mark img { width: 82%; height: 82%; object-fit: contain; }
+  .brand-mark img { width: 92%; height: 92%; object-fit: contain; }
+  @media (min-width: 640px) { .brand-mark { width: 3.5rem; height: 3.5rem; } }
+  /* Juda tor telefonda ikkinchi qator joy olmasin */
+  @media (max-width: 399.98px) { .brand-name > span { display: none; } }
   .brand:hover .brand-mark { transform: rotate(-6deg) scale(1.06); }
   .brand-name { display: flex; flex-direction: column; line-height: 1.05; }
   .brand-name b { font-family: var(--font-display); font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.01em; }
@@ -61,7 +65,7 @@
     border-color: var(--color-line);
     box-shadow: var(--shadow-sm);
   }
-  .site-header-row { display: flex; align-items: center; gap: 0.75rem; height: 4.25rem; }
+  .site-header-row { display: flex; align-items: center; gap: 0.75rem; height: 4.5rem; }
   @media (max-width: 639.98px) { .header-cta { height: var(--ui-control-h-sm); padding-inline: 0.875rem; font-size: var(--ui-text-sm); } }
 
   .site-nav { display: none; align-items: center; gap: 0.125rem; }

@@ -52,7 +52,7 @@
     </div>
     {% if active_loan %}
       <div class="ml-auto rounded-[var(--radius-sm)] bg-[color:var(--color-info-50)] px-3 py-2 text-sm">
-        Hozir <b>{{ active_loan.borrower_name }}</b> da · muddat {{ active_loan.due_date }}
+        {% if show_people %}Hozir <b>{{ active_loan.borrower_name }}</b> da{% else %}Ijarada{% endif %} · muddat {{ active_loan.due_date }}
       </div>
     {% endif %}
   </div>
@@ -87,7 +87,7 @@
           {% for loan in loans %}
             <div class="flex items-start justify-between gap-2">
               <div>
-                <p>{{ loan.borrower_name }}</p>
+                <p>{% if show_people %}{{ loan.borrower_name }}{% else %}A'zo{% endif %}</p>
                 <p class="help">{{ loan.borrowed_date|default:"—" }} → {{ loan.return_date|default:"hali qaytmagan" }}</p>
               </div>
               {% if not loan.return_date %}
@@ -107,7 +107,7 @@
                 <span>{{ log.from_status|default:"—" }} → <b>{{ log.to_status }}</b></span>
                 <span class="whitespace-nowrap text-[color:var(--color-content-subtle)]">{{ log.changed_at|date:"d.m H:i" }}</span>
               </div>
-              {% if log.reason %}<p class="text-[color:var(--color-content-subtle)]">{{ log.reason }}</p>{% endif %}
+              {% if log.reason and show_people %}<p class="text-[color:var(--color-content-subtle)]">{{ log.reason }}</p>{% endif %}
             </div>
           {% empty %}<p class="help">Jurnal bo'sh.</p>{% endfor %}
         </div>

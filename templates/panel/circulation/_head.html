@@ -1,0 +1,25 @@
+{% comment %}
+  Ro'yxat sahifalarining sarlavhasi va qidiruvi.
+  Kirish: `title`, `sub`, `placeholder`.
+{% endcomment %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">{{ title }}</h1>
+    <p class="page-sub">{{ sub }}</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    {% if "circ.checkout" in perms_flags or "circ.checkin" in perms_flags %}
+      <a href="{% url 'panel:desk' %}" class="btn btn-primary">{% include "ui/_icon.html" with name="barcode" class="size-4" %} Deskni ochish</a>
+    {% endif %}
+  </div>
+</div>
+
+<form id="circ-search" method="get" class="mb-4" role="search"
+      hx-get="{{ request.path }}" hx-target="#circ-table" hx-push-url="true"
+      hx-trigger="submit, input changed delay:400ms from:#circ-q, search from:#circ-q"
+      hx-include="#circ-view">
+  <label class="search max-w-md">
+    <span class="text-[color:var(--color-content-subtle)]">{% include "ui/_icon.html" with name="search" class="size-4" %}</span>
+    <input id="circ-q" type="search" name="q" value="{{ q }}" placeholder="{{ placeholder }}" autocomplete="off" aria-label="Qidiruv">
+  </label>
+</form>

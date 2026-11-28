@@ -215,12 +215,12 @@ class GranularPermissionTests(TestCase):
         self.assertTrue(has_perm(user, Perms.PATRONS_EDIT))
         self.assertFalse(has_perm(user, Perms.ACQ_MANAGE))
 
-    def test_student_has_only_catalog_view(self):
+    def test_student_has_no_staff_permissions(self):
         from core.testing import make_student
 
         from .permissions import Perms, has_perm
         user = make_student()
-        self.assertTrue(has_perm(user, Perms.CATALOG_VIEW))
+        self.assertFalse(has_perm(user, Perms.CATALOG_VIEW))
         self.assertFalse(has_perm(user, Perms.CIRC_CHECKOUT))
 
     def test_superuser_has_everything(self):
@@ -239,10 +239,13 @@ class GranularPermissionTests(TestCase):
         from .permissions import Perms, has_perm
         user = make_employee(role=Roles.EMPLOYEE)
         acq_role = Role.objects.create(name="Ta'minotchi", permissions=[Perms.ACQ_MANAGE])
-        user.employe_profile.roles.add(acq_role)
+        desk_role = Role.objects.create(name="Zal", permissions=[Perms.ROOM_DESK])
+        user.employe_profile.roles.add(acq_role, desk_role)
 
         self.assertTrue(has_perm(user, Perms.ACQ_MANAGE))
-        self.assertTrue(has_perm(user, Perms.CATALOG_VIEW))
+        self.assertTrue(has_perm(user, Perms.ROOM_DESK))
+        # O'quvchi roli xodim ruxsatiga hech narsa qo'shmaydi
+        self.assertFalse(has_perm(user, Perms.CATALOG_VIEW))
 
     def test_require_perm_decorator(self):
         from django.http import HttpResponse

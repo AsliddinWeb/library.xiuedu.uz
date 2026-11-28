@@ -241,7 +241,20 @@ class QuickSearchTests(TestCase):
         response = self.client.get('/panel/search/', {'q': self.item.barcode})
         self.assertRedirects(response, f'/panel/items/{self.item.pk}/')
 
-    def test_card_number_opens_patron(self):
+    def test_card_number_opens_desk(self):
+        """Abonement xodimi biletni skanerlasa — darrov kitob berish oynasi."""
+        response = self.client.get('/panel/search/', {'q': self.patron.card_number})
+        self.assertRedirects(response, f'/panel/desk/?patron={self.patron.pk}')
+
+    def test_card_number_opens_card_without_checkout(self):
+        from core.testing import make_employee
+        from user_app.models import Role
+
+        user = make_employee()
+        role = Role.objects.create(name="A'zo ko'ruvchi",
+                                   permissions=['catalog.view', 'patrons.view'])
+        user.employe_profile.roles.add(role)
+        self.client.force_login(user)
         response = self.client.get('/panel/search/', {'q': self.patron.card_number})
         self.assertRedirects(response, f'/panel/members/{self.patron.pk}/')
 

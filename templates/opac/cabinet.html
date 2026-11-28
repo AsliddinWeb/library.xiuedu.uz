@@ -35,14 +35,14 @@
               <p class="mt-1 truncate font-display text-lg font-bold">{{ user.get_full_name }}</p>
               <p class="text-xs font-semibold text-white/75">{{ patron.category.name }}</p>
             </div>
-            <span class="logo-chip grid size-12 flex-none place-items-center rounded-[var(--radius-md)]">
-              <img src="{% static 'img/xiu-mark.webp' %}" alt="" width="40" height="40">
+            <span class="logo-chip grid size-16 flex-none place-items-center rounded-full p-0.5">
+              <img src="{% static 'img/xiu-logo-192.png' %}" alt="XIU logotipi" width="60" height="60">
             </span>
           </div>
           {% if patron.category.loan_limit %}
             <div>
               <div class="flex justify-between text-xs font-bold">
-                <span class="text-white/75">Qo'ldagi kitoblar</span>
+                <span class="text-white/75">Sizdagi kitoblar</span>
                 <span>{{ active_rentals_count }} / {{ patron.category.loan_limit }}</span>
               </div>
               <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-black/20">
@@ -94,7 +94,7 @@
     <a href="{% url 'circulation:my_rentals' %}" class="stat" data-reveal style="--i:0">
       <span class="flex items-center justify-between"><span class="icon-box">{% include "ui/_icon.html" with name="book" class="size-5.5" %}</span>{% include "ui/_icon.html" with name="arrow-up-right" class="size-4 text-[color:var(--color-content-subtle)]" %}</span>
       <span class="stat-value mt-1" data-count="{{ active_rentals_count }}">{{ active_rentals_count }}</span>
-      <span class="stat-label">Qo'lda kitob</span>
+      <span class="stat-label">Sizdagi kitoblar</span>
     </a>
     <a href="{% url 'engagement:my_library' %}" class="stat" data-reveal style="--i:1">
       <span class="flex items-center justify-between"><span class="icon-box icon-box-info">{% include "ui/_icon.html" with name="book-open" class="size-5.5" %}</span>{% include "ui/_icon.html" with name="arrow-up-right" class="size-4 text-[color:var(--color-content-subtle)]" %}</span>

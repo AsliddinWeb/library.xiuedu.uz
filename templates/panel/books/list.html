@@ -12,9 +12,17 @@
     <h1 class="page-title">Katalog</h1>
     <p class="page-sub"><span id="book-total">{{ total }}</span> ta bibliografik yozuv</p>
   </div>
-  <a href="{% url 'panel:book_create' %}" class="btn btn-primary">
-    {% include "ui/_icon.html" with name="plus" class="size-4" %} Yangi yozuv
-  </a>
+  <div class="flex flex-wrap gap-2">
+    {% if "reports.export" in perms_flags %}
+      <a href="?{{ export_query }}" class="btn btn-secondary" download>{% include "ui/_icon.html" with name="download" class="size-4" %} CSV</a>
+    {% endif %}
+    {% if "catalog.import" in perms_flags %}
+      <a href="{% url 'panel:import_books' %}" class="btn btn-secondary">{% include "ui/_icon.html" with name="upload" class="size-4" %} Import</a>
+    {% endif %}
+    {% if "catalog.edit" in perms_flags %}
+      <a href="{% url 'panel:book_create' %}" class="btn btn-primary">{% include "ui/_icon.html" with name="plus" class="size-4" %} Yangi kitob</a>
+    {% endif %}
+  </div>
 </div>
 
 <div class="card card-body mb-4">
@@ -32,6 +40,8 @@
   </div>
 
   <div id="book-filters" class="mt-3 flex flex-wrap items-end gap-3">
+    {% for key, value in related.items %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+    {% if related %}<a href="{% url 'panel:books' %}" class="chip chip-active">Ma'lumotnoma bo'yicha saralangan ✕</a>{% endif %}
     <div class="field w-48">
       <label class="label">Katalog</label>
       <select name="category" class="select"
@@ -93,8 +103,8 @@
               hx-get="{% url 'panel:books' %}" hx-target="#book-table"
               hx-include="[name='q'],#book-filters" hx-trigger="change" hx-push-url="true">
         <option value="">Hammasi</option>
-        <option value="1" {% if active_filter == '1' %}selected{% endif %}>Aktiv</option>
-        <option value="0" {% if active_filter == '0' %}selected{% endif %}>Noaktiv</option>
+        <option value="1" {% if active_filter == '1' %}selected{% endif %}>Faol</option>
+        <option value="0" {% if active_filter == '0' %}selected{% endif %}>Nofaol</option>
       </select>
     </div>
 

@@ -1,43 +1,58 @@
-{% load static %}
-<span id="fine-total" hx-swap-oob="true">{{ total_unpaid }}</span>
-<div class="overflow-hidden rounded-xl border border-navy-100 bg-paper shadow-soft">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-            <thead class="border-b border-navy-100 bg-navy-50/50 text-xs uppercase tracking-wide text-navy-500">
-                <tr>
-                    <th class="px-4 py-3 font-semibold">Talaba</th>
-                    <th class="px-4 py-3 font-semibold">Kitob</th>
-                    <th class="px-4 py-3 font-semibold">Kechikish</th>
-                    <th class="px-4 py-3 font-semibold">Summa</th>
-                    <th class="px-4 py-3 font-semibold">Holat</th>
-                    <th class="px-4 py-3 text-right font-semibold">Amal</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-navy-50">
-                {% for fine in fines %}
-                <tr class="transition hover:bg-navy-50/40">
-                    <td class="px-4 py-3 font-medium text-navy-900">{{ fine.borrower_name }}</td>
-                    <td class="px-4 py-3 text-navy-600">{{ fine.rental.copy.book.title }}</td>
-                    <td class="px-4 py-3 text-navy-500">{{ fine.days_overdue }} kun</td>
-                    <td class="px-4 py-3 font-semibold text-navy-900">{{ fine.amount }} so'm</td>
-                    <td class="px-4 py-3">
-                        {% if fine.is_paid %}<span class="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">To'langan</span>
-                        {% else %}<span class="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600">To'lanmagan</span>{% endif %}
-                    </td>
-                    <td class="px-4 py-3 text-right">
-                        {% if not fine.is_paid %}
-                        <button hx-post="{% url 'panel:fine_mark_paid' fine.pk %}" hx-target="#fine-table" hx-swap="innerHTML" hx-include="#fine-filters,[name='q']"
-                                class="rounded-lg bg-navy-900 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-navy-800">To'landi</button>
-                        {% else %}<span class="text-xs text-navy-300">{{ fine.paid_at|date:"d.m.Y" }}</span>{% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="6" class="px-4 py-16 text-center text-sm text-navy-400">Jarima yo'q.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+<div class="mb-4 grid gap-3 sm:grid-cols-3">
+  <div class="stat"><p class="stat-label">To'lanmagan</p><p class="stat-value text-[color:var(--color-danger-700)]">{{ totals.unpaid|floatformat:"0g" }}</p><p class="help">so'm</p></div>
+  <div class="stat"><p class="stat-label">Shu oyda qabul qilingan</p><p class="stat-value">{{ totals.collected|floatformat:"0g" }}</p><p class="help">so'm</p></div>
+  <div class="stat"><p class="stat-label">Shu oyda kechirilgan</p><p class="stat-value">{{ totals.waived|floatformat:"0g" }}</p><p class="help">so'm</p></div>
 </div>
-
-{% url 'panel:fines' as pg_url %}
-{% include "panel/partials/_pager.html" with pager_url=pg_url pager_target="#fine-table" pager_include="#fine-filters,[name='q']" %}
+{% include "panel/circulation/_state.html" %}
+{% if page_obj.object_list %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>A'zo</th><th>Kitob</th><th class="table-num">Summa (so'm)</th><th>Holati</th><th></th></tr></thead>
+      <tbody>
+        {% for fine in page_obj %}
+          <tr>
+            <td>{% include "panel/circulation/_borrower.html" with patron=fine.patron name=fine.borrower_name %}</td>
+            <td class="min-w-56">{{ fine.rental.copy.book.title }}
+              <span class="help block">{% if fine.days_overdue %}{{ fine.days_overdue }} kun kechikish{% endif %}{% if fine.note %}{% if fine.days_overdue %} · {% endif %}{{ fine.note }}{% endif %}</span></td>
+            <td class="table-num font-semibold">{{ fine.amount|floatformat:"0g" }}</td>
+            <td>
+              {% if fine.is_waived %}{% include "ui/_badge.html" with text="Kechirilgan" variant="neutral" dot=1 %}
+              {% elif fine.is_paid %}{% include "ui/_badge.html" with text="To'langan" variant="success" dot=1 %}
+              {% else %}{% include "ui/_badge.html" with text="To'lanmagan" variant="danger" dot=1 %}{% endif %}
+              {% if fine.paid_at %}<span class="help mt-1 block">{{ fine.paid_at|date:"d.m.Y" }}</span>{% endif %}
+            </td>
+            <td>
+              {% if not fine.is_paid %}
+                {% if not fine.rental.return_date %}
+                  <span class="help">Kitob qaytgach to'lanadi</span>
+                {% else %}
+                  <div class="table-actions">
+                    {% if "billing.collect" in perms_flags %}
+                      <button type="button" class="btn btn-primary btn-sm" hx-post="{% url 'panel:fine_mark_paid' fine.pk %}" hx-include="#circ-view, #circ-page, #circ-q"
+                              data-confirm="{{ fine.borrower_name }}: {{ fine.amount|floatformat:0 }} so'm to'lov qabul qilindimi?" data-confirm-label="Ha, qabul qilindi">To'landi</button>
+                    {% endif %}
+                    {% if "billing.charge" in perms_flags %}
+                      <button type="button" class="btn btn-ghost btn-icon btn-sm" aria-label="Summani o'zgartirish" data-tip="Summani o'zgartirish"
+                              hx-post="{% url 'panel:fine_adjust' fine.pk %}" hx-include="#circ-view, #circ-page, #circ-q"
+                              data-form-title="Jarima summasini o'zgartirish"
+                              data-form='[{"name": "amount", "label": "Yangi summa (so&#39;m)", "type": "number", "value": "{{ fine.amount|floatformat:"0u" }}"}, {"name": "note", "label": "Sabab"}]'>
+                        {% include "ui/_icon.html" with name="pencil" class="size-4" %}
+                      </button>
+                    {% endif %}
+                    {% if "billing.waive" in perms_flags %}
+                      <button type="button" class="btn btn-ghost btn-sm" hx-post="{% url 'panel:fine_waive' fine.pk %}" hx-include="#circ-view, #circ-page, #circ-q"
+                              data-form-title="Jarimani kechirish" data-form-label="Kechirish" data-form='[{"name": "note", "label": "Sabab"}]'>Kechirish</button>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "ui/_pager.html" with page_obj=page_obj hx_get=request.path hx_target="#circ-table" query=query %}
+{% else %}
+  <div class="card">{% include "ui/_empty.html" with icon="wallet" title="Jarima yo'q" text="Bu bo'limda jarima topilmadi." %}</div>
+{% endif %}

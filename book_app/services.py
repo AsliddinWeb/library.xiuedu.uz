@@ -110,7 +110,7 @@ def _suggest_call_number(book):
 # --------------------------------------------------------------------------
 
 @transaction.atomic
-def change_item_status(item, new_status, *, reason='', by=None, document_no=''):
+def change_item_status(item, new_status, *, reason='', by=None, document_no='', audit=True):
     """Nusxa holatini o'zgartiradi: jurnal + audit + ko'rsatkichlar.
 
     Qaytaradi: (o'zgardimi, xabar)
@@ -124,12 +124,14 @@ def change_item_status(item, new_status, *, reason='', by=None, document_no=''):
         item.withdrawn_on = now().date()
     item.save()  # `is_available` save() ichida moslanadi
 
-    log_item_event(item, old_status, new_status, reason=reason, by=by, document_no=document_no)
+    log_item_event(item, old_status, new_status, reason=reason, by=by, document_no=document_no,
+                   audit=audit)
     recalc_book_counters(item.book)
     return True, f"Holat o'zgardi: {item.get_status_display()}"
 
 
-def log_item_event(item, old_status, new_status, *, reason='', by=None, document_no=''):
+def log_item_event(item, old_status, new_status, *, reason='', by=None, document_no='',
+                   audit=True):
     """Nusxa jurnaliga yozadi va audit izini qoldiradi."""
     ItemStatusLog.objects.create(
         item=item,
@@ -139,13 +141,18 @@ def log_item_event(item, old_status, new_status, *, reason='', by=None, document
         document_no=document_no[:60],
         changed_by=by,
     )
+    # Berish/qabul qilishda audit yozuvini sirkulyatsiya o'zi qoldiradi
+    if not audit:
+        return
 
     from audit.models import ActionLog
     from audit.services import log_action
     action = (ActionLog.Action.ITEM_WITHDRAW if new_status == Item.Status.WITHDRAWN
               else ActionLog.Action.ITEM_EDIT)
+    labels = dict(Item.Status.choices)
     log_action(action, obj=item, actor=by,
-               note=f"{old_status or '—'} -> {new_status}" + (f" ({reason})" if reason else ""))
+               note=f"{labels.get(old_status, '—')} → {labels.get(new_status, new_status)}"
+                    + (f" ({reason})" if reason else ""))
 
 
 def withdraw_item(item, reason, by=None, document_no=''):

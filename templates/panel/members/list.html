@@ -9,10 +9,17 @@
     <h1 class="page-title">Kutubxona a'zolari</h1>
     <p class="page-sub">Jami {{ total }} ta a'zo — talaba, magistrant, doktorant, o'qituvchi, xodim va tashqi o'quvchilar.</p>
   </div>
-  <a href="{% url 'panel:member_create' %}" class="btn btn-primary">
-    {% include "ui/_icon.html" with name="plus" class="size-4" %}
-    Yangi a'zo
-  </a>
+  <div class="flex flex-wrap gap-2">
+    {% if "reports.export" in perms_flags %}
+      <a href="?{{ export_query }}" class="btn btn-secondary" download>{% include "ui/_icon.html" with name="download" class="size-4" %} CSV</a>
+    {% endif %}
+    {% if "patrons.edit" in perms_flags %}
+      <a href="{% url 'panel:member_create' %}" class="btn btn-primary">
+        {% include "ui/_icon.html" with name="plus" class="size-4" %}
+        Yangi a'zo
+      </a>
+    {% endif %}
+  </div>
 </div>
 
 {# --- Filtr paneli (HTMX: sahifa yangilanmaydi) --- #}

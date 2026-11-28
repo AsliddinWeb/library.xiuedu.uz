@@ -1,0 +1,40 @@
+{% extends "panel/base.html" %}
+
+{% block title %}{{ page_title }} — Kutubxona paneli{% endblock %}
+
+{% block panel_content %}
+<div class="mx-auto max-w-2xl">
+  <nav class="breadcrumb mb-3"><a href="{{ list_url }}">{{ resource.title }}</a><span>/</span><span>{{ object }}</span></nav>
+  <h1 class="page-title">{{ page_title }}</h1>
+  <p class="page-sub mb-4"><b>«{{ object }}»</b>{% if object.used %} ({{ object.used }} ta bog'lanish){% endif %} o'chiriladi, undagi hamma narsa siz tanlagan yozuvga o'tadi.</p>
+
+  <form method="get" class="mb-3 flex gap-2" role="search">
+    <label class="search flex-1">
+      <span class="text-[color:var(--color-content-subtle)]">{% include "ui/_icon.html" with name="search" class="size-4" %}</span>
+      <input type="search" name="q" value="{{ q }}" placeholder="Qaysi yozuvga qo'shiladi?" autocomplete="off" aria-label="Maqsad yozuvni qidirish">
+    </label>
+    <button type="submit" class="btn btn-secondary">Qidirish</button>
+  </form>
+
+  {% if candidates %}
+    <form method="post" class="card">
+      {% csrf_token %}
+      <ul class="divide-y divide-[color:var(--color-line)]">
+        {% for item in candidates %}
+          <li><label class="check-row px-4 py-3">
+            <input type="radio" class="radio" name="target" value="{{ item.pk }}" required>
+            <span class="min-w-0 flex-1">{{ item }}</span>
+            {% if resource.usage %}<span class="help">{{ item.used }} ta</span>{% endif %}
+          </label></li>
+        {% endfor %}
+      </ul>
+      <div class="card-foot">
+        <a href="{{ list_url }}" class="btn btn-ghost">Bekor qilish</a>
+        <button type="submit" class="btn btn-primary" data-confirm="Birlashtirishni qaytarib bo'lmaydi. Davom etilsinmi?" data-confirm-label="Birlashtirish">Birlashtirish</button>
+      </div>
+    </form>
+  {% else %}
+    <div class="card">{% include "ui/_empty.html" with icon=resource.icon title="Mos yozuv topilmadi" text="Boshqa so'z bilan qidiring." %}</div>
+  {% endif %}
+</div>
+{% endblock %}

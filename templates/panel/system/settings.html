@@ -1,41 +1,44 @@
 {% extends "panel/base.html" %}
-{% block title %}Sozlamalar — Kutubxonachi paneli{% endblock %}
+{% block title %}Sozlamalar — Kutubxona paneli{% endblock %}
 
 {% block panel_content %}
-<div class="mx-auto max-w-xl">
-    <div class="mb-5">
-        <h2 class="font-serif text-2xl font-semibold text-navy-900">Sozlamalar</h2>
-        <p class="mt-1 text-sm text-navy-500">Ijara va jarima qoidalari</p>
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Sozlamalar</h1>
+    <p class="page-sub">Umumiy ijara va jarima qoidalari. Toifada alohida qiymat berilgan bo'lsa, o'sha ustun turadi.</p>
+  </div>
+</div>
+
+<div class="grid gap-4 lg:grid-cols-2">
+  <form method="post" class="card self-start">
+    {% csrf_token %}
+    <div class="card-head"><h2 class="card-title">Umumiy qoidalar</h2></div>
+    <div class="card-body space-y-4">
+      {% for field in form %}{% include "opac/_field.html" with field=field %}{% endfor %}
     </div>
+    <div class="card-foot"><button type="submit" class="btn btn-primary">{% include "ui/_icon.html" with name="check" class="size-4" %} Saqlash</button></div>
+  </form>
 
-    {% for message in messages %}
-    <div class="mb-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 ring-1 ring-emerald-100">{{ message }}</div>
-    {% endfor %}
-
-    <form method="post" class="space-y-5 rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
-        {% csrf_token %}
-        <div>
-            <label class="mb-1.5 block text-sm font-medium text-navy-800">Ijara muddati (kun)</label>
-            {{ form.rental_days }}
-            <p class="mt-1 text-xs text-navy-400">Tasdiqlangan ijara necha kunga beriladi.</p>
-        </div>
-        <div>
-            <label class="mb-1.5 block text-sm font-medium text-navy-800">Navbat ushlash (kun)</label>
-            {{ form.reservation_hold_days }}
-            <p class="mt-1 text-xs text-navy-400">Kitob bo'shaganda navbatdagiga necha kun ushlanadi.</p>
-        </div>
-        <div>
-            <label class="mb-1.5 block text-sm font-medium text-navy-800">Kuniga jarima (so'm)</label>
-            {{ form.fine_per_day }}
-            <p class="mt-1 text-xs text-navy-400">Kechikkan har bir kun uchun jarima.</p>
-        </div>
-        <div>
-            <label class="mb-1.5 block text-sm font-medium text-navy-800">Maksimal bir vaqtdagi ijara</label>
-            {{ form.max_active_rentals }}
-        </div>
-        <div class="pt-2">
-            <button type="submit" class="rounded-lg bg-navy-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800">Saqlash</button>
-        </div>
-    </form>
+  <section class="card self-start">
+    <div class="card-head">
+      <h2 class="card-title">Toifalar bo'yicha qoidalar</h2>
+      <a href="{% url 'panel:categories' %}" class="btn btn-secondary btn-sm">Boshqarish</a>
+    </div>
+    <div class="table-wrap border-0">
+      <table class="table">
+        <thead><tr><th>Toifa</th><th class="table-num">Kun</th><th class="table-num">Limit</th><th class="table-num">Jarima/kun</th></tr></thead>
+        <tbody>
+          {% for c in categories %}
+            <tr>
+              <td><a href="{% url 'panel:category_edit' c.pk %}" class="font-medium hover:underline">{{ c.name }}</a></td>
+              <td class="table-num">{{ c.default_loan_days|default:"umumiy" }}</td>
+              <td class="table-num">{{ c.loan_limit|default:"umumiy" }}</td>
+              <td class="table-num">{% if c.fine_per_day %}{{ c.fine_per_day|floatformat:0 }}{% else %}umumiy{% endif %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
 </div>
 {% endblock %}

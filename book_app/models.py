@@ -17,7 +17,7 @@ class Author(models.Model):
     muallif uch xil yozilishi mumkin ("Qodiriy", "Кодирий", "Kodiriy"), qidiruv
     shu ro'yxat bo'yicha ham topadi.
     """
-    full_name = models.CharField(max_length=200, db_index=True, verbose_name="Ism Familiya")
+    full_name = models.CharField(max_length=200, db_index=True, verbose_name="Ism va familiya")
     normalized_name = models.CharField(max_length=200, blank=True, db_index=True,
                                        verbose_name="Normallashgan nom")
     name_variants = models.JSONField(default=list, blank=True, verbose_name="Nom variantlari",
@@ -112,7 +112,7 @@ class Genre(models.Model):
     name = models.CharField(max_length=100, verbose_name="Katalog nomi")
     icon = models.TextField(verbose_name="Ikonkasi", null=True, blank=True)
     order = models.PositiveIntegerField(default=0, verbose_name="Tartib")
-    is_active = models.BooleanField(verbose_name="Aktivmi?", default=True)
+    is_active = models.BooleanField(verbose_name="Faolmi?", default=True)
 
     class Meta:
         verbose_name = "Katalog"
@@ -211,7 +211,7 @@ class Book(models.Model):
     reading_mode = models.CharField(max_length=10, choices=ReadingMode.choices,
                                     default=ReadingMode.PHYSICAL, verbose_name="Foydalanish turi")
     download_allowed = models.BooleanField(default=False, verbose_name="Yuklab olishga ruxsat")
-    is_active = models.BooleanField(default=True, db_index=True, verbose_name="Aktivmi?")
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name="Faolmi?")
 
     view_count = models.PositiveIntegerField(default=0, db_index=True, verbose_name="Ko'rishlar soni")
     loan_count = models.PositiveIntegerField(default=0, verbose_name="Ijaraga berilgan (jami)")
@@ -472,6 +472,7 @@ class Rental(models.Model):
     borrowed_date = models.DateField(verbose_name="Olgan sana", blank=True, null=True)
     due_date = models.DateField(verbose_name="Qaytarish muddati", blank=True, null=True, db_index=True)
     return_date = models.DateField(verbose_name="Qaytarilgan sana", blank=True, null=True, db_index=True)
+    renewals_count = models.PositiveSmallIntegerField(default=0, verbose_name="Uzaytirishlar soni")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Kitob yaratilgan sana")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Kitob yangilangan sana")

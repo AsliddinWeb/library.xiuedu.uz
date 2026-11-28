@@ -15,17 +15,11 @@ from book_app.models import Rental
 from core.jobs import job
 from notifications.models import Notification
 
-from .models import Fine, LibrarySettings, Reservation
-from .services import notify_patron, recalc_patron_counters, student_of
+from .loans import promote_next_hold
+from .models import Fine, Reservation
+from .services import fine_rate_for, notify_patron, recalc_patron_counters, student_of
 
 logger = logging.getLogger('circulation')
-
-
-def _fine_rate(patron):
-    """Kuniga jarima: avval a'zo toifasidan, bo'lmasa umumiy sozlamadan."""
-    if patron is not None and patron.category.fine_per_day:
-        return patron.category.fine_per_day
-    return LibrarySettings.load().fine_per_day
 
 
 @job('due_soon_notices', "Ertaga muddati tugaydigan ijaralar uchun ogohlantirish", schedule='daily')
@@ -54,7 +48,7 @@ def fines_accrual():
 
     for rental in overdue:
         days = (today - rental.due_date).days
-        amount = days * _fine_rate(rental.patron)
+        amount = days * fine_rate_for(rental.patron)
 
         fine, created = Fine.objects.get_or_create(
             rental=rental,
@@ -95,7 +89,6 @@ def fines_accrual():
 @job('reservation_expiry', "Ushlash muddati o'tgan navbatlarni keyingisiga o'tkazadi",
      schedule='daily')
 def reservation_expiry():
-    settings_obj = LibrarySettings.load()
     expired_count = promoted = 0
 
     expired = (Reservation.objects
@@ -107,21 +100,7 @@ def reservation_expiry():
         reservation.save(update_fields=['status'])
         expired_count += 1
 
-        nxt = (Reservation.objects
-               .filter(book=reservation.book, status=Reservation.Status.WAITING)
-               .order_by('created_at')
-               .select_related('patron__user')
-               .first())
-        if nxt:
-            nxt.status = Reservation.Status.AVAILABLE
-            nxt.hold_until = now() + timedelta(days=settings_obj.reservation_hold_days)
-            nxt.save(update_fields=['status', 'hold_until'])
+        if promote_next_hold(reservation.book):
             promoted += 1
-
-            notify_patron(nxt.patron, "Navbatdagi kitob bo'shadi",
-                          f"«{nxt.book.title}» bo'shadi — "
-                          f"{settings_obj.reservation_hold_days} kun ichida ijaraga so'rang.",
-                          type=Notification.Type.RESERVATION_AVAILABLE,
-                          link=f'/books/{nxt.book_id}/')
 
     return {'expired': expired_count, 'promoted': promoted}

@@ -44,7 +44,7 @@
 
       {% if genres %}
         <div class="enter mt-4 flex flex-wrap items-center gap-2" style="--i:4">
-          <span class="text-xs font-bold text-[color:var(--color-content-subtle)]">Ko'p qidiriladi:</span>
+          <span class="text-xs font-bold text-[color:var(--color-content-subtle)]">Mashhur yo'nalishlar:</span>
           {% for genre in genres|slice:":4" %}
             <a href="{% url 'book_app:student_book_list' %}?category={{ genre.id }}" class="chip"{% if not user.is_authenticated %} data-login{% endif %}>{{ genre.name }}</a>
           {% endfor %}
@@ -56,7 +56,7 @@
           <a href="{% url 'book_app:student_book_list' %}" class="btn btn-accent btn-lg btn-pill">
             {% include "ui/_icon.html" with name="library" class="size-5" %} Katalogni ochish
           </a>
-          <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-lg btn-pill">Kabinetim {% include "ui/_icon.html" with name="arrow-right" class="btn-arrow size-4.5" %}</a>
+          <a href="{{ account.home }}" class="btn btn-secondary btn-lg btn-pill">{% if account.is_staff %}Ish panelim{% else %}Kabinetim{% endif %} {% include "ui/_icon.html" with name="arrow-right" class="btn-arrow size-4.5" %}</a>
         {% else %}
           <a href="{% url 'student_login' %}" class="btn btn-accent btn-lg btn-pill" data-login>
             {% include "ui/_icon.html" with name="login" class="size-5" %} HEMIS orqali kirish
@@ -250,7 +250,7 @@
         <span class="step-num" aria-hidden="true">1</span>
         <span class="icon-box icon-box-lg relative">{% include "ui/_icon.html" with name="id-card" class="size-7" %}</span>
         <h3 class="tile-title">HEMIS bilan kiring</h3>
-        <p class="text-sm leading-relaxed text-[color:var(--color-content-muted)]">Talaba ham, o'qituvchi va xodim ham o'z hisobi bilan kiradi. Kutubxona bileti avtomatik ochiladi.</p>
+        <p class="text-sm leading-relaxed text-[color:var(--color-content-muted)]">Talaba, o'qituvchi va xodim — har biri o'z HEMIS hisobi bilan kiradi. Kutubxona bileti avtomatik ochiladi.</p>
       </li>
       <li class="tile" data-reveal style="--i:1">
         <span class="step-num" aria-hidden="true">2</span>
@@ -273,7 +273,7 @@
 <section class="section !pt-0">
   <div class="container-page">
     {% url 'book_app:student_book_list' as catalog_url %}
-    {% include "opac/_rail.html" with rail_id="recent" eyebrow="Yangi" title="Fondga qo'shilganlar" books=recent_books icon="sparkles" tone="icon-box-sun" more_url=catalog_url %}
+    {% include "opac/_rail.html" with rail_id="recent" eyebrow="Yangi" title="Fondga yangi qo'shilganlar" books=recent_books icon="sparkles" tone="icon-box-sun" more_url=catalog_url %}
   </div>
 </section>
 {% endif %}
@@ -293,12 +293,16 @@
   <div class="band-dark px-6 py-12 text-center sm:px-12 sm:py-16" data-reveal="zoom">
     <h2 class="mx-auto max-w-2xl text-3xl text-white sm:text-5xl">Bugun nima o'qiymiz?</h2>
     <p class="mx-auto mt-4 max-w-lg text-white/75">
-      {% if user.is_authenticated %}Katalogni oching yoki to'xtagan joyingizdan davom eting.{% else %}HEMIS hisobingiz bilan bir daqiqada kiring.{% endif %}
+      {% if account.is_staff %}Katalog va fond bilan ishlash uchun panelga o'ting.{% elif user.is_authenticated %}Katalogni oching yoki to'xtagan joyingizdan davom eting.{% else %}HEMIS hisobingiz bilan bir daqiqada kiring.{% endif %}
     </p>
     <div class="mt-8 flex flex-wrap justify-center gap-3">
       {% if user.is_authenticated %}
         <a href="{% url 'book_app:student_book_list' %}" class="btn btn-light btn-lg btn-pill">{% include "ui/_icon.html" with name="library" class="size-5" %} Katalog</a>
-        <a href="{% url 'engagement:my_library' %}" class="btn btn-glass btn-lg btn-pill">{% include "ui/_icon.html" with name="heart" class="size-5" %} Kutubxonam</a>
+        {% if account.is_staff %}
+          <a href="{{ account.home }}" class="btn btn-glass btn-lg btn-pill">{% include "ui/_icon.html" with name="chart" class="size-5" %} Panel</a>
+        {% else %}
+          <a href="{% url 'engagement:my_library' %}" class="btn btn-glass btn-lg btn-pill">{% include "ui/_icon.html" with name="heart" class="size-5" %} Kutubxonam</a>
+        {% endif %}
       {% else %}
         <a href="{% url 'student_login' %}" class="btn btn-light btn-lg btn-pill">{% include "ui/_icon.html" with name="graduation" class="size-5" %} Talaba sifatida</a>
         <a href="{% url 'employee_login' %}" class="btn btn-glass btn-lg btn-pill">{% include "ui/_icon.html" with name="briefcase" class="size-5" %} O'qituvchi yoki xodim</a>

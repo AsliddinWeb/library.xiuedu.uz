@@ -1,0 +1,27 @@
+{% load ui_extras %}
+{% if matches %}
+  <ul class="card divide-y divide-[color:var(--color-line)] overflow-hidden">
+    {% for m in matches %}
+      <li>
+        <a href="{% url 'panel:desk' %}?patron={{ m.pk }}" hx-get="{% url 'panel:desk' %}?patron={{ m.pk }}"
+           hx-target="#desk" hx-swap="outerHTML" hx-push-url="true"
+           class="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[color:var(--color-brand-soft)]">
+          <span class="avatar !size-10 !text-xs">{% if m.user.image %}<img src="{{ m.user.image.url }}" alt="">{% elif m.photo %}<img src="{{ m.photo.url }}" alt="">{% else %}{{ m.display_name|slice:":1" }}{% endif %}</span>
+          <span class="min-w-0 flex-1">
+            <b class="block truncate">{{ m.display_name }}</b>
+            <span class="help block truncate">{{ m.card_number }} · {{ m.category.name }}{% if m.user.student_profile.group %} · {{ m.user.student_profile.group }}{% endif %}</span>
+          </span>
+          {% if m.status != 'ACTIVE' %}<span class="badge badge-danger">{{ m.get_status_display }}</span>{% endif %}
+          {% include "ui/_icon.html" with name="chevron-right" class="size-4 flex-none" %}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% elif matches is not None %}
+  <div class="card">
+    {% include "ui/_empty.html" with icon="users" title="A'zo topilmadi" text="Bilet raqamini tekshiring. Universitet a'zosi bir marta HEMIS orqali kirsa, ro'yxatda paydo bo'ladi." %}
+    {% if "patrons.edit" in perms_flags %}
+      <div class="card-foot !justify-center"><a href="{% url 'panel:member_create' %}" class="btn btn-secondary btn-sm">{% include "ui/_icon.html" with name="plus" class="size-4" %} Qo'lda a'zo qo'shish</a></div>
+    {% endif %}
+  </div>
+{% endif %}

@@ -10,7 +10,7 @@ class AuthorForm(forms.ModelForm):
         model = Author
         fields = ['full_name', 'bio']
         widgets = {
-            'full_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ism Familiya'}),
+            'full_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ism va familiya'}),
             'bio': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Qisqacha tavsif', 'rows': 4}),
         }
 

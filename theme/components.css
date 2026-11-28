@@ -401,6 +401,30 @@
   .stat-trend-down { color: var(--color-danger-700); }
 
   /* =======================================================================
+     Xabar bloki va desk maydoni
+     ======================================================================= */
+  .notice {
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    padding: var(--ui-card-p);
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-line);
+    border-inline-start: 4px solid var(--color-line-strong);
+    border-radius: var(--ui-card-radius, var(--ui-radius));
+  }
+  .notice-success { border-inline-start-color: var(--color-success-500); }
+  .notice-success > svg { color: var(--color-success-500); }
+  .notice-warning { border-inline-start-color: var(--color-warning-500); }
+  .notice-warning > svg { color: var(--color-warning-500); }
+  .notice-danger  { border-inline-start-color: var(--color-danger-500); }
+  .notice-danger > svg { color: var(--color-danger-500); }
+  .notice-info    { border-inline-start-color: var(--color-info-500); }
+  .notice-info > svg { color: var(--color-info-500); }
+
+  /* Skaner maydoni — katta va ko'zga tashlanadigan */
+  .desk-input { min-height: 3rem; font-size: 1.05rem; }
+  .desk-btn { height: 3rem; }
+
+  /* =======================================================================
      Tab, pagination, bo'sh holat, skeleton
      ======================================================================= */
   .tabs {

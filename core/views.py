@@ -3,11 +3,10 @@ Loyiha darajasidagi yordamchi sahifalar.
 
 Hozircha bitta: dizayn tizimi (style-guide) — /_design/
 """
-from django.conf import settings
 from django.http import Http404
 from django.shortcuts import render
 
-from user_app.roles import Roles, effective_role
+from user_app.roles import is_library_staff
 
 from .flags import flag_enabled
 
@@ -54,7 +53,6 @@ ICONS = [
     'layers', 'folder', 'building', 'wallet',
 ]
 
-STAFF_ROLES = (Roles.LIBRARIAN, Roles.ADMIN, Roles.EMPLOYEE)
 
 
 def design_system(request):
@@ -66,7 +64,7 @@ def design_system(request):
     if not flag_enabled('design_styleguide'):
         raise Http404("Dizayn tizimi sahifasi o'chirilgan.")
 
-    if not settings.DEBUG and effective_role(request.user) not in STAFF_ROLES:
+    if not is_library_staff(request.user):
         return render(request, '403.html', status=403)
 
     return render(request, '_design/index.html', {

@@ -1,109 +1,155 @@
 {% load static %}{% comment %}
-  Staff sidebar: guruhlangan navigatsiya, aktiv holat, badge'lar.
+  Xodim paneli menyusi. Har band faqat tegishli ruxsati bor xodimga ko'rinadi
+  (`perms_flags` — foydalanuvchining ruxsat kodlari). Sahifaning o'zi ham
+  serverda tekshiriladi.
 
   Kelajak modullari (akvizitsiya, serial, zal, rasmiy hisobotlar) funksiya
-  flaglari bilan boshqariladi — flag o'chiq bo'lsa bo'lim ko'rinmaydi
-  (`core/flags.py`, shablonda `{{ flags.<nom> }}`).
+  flaglari bilan boshqariladi.
 {% endcomment %}
 <div class="flex h-16 flex-none items-center gap-3 border-b border-white/10 px-4 text-white">
-  <span class="logo-chip grid size-10 flex-none place-items-center rounded-[var(--radius-sm)]"><img src="{% static 'img/xiu-mark.webp' %}" alt="" width="34" height="34"></span>
+  <span class="logo-chip grid size-12 flex-none place-items-center rounded-full p-0.5"><img src="{% static 'img/xiu-logo-192.png' %}" alt="XIU logotipi" width="44" height="44"></span>
   <span class="leading-tight"><b class="block text-sm">XIU Kutubxona</b><span class="text-[11px] font-semibold text-white/50">Xodim paneli</span></span>
   <button type="button" class="ml-auto text-white/60 hover:text-white lg:hidden" @click="nav = false" aria-label="Yopish">
     {% include "ui/_icon.html" with name="close" class="size-5" %}
   </button>
 </div>
 
-<nav class="flex-1 overflow-y-auto pb-6">
+<nav class="flex-1 overflow-y-auto pb-6" aria-label="Panel menyusi">
 
   <p class="nav-group-title">Asosiy</p>
   <a href="/panel/" class="nav-link {% if request.path == '/panel/' %}nav-link-active{% endif %}">
     {% include "ui/_icon.html" with name="grid" class="size-4" %}<span>Boshqaruv paneli</span>
   </a>
-  {% if flags.circulation_v3 %}
-    <a href="/panel/desk/" class="nav-link {% if '/panel/desk/' in request.path %}nav-link-active{% endif %}">
-      {% include "ui/_icon.html" with name="barcode" class="size-4" %}<span>Sirkulyatsiya deski</span>
-      <span class="nav-badge">F2</span>
+  {% if "circ.checkout" in perms_flags or "circ.checkin" in perms_flags %}
+    <a href="{% url 'panel:desk' %}" data-desk-link class="nav-link {% if '/panel/desk/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="barcode" class="size-4" %}<span>Berish va qaytarish</span>
+      <span class="nav-badge max-lg:hidden">F2</span>
     </a>
   {% endif %}
 
-  <p class="nav-group-title">Katalog va fond</p>
-  <a href="/panel/books/" class="nav-link {% if '/panel/books/' in request.path %}nav-link-active{% endif %}">
-    {% include "ui/_icon.html" with name="book" class="size-4" %}<span>Kitoblar</span>
-    
-  </a>
-  <a href="/panel/items/" class="nav-link {% if '/panel/items/' in request.path %}nav-link-active{% endif %}">
-    {% include "ui/_icon.html" with name="barcode" class="size-4" %}<span>Nusxalar (fond)</span>
-  </a>
-  <a href="/panel/genres/" class="nav-link {% if '/panel/genres/' in request.path %}nav-link-active{% endif %}">
-    {% include "ui/_icon.html" with name="folder" class="size-4" %}<span>Kataloglar</span>
-  </a>
-  <a href="/panel/authors/" class="nav-link {% if '/panel/authors/' in request.path %}nav-link-active{% endif %}">
-    {% include "ui/_icon.html" with name="feather" class="size-4" %}<span>Mualliflar</span>
-  </a>
-  <a href="/panel/holdings/" class="nav-link {% if '/panel/holdings/' in request.path %}nav-link-active{% endif %}">
-    {% include "ui/_icon.html" with name="building" class="size-4" %}<span>Fond tuzilmasi</span>
-  </a>
-  <a href="/panel/import/" class="nav-link {% if '/panel/import/' in request.path %}nav-link-active{% endif %}">
-    {% include "ui/_icon.html" with name="upload" class="size-4" %}<span>Import</span>
-  </a>
+  {% if "catalog.view" in perms_flags %}
+    <p class="nav-group-title">Katalog va fond</p>
+    <a href="/panel/books/" class="nav-link {% if '/panel/books/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="book" class="size-4" %}<span>Kitoblar</span>
+    </a>
+    <a href="/panel/items/" class="nav-link {% if '/panel/items/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="barcode" class="size-4" %}<span>Nusxalar (fond)</span>
+    </a>
+    <a href="/panel/genres/" class="nav-link {% if '/panel/genres/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="folder" class="size-4" %}<span>Kataloglar</span>
+    </a>
+    <a href="/panel/authors/" class="nav-link {% if '/panel/authors/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="feather" class="size-4" %}<span>Mualliflar</span>
+    </a>
+    <a href="/panel/publishers/" class="nav-link {% if '/panel/publishers/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="building" class="size-4" %}<span>Nashriyotlar</span>
+    </a>
+    <a href="/panel/series/" class="nav-link {% if '/panel/series/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="layers" class="size-4" %}<span>Turkumlar</span>
+    </a>
+    <a href="/panel/subjects/" class="nav-link {% if '/panel/subjects/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="bookmark" class="size-4" %}<span>Mavzular</span>
+    </a>
+    {% if "items.manage" in perms_flags %}
+      <a href="/panel/holdings/" class="nav-link {% if '/panel/holdings/' in request.path %}nav-link-active{% endif %}">
+        {% include "ui/_icon.html" with name="map-pin" class="size-4" %}<span>Fond tuzilmasi</span>
+      </a>
+    {% endif %}
+    {% if "catalog.import" in perms_flags %}
+      <a href="/panel/import/" class="nav-link {% if '/panel/import/' in request.path %}nav-link-active{% endif %}">
+        {% include "ui/_icon.html" with name="upload" class="size-4" %}<span>Import</span>
+      </a>
+    {% endif %}
+    {% if "catalog.edit" in perms_flags %}
+      <a href="{% url 'book_app:course_list' %}" class="nav-link">
+        {% include "ui/_icon.html" with name="graduation" class="size-4" %}<span>Fan adabiyoti</span>
+      </a>
+      <a href="{% url 'engagement:shelf_list' %}" class="nav-link">
+        {% include "ui/_icon.html" with name="heart" class="size-4" %}<span>Tavsiya ro'yxatlari</span>
+      </a>
+    {% endif %}
+  {% endif %}
 
-  <a href="{% url 'book_app:course_list' %}" class="nav-link">
-    {% include "ui/_icon.html" with name="graduation" class="size-4" %}<span>Fan adabiyoti</span>
-  </a>
+  {% if "circ.checkout" in perms_flags or "circ.holds" in perms_flags or "billing.charge" in perms_flags %}
+    <p class="nav-group-title">Sirkulyatsiya</p>
+    {% if "circ.checkout" in perms_flags %}
+      <a href="/panel/requests/" class="nav-link {% if '/panel/requests/' in request.path %}nav-link-active{% endif %}">
+        {% include "ui/_icon.html" with name="inbox" class="size-4" %}<span>So'rovlar</span>
+        {% if lib_stats.pending_requests %}<span class="nav-badge">{{ lib_stats.pending_requests }}</span>{% endif %}
+      </a>
+      <a href="/panel/rentals/" class="nav-link {% if '/panel/rentals/' in request.path %}nav-link-active{% endif %}">
+        {% include "ui/_icon.html" with name="history" class="size-4" %}<span>Faol ijaralar</span>
+        {% if lib_stats.active_rentals %}<span class="nav-badge">{{ lib_stats.active_rentals }}</span>{% endif %}
+      </a>
+    {% endif %}
+    {% if "circ.holds" in perms_flags %}
+      <a href="/panel/reservations/" class="nav-link {% if '/panel/reservations/' in request.path %}nav-link-active{% endif %}">
+        {% include "ui/_icon.html" with name="clock" class="size-4" %}<span>Navbatlar</span>
+      </a>
+    {% endif %}
+    {% if "billing.charge" in perms_flags %}
+      <a href="/panel/fines/" class="nav-link {% if '/panel/fines/' in request.path %}nav-link-active{% endif %}">
+        {% include "ui/_icon.html" with name="wallet" class="size-4" %}<span>Jarimalar</span>
+        {% if lib_stats.unpaid_fines %}<span class="nav-badge">{{ lib_stats.unpaid_fines }}</span>{% endif %}
+      </a>
+    {% endif %}
+  {% endif %}
 
-  <p class="nav-group-title">Sirkulyatsiya</p>
-  <a href="/panel/requests/" class="nav-link {% if '/panel/requests/' in request.path %}nav-link-active{% endif %}">
-    {% include "ui/_icon.html" with name="inbox" class="size-4" %}<span>So'rovlar</span>
-    {% if lib_stats.pending_requests %}<span class="nav-badge">{{ lib_stats.pending_requests }}</span>{% endif %}
-  </a>
-  <a href="/panel/rentals/" class="nav-link {% if '/panel/rentals/' in request.path %}nav-link-active{% endif %}">
-    {% include "ui/_icon.html" with name="history" class="size-4" %}<span>Faol ijaralar</span>
-    {% if lib_stats.active_rentals %}<span class="nav-badge">{{ lib_stats.active_rentals }}</span>{% endif %}
-  </a>
-  <a href="/panel/reservations/" class="nav-link {% if '/panel/reservations/' in request.path %}nav-link-active{% endif %}">
-    {% include "ui/_icon.html" with name="clock" class="size-4" %}<span>Navbatlar</span>
-  </a>
-  <a href="/panel/fines/" class="nav-link {% if '/panel/fines/' in request.path %}nav-link-active{% endif %}">
-    {% include "ui/_icon.html" with name="wallet" class="size-4" %}<span>Jarimalar</span>
-    {% if lib_stats.unpaid_fines %}<span class="nav-badge">{{ lib_stats.unpaid_fines }}</span>{% endif %}
-  </a>
-
-  <p class="nav-group-title">A'zolar</p>
-  <a href="/panel/members/" class="nav-link {% if '/panel/members/' in request.path %}nav-link-active{% endif %}">
-    {% include "ui/_icon.html" with name="users" class="size-4" %}<span>A'zolar</span>
-    {% if lib_stats.patrons %}<span class="nav-badge">{{ lib_stats.patrons }}</span>{% endif %}
-  </a>
-  <a href="/panel/reviews/" class="nav-link {% if '/panel/reviews/' in request.path %}nav-link-active{% endif %}">
-    {% include "ui/_icon.html" with name="star" class="size-4" %}<span>Sharh moderatsiyasi</span>
-    {% if lib_stats.pending_reviews %}<span class="nav-badge">{{ lib_stats.pending_reviews }}</span>{% endif %}
-  </a>
+  {% if "patrons.view" in perms_flags or "moderate.reviews" in perms_flags %}
+    <p class="nav-group-title">A'zolar</p>
+    {% if "patrons.view" in perms_flags %}
+      <a href="/panel/members/" class="nav-link {% if '/panel/members/' in request.path %}nav-link-active{% endif %}">
+        {% include "ui/_icon.html" with name="users" class="size-4" %}<span>A'zolar</span>
+        {% if lib_stats.patrons %}<span class="nav-badge">{{ lib_stats.patrons }}</span>{% endif %}
+      </a>
+    {% endif %}
+    {% if "moderate.reviews" in perms_flags %}
+      <a href="/panel/reviews/" class="nav-link {% if '/panel/reviews/' in request.path %}nav-link-active{% endif %}">
+        {% include "ui/_icon.html" with name="star" class="size-4" %}<span>Sharh moderatsiyasi</span>
+        {% if lib_stats.pending_reviews %}<span class="nav-badge">{{ lib_stats.pending_reviews }}</span>{% endif %}
+      </a>
+    {% endif %}
+  {% endif %}
 
   {% if flags.acquisitions or flags.serials %}
     <p class="nav-group-title">Ta'minot</p>
-    {% if flags.acquisitions %}
+    {% if flags.acquisitions and "acq.manage" in perms_flags %}
       <a href="/panel/acquisitions/" class="nav-link">{% include "ui/_icon.html" with name="cash" class="size-4" %}<span>Buyurtmalar</span></a>
     {% endif %}
-    {% if flags.serials %}
+    {% if flags.serials and "serials.manage" in perms_flags %}
       <a href="/panel/serials/" class="nav-link">{% include "ui/_icon.html" with name="book" class="size-4" %}<span>Davriy nashrlar</span></a>
     {% endif %}
   {% endif %}
 
-  {% if flags.reading_room %}
+  {% if flags.reading_room and "room.desk" in perms_flags %}
     <p class="nav-group-title">O'quv zali</p>
     <a href="/panel/room/" class="nav-link">{% include "ui/_icon.html" with name="users" class="size-4" %}<span>Zal va davomat</span></a>
   {% endif %}
 
   <p class="nav-group-title">Hisobot va tizim</p>
-  <a href="/panel/analytics/" class="nav-link {% if '/panel/analytics/' in request.path %}nav-link-active{% endif %}">
-    {% include "ui/_icon.html" with name="chart" class="size-4" %}<span>Analitika</span>
-  </a>
-  {% if flags.reports_official %}
+  {% if "reports.view" in perms_flags %}
+    <a href="/panel/analytics/" class="nav-link {% if '/panel/analytics/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="chart" class="size-4" %}<span>Analitika</span>
+    </a>
+  {% endif %}
+  {% if flags.reports_official and "reports.view" in perms_flags %}
     <a href="/panel/reports/" class="nav-link">{% include "ui/_icon.html" with name="printer" class="size-4" %}<span>Rasmiy hisobotlar</span></a>
   {% endif %}
-  <a href="/panel/settings/" class="nav-link {% if '/panel/settings/' in request.path %}nav-link-active{% endif %}">
-    {% include "ui/_icon.html" with name="cog" class="size-4" %}<span>Sozlamalar</span>
+  {% if "settings.manage" in perms_flags %}
+    <a href="/panel/categories/" class="nav-link {% if '/panel/categories/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="shield" class="size-4" %}<span>A'zo toifalari</span>
+    </a>
+    <a href="/panel/settings/" class="nav-link {% if '/panel/settings/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="cog" class="size-4" %}<span>Sozlamalar</span>
+    </a>
+  {% endif %}
+  <a href="{% url 'panel:profile' %}" class="nav-link {% if '/panel/profile/' in request.path %}nav-link-active{% endif %}">
+    {% include "ui/_icon.html" with name="user" class="size-4" %}<span>Mening hisobim</span>
   </a>
-  {% if flags.design_styleguide %}
+  {% if account.is_admin and user.is_staff %}
+    <a href="/admin/" class="nav-link">{% include "ui/_icon.html" with name="shield" class="size-4" %}<span>Admin panel</span></a>
+  {% endif %}
+  {% if flags.design_styleguide and account.is_admin %}
     <a href="/_design/" class="nav-link {% if '/_design/' in request.path %}nav-link-active{% endif %}">
       {% include "ui/_icon.html" with name="external" class="size-4" %}<span>Dizayn tizimi</span>
     </a>
@@ -111,6 +157,6 @@
 </nav>
 
 <div class="flex-none border-t border-white/10 p-3">
-  <a href="/" class="nav-link mx-0">{% include "ui/_icon.html" with name="external" class="size-4" %}<span>Saytga o'tish</span></a>
+  <a href="{% url 'book_app:student_book_list' %}" class="nav-link mx-0">{% include "ui/_icon.html" with name="external" class="size-4" %}<span>Katalogni ko'rish</span></a>
   <a href="{% url 'logout' %}" class="nav-link mx-0">{% include "ui/_icon.html" with name="logout" class="size-4" %}<span>Chiqish</span></a>
 </div>

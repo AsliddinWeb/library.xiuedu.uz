@@ -5,7 +5,7 @@ Kutubxonachi Django admin'ga kirmasdan shu yerdan boshqaradi. Uchala
 ma'lumotnoma bitta sahifada: ko'rish, qo'shish, tahrirlash, faolsizlantirish.
 """
 from django.contrib import messages
-from django.db.models import Count
+from django.db.models import Count, ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -28,7 +28,8 @@ def _overview_ctx(forms=None):
     return {
         'active': 'holdings',
         'page_title': "Fond tuzilmasi",
-        'libraries': Library.objects.annotate(items_total=Count('items')).order_by('order', 'name'),
+        'libraries': (Library.objects.annotate(items_total=Count('items'))
+                      .prefetch_related('shelves').order_by('order', 'name')),
         'item_types': ItemType.objects.annotate(items_total=Count('items')).order_by('order', 'name'),
         'shelves': (ShelfLocation.objects
                     .select_related('library')
@@ -99,6 +100,32 @@ def holdings_edit(request, kind, pk):
         'object': obj,
         'kind_label': label,
     })
+
+
+@require_POST
+@require_perm(Perms.ITEMS_MANAGE)
+def holdings_delete(request, kind, pk):
+    """Hech qayerda ishlatilmagan yozuvni o'chiradi; ishlatilgani faolsizlantiriladi."""
+    if kind not in KINDS:
+        messages.error(request, "Noma'lum bo'lim.")
+        return redirect('panel:holdings')
+
+    model, _, label = KINDS[kind]
+    obj = get_object_or_404(model, pk=pk)
+    used = obj.items.exists() or (kind == 'library' and obj.shelves.exists())
+    if used:
+        messages.error(request, f"{label} ishlatilgan — o'chirib bo'lmaydi, faolsizlantiring.")
+        return redirect('panel:holdings')
+
+    name = str(obj)
+    log_action(ActionLog.Action.SETTINGS, obj=obj, note=f"{label} o'chirildi")
+    try:
+        obj.delete()
+    except ProtectedError:
+        messages.error(request, f"{label}ga bog'langan yozuvlar bor — o'chirib bo'lmadi.")
+    else:
+        messages.success(request, f"{label} o'chirildi: {name}")
+    return redirect('panel:holdings')
 
 
 @require_POST

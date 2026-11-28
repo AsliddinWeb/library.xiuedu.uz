@@ -144,7 +144,9 @@ class Fine(models.Model):
     days_overdue = models.PositiveIntegerField(default=0, verbose_name="Kechikkan kunlar")
     amount = models.DecimalField(
         max_digits=12, decimal_places=2, default=0, verbose_name="Summa (so'm)")
-    is_paid = models.BooleanField(default=False, verbose_name="To'langanmi")
+    is_paid = models.BooleanField(default=False, verbose_name="Yopilganmi")
+    is_waived = models.BooleanField(default=False, verbose_name="Kechirilganmi")
+    note = models.CharField(max_length=255, blank=True, verbose_name="Izoh")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Yaratilgan sana")
     paid_at = models.DateTimeField(null=True, blank=True, verbose_name="To'langan sana")

@@ -1,0 +1,61 @@
+<input type="hidden" id="crud-page" name="page" value="{{ page_obj.number }}">
+{% if rows %}
+  <p class="help mb-2">Jami {{ page_obj.paginator.count }} ta yozuv</p>
+  <div class="table-wrap">
+    <table class="table table-zebra">
+      <thead>
+        <tr>
+          {% for column in resource.columns %}<th class="{% if column.numeric %}table-num{% endif %}">{{ column.label }}</th>{% endfor %}
+          {% if resource.usage %}<th class="table-num">{{ resource.usage_label }}</th>{% endif %}
+          {% if resource.toggle %}<th>Holati</th>{% endif %}
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            {% for column, value in row.cells %}
+              <td class="{% if column.numeric %}table-num{% elif forloop.first %}min-w-48 font-medium{% else %}text-[color:var(--color-content-muted)]{% endif %}">
+                {% if forloop.first and can_edit %}<a href="{{ row.edit_url }}" class="hover:underline">{{ value }}</a>{% else %}{{ value|default_if_none:""|default:"—" }}{% endif %}
+              </td>
+            {% endfor %}
+            {% if resource.usage %}
+              <td class="table-num">{% if row.used and row.usage_url %}<a href="{{ row.usage_url }}" class="underline">{{ row.used }}</a>{% else %}{{ row.used }}{% endif %}</td>
+            {% endif %}
+            {% if resource.toggle %}
+              <td>
+                {% if can_edit %}
+                  <button type="button" class="badge {% if row.is_on %}badge-success{% else %}badge-neutral{% endif %} cursor-pointer"
+                          hx-post="{{ row.toggle_url }}" hx-include="#crud-q, #crud-page" data-tip="Bosib almashtiring" aria-pressed="{{ row.is_on|yesno:'true,false' }}">
+                    {{ row.is_on|yesno:"Faol,Nofaol" }}
+                  </button>
+                {% else %}
+                  <span class="badge {% if row.is_on %}badge-success{% else %}badge-neutral{% endif %}">{{ row.is_on|yesno:"Faol,Nofaol" }}</span>
+                {% endif %}
+              </td>
+            {% endif %}
+            <td>
+              <div class="table-actions">
+                {% if can_edit %}
+                  <a href="{{ row.edit_url }}" class="btn btn-ghost btn-icon btn-sm" aria-label="Tahrirlash" data-tip="Tahrirlash">{% include "ui/_icon.html" with name="pencil" class="size-4" %}</a>
+                {% endif %}
+                {% if can_delete and row.merge_url %}
+                  <a href="{{ row.merge_url }}" class="btn btn-ghost btn-icon btn-sm" aria-label="Birlashtirish" data-tip="Birlashtirish">{% include "ui/_icon.html" with name="layers" class="size-4" %}</a>
+                {% endif %}
+                {% if can_delete %}
+                  <a href="{{ row.delete_url }}" class="btn btn-ghost btn-icon btn-sm" aria-label="O'chirish" data-tip="O'chirish">{% include "ui/_icon.html" with name="trash" class="size-4" %}</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "ui/_pager.html" with page_obj=page_obj hx_get=list_url hx_target="#crud-table" query=query %}
+{% else %}
+  <div class="card">
+    {% if q %}{% include "ui/_empty.html" with icon=resource.icon title="Hech narsa topilmadi" text="Qidiruv so'zini o'zgartiring." %}
+    {% else %}{% include "ui/_empty.html" with icon=resource.icon title="Hali yozuv yo'q" text="Birinchisini qo'shing." %}{% endif %}
+  </div>
+{% endif %}

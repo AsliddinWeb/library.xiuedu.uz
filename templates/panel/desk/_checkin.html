@@ -1,0 +1,62 @@
+<div class="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+  <div class="min-w-0 space-y-4">
+    <form class="card card-body" method="post" action="{% url 'panel:desk_checkin' %}"
+          hx-post="{% url 'panel:desk_checkin' %}" hx-sync="this:drop" hx-disabled-elt="find button">
+      {% csrf_token %}
+      <input type="hidden" name="mode" value="checkin">
+      <label class="label" for="desk-return-code">Qaytarilayotgan kitob: shtrix-kod, inventar raqami yoki nomi</label>
+      <div class="mt-1.5 flex gap-2">
+        <input id="desk-return-code" type="text" name="code" value="{{ code|default:'' }}" class="input desk-input flex-1"
+               autocomplete="off" spellcheck="false" placeholder="Skanerlang..." autofocus data-autofocus>
+        <button type="submit" class="btn btn-primary desk-btn">{% include "ui/_icon.html" with name="download" class="size-4" %} <span class="max-sm:sr-only">Qabul qilish</span></button>
+      </div>
+      <label class="check-row mt-3"><input type="checkbox" name="damaged" value="1" class="checkbox" {% if damaged %}checked{% endif %}> Kitob shikastlangan holda qaytdi</label>
+    </form>
+
+    {% include "panel/desk/_result.html" %}
+
+    {% if idle_item %}
+      <div class="notice notice-info">
+        {% include "ui/_icon.html" with name="info" class="size-5 flex-none" %}
+        <p class="text-sm"><b>{{ idle_item.book.title }}</b> — {{ idle_item.get_status_display }}.
+          {% if "catalog.view" in perms_flags %}<a class="underline" href="{% url 'panel:item_detail' idle_item.pk %}">Nusxa kartasi</a>{% endif %}</p>
+      </div>
+    {% endif %}
+
+    {% if return_candidates %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Ijaradagi nusxa</th><th>A'zo</th><th></th></tr></thead>
+          <tbody>
+            {% for rental in return_candidates %}
+              <tr>
+                <td><b class="block">{{ rental.copy.book.title }}</b><span class="help font-mono">{{ rental.copy.barcode|default:rental.copy.inventory_number }}</span></td>
+                <td>{{ rental.borrower_name }}<span class="help block">{{ rental.due_date|date:"d.m.Y" }} gacha</span></td>
+                <td><div class="table-actions">
+                  <button type="button" class="btn btn-primary btn-sm" hx-post="{% url 'panel:desk_checkin' %}"
+                          hx-vals='{"rental": "{{ rental.pk }}", "mode": "checkin"{% if damaged %}, "damaged": "1"{% endif %}}'>Qabul qilish</button>
+                </div></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+
+  <section class="card min-w-0 self-start">
+    <div class="card-head"><h3 class="card-title">Bugun qabul qilinganlar</h3><span class="badge badge-neutral">{{ returned_today_count }}</span></div>
+    {% if returned_today %}
+      <ul class="divide-y divide-[color:var(--color-line)]">
+        {% for rental in returned_today %}
+          <li class="px-4 py-3">
+            <b class="block truncate">{{ rental.copy.book.title }}</b>
+            <span class="help"><span class="font-mono">{{ rental.copy.barcode|default:rental.copy.inventory_number }}</span> · {{ rental.borrower_name }} · {{ rental.updated_at|date:"H:i" }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="card-body help">Bugun hali kitob qabul qilinmadi.</p>
+    {% endif %}
+  </section>
+</div>

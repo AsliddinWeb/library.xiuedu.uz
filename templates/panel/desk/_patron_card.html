@@ -1,0 +1,35 @@
+<section class="card" aria-label="Tanlangan a'zo">
+  <div class="card-body flex flex-wrap items-center gap-4">
+    <span class="avatar !size-14 !text-lg">{% if patron.user.image %}<img src="{{ patron.user.image.url }}" alt="">{% elif patron.photo %}<img src="{{ patron.photo.url }}" alt="">{% else %}{{ patron.display_name|slice:":1" }}{% endif %}</span>
+    <div class="min-w-0 flex-1 basis-48">
+      <h2 class="break-words text-lg font-semibold leading-snug">
+        {% if "patrons.view" in perms_flags %}<a href="{% url 'panel:member_detail' patron.pk %}" class="hover:underline">{{ patron.display_name }}</a>{% else %}{{ patron.display_name }}{% endif %}
+      </h2>
+      <p class="help">
+        {{ patron.card_number }} · {{ patron.category.name }}
+        {% if patron.user.student_profile.group %} · {{ patron.user.student_profile.group }}{% elif patron.user.employe_profile.department %} · {{ patron.user.employe_profile.department|truncatechars:40 }}{% endif %}
+        {% if patron.contact_phone %} · {{ patron.contact_phone }}{% endif %}
+      </p>
+    </div>
+    <a href="{% url 'panel:desk' %}" hx-get="{% url 'panel:desk' %}" hx-push-url="true" class="btn btn-secondary btn-sm">
+      {% include "ui/_icon.html" with name="users" class="size-4" %} Boshqa a'zo
+    </a>
+  </div>
+  <dl class="grid grid-cols-3 border-t border-[color:var(--color-line)] text-center">
+    <div class="px-2 py-3"><dt class="help">Qo'lida</dt><dd class="text-xl font-semibold tabular-nums">{{ patron.active_loans_count }}{% if loan_limit %}<span class="text-sm font-normal text-[color:var(--color-content-subtle)]">/{{ loan_limit }}</span>{% endif %}</dd></div>
+    <div class="border-x border-[color:var(--color-line)] px-2 py-3"><dt class="help">Kechikkan</dt><dd class="text-xl font-semibold tabular-nums {% if patron.overdue_count %}text-[color:var(--color-danger-700)]{% endif %}">{{ patron.overdue_count }}</dd></div>
+    <div class="px-2 py-3"><dt class="help">Qarz (so'm)</dt><dd class="text-xl font-semibold tabular-nums {% if patron.balance %}text-[color:var(--color-danger-700)]{% endif %}">{{ patron.balance|floatformat:0 }}</dd></div>
+  </dl>
+</section>
+
+{% if blocks %}
+  <div class="notice notice-warning" role="alert">
+    {% include "ui/_icon.html" with name="alert" class="size-5 flex-none" %}
+    <div class="min-w-0">
+      <p class="font-semibold">Kitob berishda cheklov bor</p>
+      <ul class="mt-1 text-sm">
+        {% for block in blocks %}<li>{{ block.message }}</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+{% endif %}

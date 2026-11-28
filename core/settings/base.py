@@ -5,7 +5,9 @@ import os
 from pathlib import Path
 
 from django.contrib.messages import constants as message_constants
+from django.templatetags.static import static
 from django.urls import reverse_lazy
+from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
 
@@ -59,6 +61,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_htmx.middleware.HtmxMiddleware',
+    # `/panel/` ostidagi hamma narsa faqat kutubxona xodimiga
+    'user_app.middleware.StaffAreaMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -81,6 +85,8 @@ TEMPLATES = [
                 'notifications.context_processors.notifications',
                 # Kutubxonachi sidebar statistikasi
                 'dashboard_app.context_processors.librarian',
+                # Hisob turi: o'quvchi / kutubxona xodimi / admin ({{ account }})
+                'user_app.context_processors.account',
                 # Funksiya flaglari ({{ flags.<nom> }})
                 'core.context_processors.feature_flags',
                 # Ruxsat flaglari ({{ perms_flags }})
@@ -121,7 +127,7 @@ AUTH_USER_MODEL = "user_app.User"
 FEATURE_FLAGS: dict[str, bool] = {}
 
 # Autentifikatsiya yo'naltirishlari
-LOGIN_URL = '/auth/student-login/'
+LOGIN_URL = '/auth/login/'          # talaba yoki xodim tanlovi
 LOGIN_REDIRECT_URL = '/dashboard/'
 
 # Logging
@@ -162,6 +168,11 @@ REDIRECT_URI = os.getenv('REDIRECT_URI')
 AUTHORIZE_URL = os.getenv('AUTHORIZE_URL')
 ACCESS_TOKEN_URL = os.getenv('ACCESS_TOKEN_URL')
 RESOURCE_OWNER_URL = os.getenv('RESOURCE_OWNER_URL')
+# Xodimlar HEMIS'i (hemis.xiuedu.uz) alohida tizim: unda ilova alohida ro'yxatdan
+# o'tgan bo'lsa shu qiymatlar to'ldiriladi, aks holda talabanikidan olinadi.
+EMPLOYE_CLIENT_ID = os.getenv('EMPLOYE_CLIENT_ID') or CLIENT_ID
+EMPLOYE_CLIENT_SECRET = os.getenv('EMPLOYE_CLIENT_SECRET') or CLIENT_SECRET
+EMPLOYE_REDIRECT_URI = os.getenv('EMPLOYE_REDIRECT_URI') or REDIRECT_URI
 EMPLOYE_AUTHORIZE_URL = os.getenv('EMPLOYE_AUTHORIZE_URL')
 EMPLOYE_ACCESS_TOKEN_URL = os.getenv('EMPLOYE_ACCESS_TOKEN_URL')
 EMPLOYE_RESOURCE_OWNER_URL = os.getenv('EMPLOYE_RESOURCE_OWNER_URL')
@@ -178,20 +189,22 @@ UNFOLD = {
     "SHOW_VIEW_ON_SITE": True,
     "SHOW_BACK_BUTTON": True,
 
-    # Brend ranglari (saytdagi navy bilan mos)
+    "SITE_ICON": lambda request: static("img/xiu-logo-192.png"),
+
+    # Brend ranglari (saytdagi zumrad bilan mos)
     "COLORS": {
         "primary": {
-            "50": "238 242 249",
-            "100": "215 224 239",
-            "200": "176 194 221",
-            "300": "129 156 196",
-            "400": "84 116 166",
-            "500": "55 87 137",
-            "600": "42 68 112",
-            "700": "32 51 90",
-            "800": "22 36 63",
-            "900": "14 26 48",
-            "950": "7 15 32",
+            "50": "237 251 247",
+            "100": "210 244 233",
+            "200": "169 233 214",
+            "300": "112 214 189",
+            "400": "55 188 160",
+            "500": "23 160 136",
+            "600": "13 129 112",
+            "700": "14 103 91",
+            "800": "15 82 74",
+            "900": "16 68 62",
+            "950": "5 40 36",
         },
     },
 
@@ -207,6 +220,16 @@ UNFOLD = {
                         "title": _("Bosh sahifa"),
                         "icon": "dashboard",
                         "link": reverse_lazy("admin:index"),
+                    },
+                    {
+                        "title": _("Kutubxona paneli"),
+                        "icon": "chevron_right",
+                        "link": "/panel/",
+                    },
+                    {
+                        "title": _("Saytni ochish"),
+                        "icon": "open_in_new",
+                        "link": "/",
                     },
                 ],
             },
@@ -365,27 +388,47 @@ UNFOLD = {
                 "separator": True,
                 "items": [
                     {
-                        "title": _("Foydalanuvchilar"),
+                        "title": _("Talabalar"),
+                        "icon": "school",
+                        "link": format_lazy("{}?kind=student", reverse_lazy("admin:user_app_user_changelist")),
+                    },
+                    {
+                        "title": _("O'qituvchi va xodimlar"),
+                        "icon": "badge",
+                        "link": format_lazy("{}?kind=employee", reverse_lazy("admin:user_app_user_changelist")),
+                    },
+                    {
+                        "title": _("Kutubxona xodimlari"),
+                        "icon": "local_library",
+                        "link": format_lazy("{}?kind=librarian", reverse_lazy("admin:user_app_user_changelist")),
+                    },
+                    {
+                        "title": _("Administratorlar"),
+                        "icon": "shield_person",
+                        "link": format_lazy("{}?kind=admin", reverse_lazy("admin:user_app_user_changelist")),
+                    },
+                    {
+                        "title": _("Barcha foydalanuvchilar"),
                         "icon": "group",
                         "link": reverse_lazy("admin:user_app_user_changelist"),
                         "badge": "core.unfold_badges.user_count",
                     },
                     {
-                        "title": _("Talabalar"),
-                        "icon": "school",
+                        "title": _("Rollar va ruxsatlar"),
+                        "icon": "key",
+                        "link": reverse_lazy("admin:user_app_role_changelist"),
+                    },
+                    {
+                        "title": _("Talaba profillari"),
+                        "icon": "contact_page",
                         "link": reverse_lazy("admin:user_app_studentprofile_changelist"),
                         "badge": "core.unfold_badges.student_count",
                     },
                     {
-                        "title": _("Hodimlar"),
-                        "icon": "badge",
+                        "title": _("Xodim profillari"),
+                        "icon": "assignment_ind",
                         "link": reverse_lazy("admin:user_app_employeprofile_changelist"),
                         "badge": "core.unfold_badges.employee_count",
-                    },
-                    {
-                        "title": _("Rollar"),
-                        "icon": "shield_person",
-                        "link": reverse_lazy("admin:user_app_role_changelist"),
                     },
                     {
                         "title": _("Guruhlar"),

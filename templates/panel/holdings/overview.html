@@ -25,7 +25,7 @@
   </div>
 
   {# ---------------- Filiallar ---------------- #}
-  <div x-show="tab === 'library'" class="grid gap-4 lg:grid-cols-3">
+  <div x-show="tab === 'library'" class="grid grid-cols-1 gap-4 lg:grid-cols-3 [&>*]:min-w-0">
     <div class="lg:col-span-2">
       <div class="table-wrap">
         <table class="table">
@@ -44,8 +44,15 @@
                     {% include "ui/_icon.html" with name="pencil" class="size-4" %}
                   </a>
                   <form method="post" action="{% url 'panel:holdings_toggle' 'library' lib.pk %}">{% csrf_token %}
-                    <button class="btn btn-ghost btn-sm">{% if lib.is_active %}O'chirish{% else %}Yoqish{% endif %}</button>
+                    <button class="btn btn-ghost btn-sm">{% if lib.is_active %}Faolsizlantirish{% else %}Yoqish{% endif %}</button>
                   </form>
+                  {% if not lib.items_total and not lib.shelves.all %}
+                    <form method="post" action="{% url 'panel:holdings_delete' 'library' lib.pk %}">{% csrf_token %}
+                      <button class="btn btn-ghost btn-icon btn-sm" aria-label="O'chirish" data-tip="O'chirish" data-confirm="«{{ lib }}» o'chirilsinmi?" data-confirm-label="O'chirish">
+                        {% include "ui/_icon.html" with name="trash" class="size-4" %}
+                      </button>
+                    </form>
+                  {% endif %}
                 </div>
               </td>
             </tr>
@@ -72,7 +79,7 @@
   </div>
 
   {# ---------------- Nusxa turlari ---------------- #}
-  <div x-show="tab === 'type'" x-cloak class="grid gap-4 lg:grid-cols-3">
+  <div x-show="tab === 'type'" x-cloak class="grid grid-cols-1 gap-4 lg:grid-cols-3 [&>*]:min-w-0">
     <div class="lg:col-span-2">
       <div class="table-wrap">
         <table class="table">
@@ -91,8 +98,15 @@
                     {% include "ui/_icon.html" with name="pencil" class="size-4" %}
                   </a>
                   <form method="post" action="{% url 'panel:holdings_toggle' 'type' it.pk %}">{% csrf_token %}
-                    <button class="btn btn-ghost btn-sm">{% if it.is_active %}O'chirish{% else %}Yoqish{% endif %}</button>
+                    <button class="btn btn-ghost btn-sm">{% if it.is_active %}Faolsizlantirish{% else %}Yoqish{% endif %}</button>
                   </form>
+                  {% if not it.items_total %}
+                    <form method="post" action="{% url 'panel:holdings_delete' 'type' it.pk %}">{% csrf_token %}
+                      <button class="btn btn-ghost btn-icon btn-sm" aria-label="O'chirish" data-tip="O'chirish" data-confirm="«{{ it }}» o'chirilsinmi?" data-confirm-label="O'chirish">
+                        {% include "ui/_icon.html" with name="trash" class="size-4" %}
+                      </button>
+                    </form>
+                  {% endif %}
                 </div>
               </td>
             </tr>
@@ -120,7 +134,7 @@
   </div>
 
   {# ---------------- Javonlar ---------------- #}
-  <div x-show="tab === 'shelf'" x-cloak class="grid gap-4 lg:grid-cols-3">
+  <div x-show="tab === 'shelf'" x-cloak class="grid grid-cols-1 gap-4 lg:grid-cols-3 [&>*]:min-w-0">
     <div class="lg:col-span-2">
       <div class="table-wrap">
         <table class="table table-zebra">
@@ -138,8 +152,15 @@
                     {% include "ui/_icon.html" with name="pencil" class="size-4" %}
                   </a>
                   <form method="post" action="{% url 'panel:holdings_toggle' 'shelf' shelf.pk %}">{% csrf_token %}
-                    <button class="btn btn-ghost btn-sm">{% if shelf.is_active %}O'chirish{% else %}Yoqish{% endif %}</button>
+                    <button class="btn btn-ghost btn-sm">{% if shelf.is_active %}Faolsizlantirish{% else %}Yoqish{% endif %}</button>
                   </form>
+                  {% if not shelf.items_total %}
+                    <form method="post" action="{% url 'panel:holdings_delete' 'shelf' shelf.pk %}">{% csrf_token %}
+                      <button class="btn btn-ghost btn-icon btn-sm" aria-label="O'chirish" data-tip="O'chirish" data-confirm="«{{ shelf }}» o'chirilsinmi?" data-confirm-label="O'chirish">
+                        {% include "ui/_icon.html" with name="trash" class="size-4" %}
+                      </button>
+                    </form>
+                  {% endif %}
                 </div>
               </td>
             </tr>

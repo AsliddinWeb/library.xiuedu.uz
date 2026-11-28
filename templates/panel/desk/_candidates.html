@@ -1,0 +1,38 @@
+{% comment %}Matnli qidiruv yoki bir xil inventar raqami: qaysi nusxa berilishini xodim tanlaydi.{% endcomment %}
+{% if candidates %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Nusxa</th><th>Holati</th><th></th></tr></thead>
+      <tbody>
+        {% for item in candidates %}
+          <tr>
+            <td>
+              <b class="block">{{ item.book.title }}</b>
+              <span class="help font-mono">{{ item.barcode|default:"—" }} · {{ item.inventory_number }}</span>
+              {% if item.shelf_location or item.call_number %}<span class="help block">{{ item.location_text }}</span>{% endif %}
+            </td>
+            <td>{% include "panel/partials/_item_status.html" %}</td>
+            <td>
+              <div class="table-actions">
+                {% if item.status == 'AVAILABLE' or item.status == 'ON_HOLD_SHELF' or item.status == 'NOT_FOR_LOAN' %}
+                  <button type="button" class="btn btn-primary btn-sm" hx-post="{% url 'panel:desk_checkout' %}"
+                          hx-vals='{"patron": "{{ patron.pk }}", "item": "{{ item.pk }}", "due_date": "{{ due|default:'' }}"}'>Berish</button>
+                {% elif item.status == 'ON_LOAN' and "circ.holds" in perms_flags %}
+                  <button type="button" class="btn btn-secondary btn-sm" hx-post="{% url 'panel:desk_hold' %}"
+                          hx-vals='{"patron": "{{ patron.pk }}", "book": "{{ item.book_id }}"}'>Navbatga yozish</button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+{% for book in books_without_items %}
+  <div class="notice notice-info">
+    {% include "ui/_icon.html" with name="info" class="size-5 flex-none" %}
+    <p class="text-sm"><b>{{ book.title }}</b> — bu kitobning fondda nusxasi yo'q.
+      {% if "catalog.view" in perms_flags %}<a class="underline" href="{% url 'panel:book_detail' book.pk %}">Nusxa qo'shish</a>{% endif %}</p>
+  </div>
+{% endfor %}

@@ -1,0 +1,6 @@
+{% comment %}Nusxa holati belgisi. Kirish: `item`.{% endcomment %}
+{% if item.status == 'AVAILABLE' %}{% include "ui/_badge.html" with text="Mavjud" variant="success" dot=1 %}
+{% elif item.status == 'ON_LOAN' %}{% include "ui/_badge.html" with text="Ijarada" variant="info" dot=1 %}
+{% elif item.status == 'ON_HOLD_SHELF' or item.status == 'NOT_FOR_LOAN' or item.status == 'IN_PROCESSING' or item.status == 'IN_TRANSIT' %}{% include "ui/_badge.html" with text=item.get_status_display variant="warning" dot=1 %}
+{% elif item.status == 'DAMAGED' or item.status == 'LOST' %}{% include "ui/_badge.html" with text=item.get_status_display variant="danger" dot=1 %}
+{% else %}{% include "ui/_badge.html" with text=item.get_status_display variant="neutral" dot=1 %}{% endif %}

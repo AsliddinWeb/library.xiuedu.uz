@@ -1,0 +1,88 @@
+{% if pending %}
+  <section class="card">
+    <div class="card-head"><h3 class="card-title">Saytdan yuborilgan so'rovlar</h3><span class="badge badge-warning">{{ pending|length }}</span></div>
+    <ul class="divide-y divide-[color:var(--color-line)]">
+      {% for req in pending %}
+        <li class="flex flex-wrap items-center gap-3 px-4 py-3">
+          <span class="min-w-0 flex-1"><b class="block truncate">{{ req.book.title }}</b><span class="help">{{ req.created_at|date:"d.m.Y H:i" }}</span></span>
+          <button type="button" class="btn btn-primary btn-sm" hx-post="{% url 'panel:desk_request_approve' %}" hx-vals='{"request": "{{ req.pk }}"}'>Berish</button>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endif %}
+
+<section class="card">
+  <div class="card-head"><h3 class="card-title">Qo'lidagi kitoblar</h3><span class="badge badge-neutral">{{ open_loans|length }}</span></div>
+  {% if open_loans %}
+    <ul class="divide-y divide-[color:var(--color-line)]">
+      {% for rental in open_loans %}
+        <li class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+          <span class="min-w-40 flex-1">
+            <b class="block">{{ rental.copy.book.title }}</b>
+            <span class="help">
+              <span class="font-mono">{{ rental.copy.barcode|default:rental.copy.inventory_number }}</span>
+              {% if rental.due_date %} · <span class="{% if rental.is_overdue %}font-semibold text-[color:var(--color-danger-700)]{% endif %}">{{ rental.due_date|date:"d.m.Y" }}{% if rental.is_overdue %} — muddati o'tgan{% endif %}</span>{% endif %}
+              {% if rental.renewals_count %} · {{ rental.renewals_count }} marta uzaytirilgan{% endif %}
+            </span>
+          </span>
+          <span class="flex gap-1.5">
+            {% if "circ.renew" in perms_flags and not rental.is_overdue %}
+              <button type="button" class="btn btn-secondary btn-sm" hx-post="{% url 'panel:desk_renew' %}" hx-vals='{"rental": "{{ rental.pk }}"}'>
+                {% include "ui/_icon.html" with name="history" class="size-4" %} Uzaytirish
+              </button>
+            {% endif %}
+            {% if "circ.checkin" in perms_flags %}
+              <button type="button" class="btn btn-secondary btn-sm" hx-post="{% url 'panel:desk_checkin' %}"
+                      hx-vals='{"rental": "{{ rental.pk }}", "patron": "{{ patron.pk }}", "mode": "checkout"}'>
+                {% include "ui/_icon.html" with name="download" class="size-4" %} Qabul qilish
+              </button>
+            {% endif %}
+          </span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="card-body help">Hozir qo'lida kitob yo'q.</p>
+  {% endif %}
+</section>
+
+{% if unpaid %}
+  <section class="card">
+    <div class="card-head"><h3 class="card-title">To'lanmagan jarimalar</h3></div>
+    <ul class="divide-y divide-[color:var(--color-line)]">
+      {% for fine in unpaid %}
+        <li class="flex flex-wrap items-center gap-3 px-4 py-3">
+          <span class="min-w-0 flex-1"><b class="block truncate">{{ fine.rental.copy.book.title }}</b><span class="help">{{ fine.days_overdue }} kun kechikish</span></span>
+          <b class="tabular-nums">{{ fine.amount|floatformat:0 }} so'm</b>
+          {% if not fine.rental.return_date %}
+            <span class="help w-full">Kitob qaytgach to'lanadi.</span>
+          {% elif "billing.collect" in perms_flags %}
+            <button type="button" class="btn btn-secondary btn-sm" hx-post="{% url 'panel:desk_fine_pay' %}" hx-vals='{"fine": "{{ fine.pk }}", "mode": "checkout"}'
+                    data-confirm="{{ fine.amount|floatformat:0 }} so'm to'lov qabul qilindimi?" data-confirm-label="Ha, qabul qilindi">To'landi</button>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endif %}
+
+{% if holds %}
+  <section class="card">
+    <div class="card-head"><h3 class="card-title">Navbatlari</h3><span class="badge badge-neutral">{{ holds|length }}</span></div>
+    <ul class="divide-y divide-[color:var(--color-line)]">
+      {% for hold in holds %}
+        <li class="flex flex-wrap items-center gap-3 px-4 py-3">
+          <span class="min-w-0 flex-1">
+            <b class="block truncate">{{ hold.book.title }}</b>
+            {% if hold.status == 'AVAILABLE' %}<span class="badge badge-success">Tayyor — {{ hold.hold_until|date:"d.m" }} gacha</span>{% else %}<span class="help">Navbatda · {{ hold.created_at|date:"d.m.Y" }} dan</span>{% endif %}
+          </span>
+          {% if "circ.holds" in perms_flags %}
+            <button type="button" class="btn btn-ghost btn-sm" hx-post="{% url 'panel:desk_hold_cancel' %}" hx-vals='{"reservation": "{{ hold.pk }}"}'
+                    data-confirm="Bu navbat bekor qilinsinmi?" data-confirm-label="Bekor qilish">Bekor qilish</button>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endif %}

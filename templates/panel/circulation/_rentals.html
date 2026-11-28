@@ -1,43 +1,54 @@
-{% load static %}
-<div class="overflow-hidden rounded-xl border border-navy-100 bg-paper shadow-soft">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-            <thead class="border-b border-navy-100 bg-navy-50/50 text-xs uppercase tracking-wide text-navy-500">
-                <tr>
-                    <th class="px-4 py-3 font-semibold">Kitob</th>
-                    <th class="px-4 py-3 font-semibold">Inventar</th>
-                    <th class="px-4 py-3 font-semibold">Talaba</th>
-                    <th class="px-4 py-3 font-semibold">Muddat</th>
-                    <th class="px-4 py-3 font-semibold">Holat</th>
-                    <th class="px-4 py-3 text-right font-semibold">Amal</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-navy-50">
-                {% for rental in rentals %}
-                <tr class="transition hover:bg-navy-50/40">
-                    <td class="px-4 py-3 font-medium text-navy-900">{{ rental.copy.book.title }}</td>
-                    <td class="px-4 py-3 text-navy-500">{{ rental.copy.inventory_number }}</td>
-                    <td class="px-4 py-3 text-navy-600">{{ rental.borrower_name }}</td>
-                    <td class="px-4 py-3 text-navy-500">{{ rental.due_date|default:"—" }}</td>
-                    <td class="px-4 py-3">
-                        {% if rental.return_date %}<span class="rounded-full bg-navy-50 px-2.5 py-0.5 text-xs font-medium text-navy-500">Qaytarilgan</span>
-                        {% elif rental.is_overdue %}<span class="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600">Kechikkan</span>
-                        {% else %}<span class="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Faol</span>{% endif %}
-                    </td>
-                    <td class="px-4 py-3 text-right">
-                        {% if not rental.return_date %}
-                        <button hx-post="{% url 'panel:rental_return' rental.pk %}" hx-target="#rent-table" hx-swap="innerHTML" hx-include="#rent-filters,[name='q']"
-                                class="rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700">Qaytarildi</button>
-                        {% else %}<span class="text-xs text-navy-300">{{ rental.return_date }}</span>{% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="6" class="px-4 py-16 text-center text-sm text-navy-400">Ijara yo'q.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-{% url 'panel:rentals' as pg_url %}
-{% include "panel/partials/_pager.html" with pager_url=pg_url pager_target="#rent-table" pager_include="#rent-filters,[name='q']" %}
+{% include "panel/circulation/_state.html" %}
+{% if page_obj.object_list %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>A'zo</th><th>Kitob</th><th>Berilgan</th><th>Muddat</th><th></th></tr></thead>
+      <tbody>
+        {% for rental in page_obj %}
+          <tr>
+            <td>{% include "panel/circulation/_borrower.html" with patron=rental.patron name=rental.borrower_name %}</td>
+            <td class="min-w-56">
+              <a href="{% url 'panel:item_detail' rental.copy_id %}" class="hover:underline">{{ rental.copy.book.title }}</a>
+              <span class="help block font-mono">{{ rental.copy.barcode|default:rental.copy.inventory_number }}</span>
+            </td>
+            <td class="whitespace-nowrap text-[color:var(--color-content-muted)]">{{ rental.borrowed_date|date:"d.m.Y"|default:"—" }}</td>
+            <td class="whitespace-nowrap">
+              {% if rental.return_date %}
+                {% include "ui/_badge.html" with text="Qaytarilgan" variant="success" dot=1 %}
+                <span class="help mt-1 block">{{ rental.return_date|date:"d.m.Y" }}</span>
+              {% else %}
+                <span class="{% if rental.is_overdue %}font-semibold text-[color:var(--color-danger-700)]{% endif %}">{{ rental.due_date|date:"d.m.Y"|default:"—" }}</span>
+                {% if rental.is_overdue %}<span class="help block !text-[color:var(--color-danger-700)]">{{ rental.due_date|timesince:today }} kechikdi</span>{% endif %}
+              {% endif %}
+              {% if rental.renewals_count %}<span class="help block">{{ rental.renewals_count }} marta uzaytirilgan</span>{% endif %}
+            </td>
+            <td>
+              {% if not rental.return_date %}
+                <div class="table-actions">
+                  {% if "circ.renew" in perms_flags and not rental.is_overdue %}
+                    <button type="button" class="btn btn-ghost btn-sm" hx-post="{% url 'panel:rental_renew' rental.pk %}" hx-include="#circ-view, #circ-page, #circ-q">Uzaytirish</button>
+                  {% endif %}
+                  {% if "circ.checkin" in perms_flags %}
+                    <button type="button" class="btn btn-secondary btn-sm" hx-post="{% url 'panel:rental_return' rental.pk %}" hx-include="#circ-view, #circ-page, #circ-q"
+                            data-confirm="«{{ rental.copy.book.title }}» qabul qilinsinmi?" data-confirm-label="Qabul qilish">Qabul qilish</button>
+                    <button type="button" class="btn btn-ghost btn-icon btn-sm" aria-label="Yo'qolgan deb belgilash" data-tip="Yo'qolgan"
+                            hx-post="{% url 'panel:rental_lost' rental.pk %}" hx-include="#circ-view, #circ-page, #circ-q"
+                            data-form-title="Kitob yo'qolgan deb belgilansinmi?" data-form-label="Belgilash"
+                            data-form='[{"name": "amount", "label": "Kitob uchun to&#39;lov (so&#39;m)", "type": "number", "value": "{{ rental.copy.price|default:0|floatformat:"0u" }}"}, {"name": "note", "label": "Izoh", "required": false}]'>
+                      {% include "ui/_icon.html" with name="alert" class="size-4" %}
+                    </button>
+                  {% endif %}
+                </div>
+              {% elif rental.fine and not rental.fine.is_paid %}
+                <span class="badge badge-danger">Jarima {{ rental.fine.amount|floatformat:0 }} so'm</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "ui/_pager.html" with page_obj=page_obj hx_get=request.path hx_target="#circ-table" query=query %}
+{% else %}
+  <div class="card">{% include "ui/_empty.html" with icon="book" title="Ijara topilmadi" text="Qidiruv shartini o'zgartiring yoki boshqa bo'limni oching." %}</div>
+{% endif %}

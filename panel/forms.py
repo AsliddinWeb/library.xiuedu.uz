@@ -10,18 +10,17 @@ from django import forms
 from django.utils.text import slugify
 
 from book_app.models import Author, Book, Genre, Item, Publisher, Series, Subject
+from circulation.models import LibrarySettings
 from holdings.models import ItemType, Library, ShelfLocation
+from user_app.models import PatronCategory
 
 __all__ = [
     'PanelBookForm', 'PanelGenreForm', 'PanelAuthorForm', 'PanelSettingsForm',
     'PanelItemForm', 'ItemBulkActionForm', 'PanelLibraryForm', 'PanelItemTypeForm',
-    'PanelShelfForm',
+    'PanelShelfForm', 'PanelPublisherForm', 'PanelSeriesForm', 'PanelSubjectForm',
+    'PanelCategoryForm',
 ]
 
-# Eski (v2) sahifalar uchun klasslar — yangi formalar `.input`/`.select` ishlatadi
-INPUT = ("w-full rounded-lg border border-navy-200 bg-paper px-3.5 py-2.5 text-sm text-navy-900 "
-         "transition placeholder:text-navy-400 focus:border-gold-400 focus:ring-2 "
-         "focus:ring-gold-200 focus:outline-none")
 FILE = ("block w-full text-sm text-navy-600 file:mr-4 file:rounded-lg file:border-0 "
         "file:bg-navy-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white "
         "hover:file:bg-navy-800")
@@ -289,40 +288,116 @@ class PanelShelfForm(forms.ModelForm):
         _style(self)
 
 
-class PanelGenreForm(forms.ModelForm):
+class _StyledForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _style(self)
+
+
+class PanelGenreForm(_StyledForm):
     class Meta:
         model = Genre
-        fields = ['name', 'icon', 'order', 'is_active']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': INPUT, 'placeholder': 'Katalog nomi'}),
-            'icon': forms.Textarea(attrs={'class': INPUT, 'rows': 2,
-                                          'placeholder': 'Ikonka (SVG yoki emoji) — ixtiyoriy'}),
-            'order': forms.NumberInput(attrs={'class': INPUT, 'placeholder': '0'}),
-        }
+        fields = ['name', 'order', 'icon', 'is_active']
+        widgets = {'icon': forms.Textarea(attrs={'rows': 2})}
+        help_texts = {'order': "Kichik raqam ro'yxatda oldinroq chiqadi.",
+                      'icon': "Ixtiyoriy. Bo'sh qolsa ikonka nomiga qarab tanlanadi."}
+
+    def clean_name(self):
+        name = ' '.join(self.cleaned_data['name'].split())
+        if Genre.objects.filter(name__iexact=name).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("Bunday katalog allaqachon bor.")
+        return name
 
 
-class PanelAuthorForm(forms.ModelForm):
+class PanelAuthorForm(_StyledForm):
+    variants_text = forms.CharField(
+        required=False, label="Boshqa yozilishlari",
+        help_text="Vergul bilan: Кодирий, Kodiriy. Qidiruv shular bo'yicha ham topadi.")
+
     class Meta:
         model = Author
-        fields = ['full_name', 'birth_year', 'death_year', 'nationality', 'bio']
-        widgets = {
-            'full_name': forms.TextInput(attrs={'class': INPUT, 'placeholder': 'Ism Familiya'}),
-            'birth_year': forms.NumberInput(attrs={'class': INPUT, 'placeholder': '1894'}),
-            'death_year': forms.NumberInput(attrs={'class': INPUT, 'placeholder': '1938'}),
-            'nationality': forms.TextInput(attrs={'class': INPUT, 'placeholder': "O'zbek"}),
-            'bio': forms.Textarea(attrs={'class': INPUT, 'rows': 4,
-                                         'placeholder': 'Qisqacha tavsif'}),
+        fields = ['full_name', 'birth_year', 'death_year', 'nationality', 'photo', 'bio']
+        widgets = {'bio': forms.Textarea(attrs={'rows': 4})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.order_fields(['full_name', 'variants_text'])
+        if self.instance.pk:
+            self.fields['variants_text'].initial = ', '.join(self.instance.name_variants or [])
+
+    def clean(self):
+        data = super().clean()
+        born, died = data.get('birth_year'), data.get('death_year')
+        if born and died and died < born:
+            self.add_error('death_year', "Vafot yili tug'ilgan yildan oldin bo'lmaydi.")
+        return data
+
+    def save(self, commit=True):
+        raw = self.cleaned_data.get('variants_text', '')
+        self.instance.name_variants = [part.strip() for part in raw.split(',') if part.strip()]
+        return super().save(commit)
+
+
+class PanelPublisherForm(_StyledForm):
+    class Meta:
+        model = Publisher
+        fields = ['name', 'city', 'website']
+
+
+class PanelSeriesForm(_StyledForm):
+    class Meta:
+        model = Series
+        fields = ['name', 'issn', 'publisher']
+
+
+class PanelSubjectForm(_StyledForm):
+    class Meta:
+        model = Subject
+        fields = ['name', 'kind', 'code', 'parent']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        parents = Subject.objects.all()
+        if self.instance.pk:
+            # O'zi yoki avlodi yuqori mavzu bo'lib qolmasin (aylanma bog'lanish)
+            excluded = {self.instance.pk}
+            frontier = [self.instance.pk]
+            while frontier:
+                frontier = list(Subject.objects.filter(parent_id__in=frontier)
+                                .exclude(pk__in=excluded).values_list('pk', flat=True))
+                excluded.update(frontier)
+            parents = parents.exclude(pk__in=excluded)
+        self.fields['parent'].queryset = parents
+
+
+class PanelCategoryForm(_StyledForm):
+    class Meta:
+        model = PatronCategory
+        fields = ['code', 'name', 'description', 'default_loan_days', 'loan_limit',
+                  'hold_limit', 'renewals_allowed', 'fine_per_day', 'debt_block_amount',
+                  'membership_months', 'requires_deposit',
+                  'can_borrow_reading_room_items', 'order', 'is_active']
+        help_texts = {
+            'default_loan_days': "0 — umumiy sozlamadagi muddat olinadi.",
+            'loan_limit': "0 — umumiy sozlamadagi limit olinadi.",
+            'hold_limit': "0 — cheklanmagan.",
+            'fine_per_day': "0 — umumiy sozlamadagi stavka olinadi.",
         }
 
 
-class PanelSettingsForm(forms.ModelForm):
+class PanelSettingsForm(_StyledForm):
     class Meta:
-        from circulation.models import LibrarySettings
         model = LibrarySettings
         fields = ['rental_days', 'reservation_hold_days', 'fine_per_day', 'max_active_rentals']
-        widgets = {
-            'rental_days': forms.NumberInput(attrs={'class': INPUT}),
-            'reservation_hold_days': forms.NumberInput(attrs={'class': INPUT}),
-            'fine_per_day': forms.NumberInput(attrs={'class': INPUT}),
-            'max_active_rentals': forms.NumberInput(attrs={'class': INPUT}),
+        help_texts = {
+            'rental_days': "Kitob necha kunga beriladi.",
+            'reservation_hold_days': "Bo'shagan kitob navbatdagi a'zo uchun necha kun saqlanadi.",
+            'fine_per_day': "Kechikkan har bir kun uchun. 0 — jarima yozilmaydi.",
+            'max_active_rentals': "A'zo bir vaqtda qo'lida ushlab turishi mumkin bo'lgan son.",
         }
+
+    def clean_rental_days(self):
+        days = self.cleaned_data['rental_days']
+        if not 1 <= days <= 365:
+            raise forms.ValidationError("1 dan 365 kungacha.")
+        return days

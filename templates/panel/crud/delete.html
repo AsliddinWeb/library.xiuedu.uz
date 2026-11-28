@@ -1,0 +1,27 @@
+{% extends "panel/base.html" %}
+
+{% block title %}{{ page_title }} — Kutubxona paneli{% endblock %}
+
+{% block panel_content %}
+<div class="mx-auto max-w-lg">
+  <div class="card card-body text-center">
+    <span class="icon-box icon-box-lg icon-box-danger mx-auto">{% include "ui/_icon.html" with name="trash" class="size-7" %}</span>
+    <h1 class="page-title mt-4">{{ page_title }}</h1>
+    <p class="mt-2"><b>«{{ object }}»</b></p>
+    {% if blocker %}
+      <div class="notice notice-warning mt-4 text-left">{% include "ui/_icon.html" with name="alert" class="size-5 flex-none" %}<p class="text-sm">{{ blocker }}</p></div>
+      <div class="mt-5 flex flex-wrap justify-center gap-2">
+        <a href="{{ list_url }}" class="btn btn-secondary">Orqaga</a>
+        {% if merge_url %}<a href="{{ merge_url }}" class="btn btn-primary">{% include "ui/_icon.html" with name="layers" class="size-4" %} Birlashtirish</a>{% endif %}
+      </div>
+    {% else %}
+      <p class="help mt-2">Bu amalni qaytarib bo'lmaydi.</p>
+      <form method="post" class="mt-5 flex flex-wrap justify-center gap-2">
+        {% csrf_token %}
+        <a href="{{ list_url }}" class="btn btn-secondary">Bekor qilish</a>
+        <button type="submit" class="btn btn-danger">Ha, o'chirish</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

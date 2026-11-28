@@ -1,0 +1,13 @@
+{% comment %}Ikki kirish yo'li. Sahifada ham, kirish oynasida ham ishlatiladi.{% endcomment %}
+<div class="grid gap-3 text-left">
+  <a href="{% url 'student_login' %}" class="card card-hover flex items-center gap-4 p-4" data-login-choice>
+    <span class="icon-box">{% include "ui/_icon.html" with name="graduation" class="size-6" %}</span>
+    <span class="min-w-0 flex-1"><b class="block">Talaba</b><span class="help">student.xiuedu.uz orqali</span></span>
+    {% include "ui/_icon.html" with name="arrow-right" class="size-5 text-[color:var(--color-content-subtle)]" %}
+  </a>
+  <a href="{% url 'employee_login' %}" class="card card-hover flex items-center gap-4 p-4">
+    <span class="icon-box icon-box-accent">{% include "ui/_icon.html" with name="briefcase" class="size-6" %}</span>
+    <span class="min-w-0 flex-1"><b class="block">O'qituvchi yoki xodim</b><span class="help">hemis.xiuedu.uz orqali</span></span>
+    {% include "ui/_icon.html" with name="arrow-right" class="size-5 text-[color:var(--color-content-subtle)]" %}
+  </a>
+</div>

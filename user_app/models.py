@@ -80,8 +80,8 @@ class EmployeProfile(models.Model):
     updated_at = models.DateTimeField(auto_now=True, null=True, verbose_name="Yangilangan sana")
 
     class Meta:
-        verbose_name = "Hodim"
-        verbose_name_plural = "Hodimlar"
+        verbose_name = "Xodim profili"
+        verbose_name_plural = "Xodim profillari"
 
     def __str__(self):
         return self.user.username
@@ -289,18 +289,27 @@ class Patron(models.Model):
             return not self.blocked_until or self.blocked_until >= now().date()
         return False
 
-    def can_borrow(self):
-        """(bo'ladimi, sabab) — ijara berishdan oldin tekshiriladi."""
+    def borrow_blocks(self):
+        """Yangi ijaraga to'sqinlik qiluvchi sabablar: [(kod, matn), ...]."""
+        from .roles import is_library_staff
+        if self.user_id and is_library_staff(self.user):
+            return [('staff', "Kutubxona xodimi hisobi bilan kitob olinmaydi.")]
+        blocks = []
         if self.status == self.Status.CLOSED:
-            return False, "A'zolik yopilgan."
+            blocks.append(('closed', "A'zolik yopilgan."))
         if self.is_blocked:
-            return False, self.block_reason or "A'zo bloklangan."
+            blocks.append(('blocked', self.block_reason or "A'zo bloklangan."))
         if self.is_expired:
-            return False, "A'zolik muddati tugagan."
+            blocks.append(('expired', "A'zolik muddati tugagan."))
         limit = self.category.loan_limit
         if limit and self.active_loans_count >= limit:
-            return False, f"Ijara limiti to'lgan ({limit} ta)."
+            blocks.append(('limit', f"Ijara limiti to'lgan ({limit} ta)."))
         block_at = self.category.debt_block_amount
         if block_at and self.balance >= block_at:
-            return False, f"Qarz chegaradan oshgan ({self.balance} so'm)."
-        return True, ""
+            blocks.append(('debt', f"Qarz chegaradan oshgan ({self.balance} so'm)."))
+        return blocks
+
+    def can_borrow(self):
+        """(bo'ladimi, sabab) — ijara berishdan oldin tekshiriladi."""
+        blocks = self.borrow_blocks()
+        return (False, blocks[0][1]) if blocks else (True, "")

@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from .resources import RESOURCES
 
 app_name = "panel"
 
@@ -17,19 +18,6 @@ urlpatterns = [
     path('copies/<int:pk>/toggle/', views.copy_toggle, name='copy_toggle'),
     path('copies/<int:pk>/delete/', views.copy_delete, name='copy_delete'),
 
-    # Kataloglar (Genre)
-    path('genres/', views.genre_list, name='genres'),
-    path('genres/new/', views.genre_create, name='genre_create'),
-    path('genres/<int:pk>/edit/', views.genre_edit, name='genre_edit'),
-    path('genres/<int:pk>/toggle/', views.genre_toggle, name='genre_toggle'),
-    path('genres/<int:pk>/delete/', views.genre_delete, name='genre_delete'),
-
-    # Mualliflar (Author)
-    path('authors/', views.author_list, name='authors'),
-    path('authors/new/', views.author_create, name='author_create'),
-    path('authors/<int:pk>/edit/', views.author_edit, name='author_edit'),
-    path('authors/<int:pk>/delete/', views.author_delete, name='author_delete'),
-
     # Nusxalar (fond)
     path('items/', views.item_list, name='items'),
     path('items/<int:pk>/', views.item_detail, name='item_detail'),
@@ -40,11 +28,25 @@ urlpatterns = [
     path('holdings/', views.holdings_overview, name='holdings'),
     path('holdings/<str:kind>/<int:pk>/edit/', views.holdings_edit, name='holdings_edit'),
     path('holdings/<str:kind>/<int:pk>/toggle/', views.holdings_toggle, name='holdings_toggle'),
+    path('holdings/<str:kind>/<int:pk>/delete/', views.holdings_delete, name='holdings_delete'),
 
     # Skaner uchun tezkor qidiruv
     path('search/', views.quick_search, name='quick_search'),
 
     path('import/', views.import_books, name='import_books'),
+    path('import/csv/', views.import_preview, name='import_preview'),
+    path('import/csv/confirm/', views.import_confirm, name='import_confirm'),
+
+    # Abonement deski
+    path('desk/', views.desk, name='desk'),
+    path('desk/patrons/', views.desk_patrons, name='desk_patrons'),
+    path('desk/checkout/', views.desk_checkout, name='desk_checkout'),
+    path('desk/checkin/', views.desk_checkin, name='desk_checkin'),
+    path('desk/renew/', views.desk_renew, name='desk_renew'),
+    path('desk/hold/', views.desk_hold, name='desk_hold'),
+    path('desk/hold/cancel/', views.desk_hold_cancel, name='desk_hold_cancel'),
+    path('desk/request/', views.desk_request_approve, name='desk_request_approve'),
+    path('desk/fine/', views.desk_fine_pay, name='desk_fine_pay'),
 
     # Sirkulyatsiya
     path('requests/', views.requests_view, name='requests'),
@@ -52,10 +54,14 @@ urlpatterns = [
     path('requests/<int:pk>/reject/', views.request_reject, name='request_reject'),
     path('rentals/', views.rentals_view, name='rentals'),
     path('rentals/<int:pk>/return/', views.rental_return, name='rental_return'),
+    path('rentals/<int:pk>/renew/', views.rental_renew, name='rental_renew'),
+    path('rentals/<int:pk>/lost/', views.rental_lost, name='rental_lost'),
     path('reservations/', views.reservations_view, name='reservations'),
     path('reservations/<int:pk>/cancel/', views.reservation_cancel, name='reservation_cancel'),
     path('fines/', views.fines_view, name='fines'),
     path('fines/<int:pk>/paid/', views.fine_mark_paid, name='fine_mark_paid'),
+    path('fines/<int:pk>/waive/', views.fine_waive, name='fine_waive'),
+    path('fines/<int:pk>/adjust/', views.fine_adjust, name='fine_adjust'),
 
     # Tizim
     path('reviews/', views.reviews_view, name='reviews'),
@@ -68,6 +74,13 @@ urlpatterns = [
     path('members/<int:pk>/block/', views.member_block, name='member_block'),
     path('members/<int:pk>/unblock/', views.member_unblock, name='member_unblock'),
     path('members/<int:pk>/renew/', views.member_renew, name='member_renew'),
+    path('members/<int:pk>/delete/', views.member_delete, name='member_delete'),
+    path('profile/', views.profile, name='profile'),
+    path('notifications/', views.notifications, name='notifications'),
     path('analytics/', views.analytics, name='analytics'),
     path('settings/', views.settings_view, name='settings'),
 ]
+
+# Ma'lumotnomalar (muallif, katalog, nashriyot, turkum, mavzu, a'zo toifasi)
+for resource in RESOURCES:
+    urlpatterns += resource.urls()

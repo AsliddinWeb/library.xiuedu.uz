@@ -2,6 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from user_app.roles import is_library_staff
+
 from .models import Notification
 
 
@@ -16,6 +18,8 @@ def dropdown(request):
 
 @login_required
 def notification_list(request):
+    if is_library_staff(request.user):
+        return redirect('panel:notifications')
     items = Notification.objects.filter(user=request.user)
     return render(request, 'notifications/list.html', {'items': items})
 
@@ -34,7 +38,8 @@ def mark_read(request, pk):
 def read_all(request):
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
     if not getattr(request, 'htmx', False):          # ro'yxat sahifasidagi oddiy forma
-        return redirect('notifications:list')
+        return redirect('panel:notifications' if is_library_staff(request.user)
+                        else 'notifications:list')
     items = Notification.objects.filter(user=request.user)[:8]
     return render(request, 'notifications/partials/_dropdown.html',
                   {'items': items, 'unread': 0})

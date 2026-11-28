@@ -10,6 +10,11 @@
     <p class="page-sub">Jami {{ total }} ta nusxa. Skanerni shu sahifada ishlatsangiz ham bo'ladi —
       shtrix-kodni yozsangiz nusxa darhol topiladi.</p>
   </div>
+  {% if "reports.export" in perms_flags %}
+    <a href="?export=csv{% if q %}&q={{ q|urlencode }}{% endif %}{% if status %}&status={{ status|urlencode }}{% endif %}{% if library %}&library={{ library|urlencode }}{% endif %}{% if type %}&type={{ type|urlencode }}{% endif %}" class="btn btn-secondary" download>
+      {% include "ui/_icon.html" with name="download" class="size-4" %} CSV
+    </a>
+  {% endif %}
 </div>
 
 <form class="card card-body mb-4 flex flex-wrap items-end gap-3"

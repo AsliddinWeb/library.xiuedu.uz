@@ -13,6 +13,8 @@
      6. data-count="N" — sonlar sanab chiqiladi
      7. .site-header — aylantirilganda soya
      8. data-rail — gorizontal lentani tugma bilan surish
+     9. data-form — sabab/summa so'raydigan oyna
+    10. F2 — abonement deski; data-autofocus — yangilangandan keyin fokus
 =========================================================================== */
 (function () {
   'use strict';
@@ -70,6 +72,26 @@
     el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' ||
     el.isContentEditable
   );
+
+  // F2 — abonement deski (menyuda havolasi bor xodimda)
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'F2') return;
+    const desk = document.querySelector('[data-desk-link]');
+    if (!desk) return;
+    event.preventDefault();
+    window.location.assign(desk.getAttribute('href'));
+  });
+
+  // Yangilangan blokdagi asosiy maydonga fokus qaytadi (skaner ketma-ket o'qiydi)
+  document.body.addEventListener('htmx:afterSettle', (event) => {
+    const root = event.detail.elt;
+    if (!root || !root.querySelector) return;
+    const field = root.matches('[data-autofocus]') ? root : root.querySelector('[data-autofocus]');
+    if (field && root.id === 'desk') {
+      field.focus();
+      field.select();
+    }
+  });
 
   document.addEventListener('keydown', (event) => {
     const search = document.querySelector('[data-global-search]');
@@ -213,6 +235,82 @@
       delete trigger.dataset.confirmed;
     });
   }, true);
+
+  /* --- 9. Kichik forma oynasi: data-form='[{"name":"note","label":"Sabab"}]' --
+     Tasdiqlangach element qayta bosiladi va qiymatlar HTMX so'roviga qo'shiladi. */
+  const askForm = (title, fields, label) => new Promise((resolve) => {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'confirm';
+    const form = document.createElement('form');
+    const heading = document.createElement('p');
+    heading.className = 'text-base font-bold';
+    heading.textContent = title;
+    form.appendChild(heading);
+
+    fields.forEach((spec) => {
+      const wrap = document.createElement('label');
+      wrap.className = 'field mt-3';
+      const caption = document.createElement('span');
+      caption.className = 'label';
+      caption.textContent = spec.label;
+      const input = document.createElement('input');
+      input.className = 'input';
+      input.name = spec.name;
+      input.type = spec.type || 'text';
+      input.value = spec.value || '';
+      input.required = spec.required !== false;
+      input.maxLength = 200;
+      if (input.type === 'number') { input.min = '0'; input.step = 'any'; }
+      wrap.append(caption, input);
+      form.appendChild(wrap);
+    });
+
+    const actions = document.createElement('div');
+    actions.className = 'confirm-actions';
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'btn btn-secondary';
+    cancel.textContent = 'Bekor qilish';
+    const ok = document.createElement('button');
+    ok.type = 'submit';
+    ok.className = 'btn btn-primary';
+    ok.textContent = label || 'Saqlash';
+    actions.append(cancel, ok);
+    form.appendChild(actions);
+    dialog.appendChild(form);
+
+    const close = (answer) => { dialog.close(); dialog.remove(); resolve(answer); };
+    cancel.addEventListener('click', () => close(null));
+    dialog.addEventListener('cancel', (event) => { event.preventDefault(); close(null); });
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      close(Object.fromEntries(new FormData(form)));
+    });
+    document.body.appendChild(dialog);
+    dialog.showModal();
+    const first = form.querySelector('input');
+    if (first) first.focus();
+  });
+
+  document.body.addEventListener('click', (event) => {
+    const trigger = event.target.closest('[data-form]');
+    if (!trigger || trigger.formValues) return;
+    event.preventDefault();
+    event.stopPropagation();
+    askForm(trigger.dataset.formTitle, JSON.parse(trigger.dataset.form), trigger.dataset.formLabel)
+      .then((values) => {
+        if (!values) return;
+        trigger.formValues = values;
+        trigger.click();
+        delete trigger.formValues;
+      });
+  }, true);
+
+  document.body.addEventListener('htmx:configRequest', (event) => {
+    const values = event.detail.elt.formValues;
+    if (!values) return;
+    Object.keys(values).forEach((key) => { event.detail.parameters[key] = values[key]; });
+  });
 
   /* --- 10. Mavzu: yorug' / tungi / tizimcha ----------------------------- */
   const root = document.documentElement;

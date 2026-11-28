@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 from book_app.citation import gost
 from book_app.models import Book
 from reading.models import ReadingHistory
-from user_app.permissions import Perms, require_perm
+from user_app.permissions import Perms, reader_required, require_perm
 
 from . import services
 from .forms import ShelfForm
@@ -30,10 +30,10 @@ def _render_favorite(request, book):
     })
 
 
-# ----------------------------------------------------------- talaba amallari
+# ----------------------------------------------------------- o'quvchi amallari
 
 @require_POST
-@login_required
+@reader_required
 def toggle_favorite(request, pk):
     book = get_object_or_404(Book, pk=pk)
     services.toggle_favorite(request.user, book)
@@ -41,7 +41,7 @@ def toggle_favorite(request, pk):
 
 
 @require_POST
-@login_required
+@reader_required
 def submit_review(request, pk):
     book = get_object_or_404(Book, pk=pk)
     _, msg = services.submit_review(request.user, book,
@@ -49,7 +49,7 @@ def submit_review(request, pk):
     return _render_reviews(request, book, message=msg)
 
 
-@login_required
+@reader_required
 def my_library(request):
     favorites = (Favorite.objects.filter(user=request.user)
                  .select_related('book__category').prefetch_related('book__authors'))

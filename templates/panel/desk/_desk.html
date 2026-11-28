@@ -1,0 +1,24 @@
+{% comment %}
+  Deskning HTMX bloki. Barcha amallar shu blokni butunlay yangilaydi
+  (hx-target va hx-swap ichkaridagi elementlarga meros bo'ladi).
+{% endcomment %}
+<div id="desk" hx-target="#desk" hx-swap="outerHTML">
+  {% if "circ.checkout" in perms_flags and "circ.checkin" in perms_flags %}
+    <nav class="tabs mb-4" aria-label="Desk rejimi">
+      <a class="tab {% if mode == 'checkout' %}tab-active{% endif %}" href="{% url 'panel:desk' %}{% if patron %}?patron={{ patron.pk }}{% endif %}"
+         hx-get="{% url 'panel:desk' %}{% if patron %}?patron={{ patron.pk }}{% endif %}" hx-push-url="true">
+        {% include "ui/_icon.html" with name="upload" class="size-4" %} Berish
+      </a>
+      <a class="tab {% if mode == 'checkin' %}tab-active{% endif %}" href="{% url 'panel:desk' %}?mode=checkin"
+         hx-get="{% url 'panel:desk' %}?mode=checkin" hx-push-url="true">
+        {% include "ui/_icon.html" with name="download" class="size-4" %} Qabul qilish
+      </a>
+    </nav>
+  {% endif %}
+
+  {% if mode == 'checkin' %}
+    {% include "panel/desk/_checkin.html" %}
+  {% else %}
+    {% include "panel/desk/_checkout.html" %}
+  {% endif %}
+</div>

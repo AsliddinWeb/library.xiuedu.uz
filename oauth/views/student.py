@@ -10,10 +10,25 @@ from django.shortcuts import redirect
 from django.views import View
 
 from oauth.client import oAuth2Client
+from oauth.views.choice import NEXT_KEY
 from user_app.models import EmployeProfile, Role, StudentProfile, User
 from user_app.services import sync_patron
 
 logger = logging.getLogger(__name__)
+
+
+def _account_username(hemis_id, user_type, prefix):
+    """HEMIS raqamidan login nomi.
+
+    Talaba va xodim raqamlari ikki alohida HEMIS'dan keladi. Bir xil raqam
+    chiqib qolsa, biri ikkinchisining hisobini egallab olmasligi uchun
+    keyingisiga prefiks qo'shiladi.
+    """
+    username = str(hemis_id)
+    if User.objects.filter(username=username).exclude(user_type=user_type).exists():
+        username = f'{prefix}-{username}'
+        logger.warning("HEMIS raqami ikki turdagi hisobda uchradi, %s ishlatildi", username)
+    return username
 
 
 def _parse_birth_date(value):
@@ -85,32 +100,34 @@ class AuthCallbackView(View):
         user_type = request.COOKIES.get('user_type', 'student')
 
         if not code:
-            return JsonResponse({'error': 'Code is missing!'}, status=400)
+            return JsonResponse({'error': "HEMIS'dan kirish kodi kelmadi. Qayta kirib ko'ring."}, status=400)
 
-        if user_type == "employee":
-            token_url = settings.EMPLOYE_ACCESS_TOKEN_URL
-            resource_owner_url = settings.EMPLOYE_RESOURCE_OWNER_URL
-            authorize_url = settings.EMPLOYE_AUTHORIZE_URL
-        elif user_type == "student":
-            token_url = settings.ACCESS_TOKEN_URL
-            resource_owner_url = settings.RESOURCE_OWNER_URL
-            authorize_url = settings.AUTHORIZE_URL
+        if user_type == "employee":     # hemis.xiuedu.uz
+            client = oAuth2Client(
+                client_id=settings.EMPLOYE_CLIENT_ID,
+                client_secret=settings.EMPLOYE_CLIENT_SECRET,
+                redirect_uri=settings.EMPLOYE_REDIRECT_URI,
+                authorize_url=settings.EMPLOYE_AUTHORIZE_URL,
+                token_url=settings.EMPLOYE_ACCESS_TOKEN_URL,
+                resource_owner_url=settings.EMPLOYE_RESOURCE_OWNER_URL,
+            )
+        elif user_type == "student":    # student.xiuedu.uz
+            client = oAuth2Client(
+                client_id=settings.CLIENT_ID,
+                client_secret=settings.CLIENT_SECRET,
+                redirect_uri=settings.REDIRECT_URI,
+                authorize_url=settings.AUTHORIZE_URL,
+                token_url=settings.ACCESS_TOKEN_URL,
+                resource_owner_url=settings.RESOURCE_OWNER_URL,
+            )
         else:
-            return JsonResponse({'error': 'Invalid user type in cookie!'}, status=400)
-
-        client = oAuth2Client(
-            client_id=settings.CLIENT_ID,
-            client_secret=settings.CLIENT_SECRET,
-            redirect_uri=settings.REDIRECT_URI,
-            authorize_url=authorize_url,
-            token_url=token_url,
-            resource_owner_url=resource_owner_url
-        )
+            return JsonResponse({'error': "Kirish turi aniqlanmadi. Qayta kirib ko'ring."}, status=400)
 
         access_token_response = client.get_access_token(code)
         access_token = access_token_response.get('access_token')
         if not access_token:
-            return JsonResponse({'status': False, 'error': 'Failed to obtain access token'}, status=400)
+            return JsonResponse({'status': False, 'error': "HEMIS kirishni tasdiqlamadi. Qayta kirib ko'ring."},
+                                status=400)
 
         user_details = client.get_user_details(access_token)
 
@@ -122,15 +139,19 @@ class AuthCallbackView(View):
         if not user:
             return JsonResponse({'status': False, 'error': "Foydalanuvchi ma'lumotlarini qayta ishlashda xatolik"}, status=400)
 
-        # Kutubxona a'zoligi: talaba ham, xodim ham shu yerda bilet oladi.
+        # Kutubxona a'zoligi: talaba ham, HEMIS xodimi ham o'quvchi sifatida bilet
+        # oladi. Kutubxona xodimi roli biriktirilgan hisobga a'zolik ochilmaydi.
         # Xatolik kirishni to'xtatmasligi kerak — a'zolikni keyin xodim ocha oladi.
         try:
             sync_patron(user)
         except Exception:
             logger.exception("A'zolikni sinxronlashda xatolik: %s", user.username)
 
+        # `login()` sessiyani yangilaydi — manzilni oldin olib qo'yamiz
+        next_url = request.session.pop(NEXT_KEY, None)
         login(request, user)
-        return redirect('dashboard')
+        # Har hisob o'z ish joyiga: o'quvchi — kabinet, xodim — panel
+        return redirect(next_url or 'dashboard')
 
     def process_student(self, user_details):
         student_data = user_details.get('data', {})
@@ -142,7 +163,8 @@ class AuthCallbackView(View):
         faculty = student_data.get('faculty', {})
 
         user, _ = User.objects.update_or_create(
-            username=student_data.get('student_id_number'),
+            username=_account_username(student_data.get('student_id_number'),
+                                       User.UserType.STUDENT, 'st'),
             defaults={
                 'first_name': student_data.get('first_name', ''),
                 'second_name': student_data.get('second_name', ''),
@@ -163,7 +185,9 @@ class AuthCallbackView(View):
 
         _download_profile_image(user, student_data.get('image', ''))
 
-        StudentProfile.objects.update_or_create(
+        # Natija `user.student_profile`ga ham yoziladi: signal yaratgan bo'sh profil
+        # keshda qolsa, birinchi kirishda a'zo toifasi noto'g'ri aniqlanadi
+        user.student_profile, _ = StudentProfile.objects.update_or_create(
             user=user,
             defaults={
                 'faculty': faculty.get('name', ''),
@@ -189,7 +213,8 @@ class AuthCallbackView(View):
         position = departments[0].get('staffPosition', {}).get('name', '')
 
         user, _ = User.objects.update_or_create(
-            username=employe_data.get('employee_id_number'),
+            username=_account_username(employe_data.get('employee_id_number'),
+                                       User.UserType.EMPLOYE, 'emp'),
             defaults={
                 'first_name': employe_data.get('firstname', ''),
                 'second_name': employe_data.get('surname', ''),
@@ -214,6 +239,10 @@ class AuthCallbackView(View):
                 'position': position,
             }
         )
+        # Signal yaratgan bo'sh profil keshda qolmasin — aks holda birinchi kirishda
+        # o'qituvchi "Xodim" toifasiga tushib qoladi
+        user.employe_profile = profile
+
         # current_role faqat birinchi marta o'rnatiladi (mavjudini bekor qilmaslik uchun)
         if profile.current_role is None:
             profile.current_role = employee_role

@@ -2,7 +2,7 @@
 {% with page=request.resolver_match.url_name %}
 <nav class="tabbar" aria-label="Pastki menyu">
   <a href="/" {% if page == 'home' %}aria-current="page"{% endif %}>
-    <i>{% include "ui/_icon.html" with name="home" class="size-5" %}</i><span>Bosh</span>
+    <i>{% include "ui/_icon.html" with name="home" class="size-5" %}</i><span>Asosiy</span>
   </a>
   <a href="{% url 'book_app:student_book_list' %}" {% if page == 'student_book_list' or page == 'student_book_detail' %}aria-current="page"{% endif %}>
     <i>{% include "ui/_icon.html" with name="library" class="size-5" %}</i><span>Katalog</span>
@@ -11,12 +11,21 @@
     <a href="{% url 'book_app:course_list' %}" {% if page|slice:":6" == 'course' %}aria-current="page"{% endif %}>
       <i>{% include "ui/_icon.html" with name="graduation" class="size-5" %}</i><span>Fanlar</span>
     </a>
-    <a href="{% url 'engagement:my_library' %}" {% if page == 'my_library' or page|slice:":5" == 'shelf' %}aria-current="page"{% endif %}>
-      <i>{% include "ui/_icon.html" with name="heart" class="size-5" %}</i><span>Kutubxonam</span>
-    </a>
-    <a href="{% url 'dashboard' %}" {% if page == 'dashboard' or page == 'my_rentals' %}aria-current="page"{% endif %}>
-      <i>{% include "ui/_icon.html" with name="grid" class="size-5" %}</i><span>Kabinet</span>
-    </a>
+    {% if account.is_staff %}
+      <a href="{% url 'engagement:shelf_list' %}" {% if page|slice:":5" == 'shelf' %}aria-current="page"{% endif %}>
+        <i>{% include "ui/_icon.html" with name="bookmark" class="size-5" %}</i><span>Ro'yxatlar</span>
+      </a>
+      <a href="{{ account.home }}">
+        <i>{% include "ui/_icon.html" with name="chart" class="size-5" %}</i><span>Panel</span>
+      </a>
+    {% else %}
+      <a href="{% url 'engagement:my_library' %}" {% if page == 'my_library' or page|slice:":5" == 'shelf' %}aria-current="page"{% endif %}>
+        <i>{% include "ui/_icon.html" with name="heart" class="size-5" %}</i><span>Kutubxonam</span>
+      </a>
+      <a href="{% url 'dashboard' %}" {% if page == 'dashboard' or page == 'my_rentals' %}aria-current="page"{% endif %}>
+        <i>{% include "ui/_icon.html" with name="grid" class="size-5" %}</i><span>Kabinet</span>
+      </a>
+    {% endif %}
   {% else %}
     <a href="{% url 'student_login' %}" x-data @click.prevent="$dispatch('open-login')">
       <i>{% include "ui/_icon.html" with name="login" class="size-5" %}</i><span>Kirish</span>

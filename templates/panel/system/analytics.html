@@ -1,67 +1,73 @@
 {% extends "panel/base.html" %}
-{% block title %}Analitika — Kutubxonachi paneli{% endblock %}
+{% load static %}
+{% block title %}Analitika — Kutubxona paneli{% endblock %}
 
 {% block panel_content %}
-<div>
-    <h2 class="font-serif text-2xl font-semibold text-navy-900">Analitika</h2>
-    <p class="mt-1 text-sm text-navy-500">Kutubxona faoliyati ko'rsatkichlari</p>
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Analitika</h1>
+    <p class="page-sub">{{ start|date:"d.m.Y" }} — {{ today|date:"d.m.Y" }} davri uchun faoliyat va fondning joriy holati.</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <nav class="tabs" aria-label="Davr">
+      {% for value, label in periods %}
+        <a href="?period={{ value }}" class="tab {% if value == period %}tab-active{% endif %}">{{ label }}</a>
+      {% endfor %}
+    </nav>
+    {% if "reports.export" in perms_flags %}
+      <a href="?period={{ period }}&export=csv" class="btn btn-secondary" download>{% include "ui/_icon.html" with name="download" class="size-4" %} CSV</a>
+    {% endif %}
+  </div>
 </div>
 
-{# Stat #}
-<div class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
-    <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.books }}</p><p class="text-xs text-navy-500">Kitoblar</p></div>
-    <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.patrons }}</p><p class="text-xs text-navy-500">A'zolar</p></div>
-    <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.rentals }}</p><p class="text-xs text-navy-500">Jami ijaralar</p></div>
-    <div class="rounded-xl border border-navy-100 bg-paper px-5 py-4 shadow-soft"><p class="font-serif text-2xl font-semibold text-navy-900">{{ stats.reads }}</p><p class="text-xs text-navy-500">O'qishlar</p></div>
+<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+  <div class="stat"><p class="stat-label">Berilgan kitob</p><p class="stat-value">{{ summary.issued }}</p></div>
+  <div class="stat"><p class="stat-label">Qaytarilgan</p><p class="stat-value">{{ summary.returned }}</p></div>
+  <div class="stat"><p class="stat-label">Onlayn o'qishlar</p><p class="stat-value">{{ summary.reads }}</p></div>
+  <div class="stat"><p class="stat-label">Qabul qilingan to'lov</p><p class="stat-value">{{ summary.collected|floatformat:"0g" }}</p><p class="help">so'm</p></div>
+  <div class="stat"><p class="stat-label">Yangi kitob</p><p class="stat-value">{{ summary.new_books }}</p><p class="help">jami {{ totals.books }}</p></div>
+  <div class="stat"><p class="stat-label">Yangi nusxa</p><p class="stat-value">{{ summary.new_items }}</p><p class="help">fondda {{ totals.items }}</p></div>
+  <div class="stat"><p class="stat-label">Yangi a'zo</p><p class="stat-value">{{ summary.new_patrons }}</p><p class="help">jami {{ totals.patrons }}</p></div>
+  <div class="stat"><p class="stat-label">Hozir ijarada</p><p class="stat-value">{{ totals.on_loan }}</p></div>
 </div>
 
-{# Grafiklar #}
-<div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-    <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft lg:col-span-2">
-        <h3 class="font-serif text-base font-semibold text-navy-900">Ijaralar dinamikasi <span class="text-xs font-normal text-navy-400">(30 kun)</span></h3>
-        <div class="mt-4 h-64"><canvas id="aRentals"></canvas></div>
-    </div>
-    <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
-        <h3 class="font-serif text-base font-semibold text-navy-900">Kataloglar</h3>
-        <div class="mt-4 h-64"><canvas id="aCats"></canvas></div>
-    </div>
-    <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
-        <h3 class="font-serif text-base font-semibold text-navy-900">Eng ko'p o'qilgan</h3>
-        <div class="mt-4 h-72"><canvas id="aViewed"></canvas></div>
-    </div>
-    <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
-        <h3 class="font-serif text-base font-semibold text-navy-900">Eng ko'p ijaraga olingan</h3>
-        <div class="mt-4 h-72"><canvas id="aRented"></canvas></div>
-    </div>
-    <div class="rounded-2xl border border-navy-100 bg-paper p-6 shadow-soft">
-        <h3 class="font-serif text-base font-semibold text-navy-900">Faol o'quvchilar</h3>
-        <div class="mt-4 space-y-2.5">
-            {% for p in active_patrons %}
-            <div class="flex items-center justify-between text-sm">
-                <span class="truncate text-navy-700">{{ p.display_name }}
-                    <span class="text-xs text-navy-400">· {{ p.category.name }}</span></span>
-                <span class="font-semibold text-navy-900">{{ p.rc }}</span>
-            </div>
-            {% empty %}<p class="text-sm text-navy-400">Ma'lumot yo'q.</p>{% endfor %}
-        </div>
-    </div>
+<div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+  <section class="card card-body lg:col-span-2">
+    <h2 class="card-title">Berish va qaytarish</h2>
+    <div class="mt-3 h-64"><canvas data-chart="line" data-source="rentals-data" role="img" aria-label="Kunlik berilgan va qaytarilgan kitoblar"></canvas></div>
+  </section>
+  <section class="card card-body">
+    <h2 class="card-title">Fond kataloglar bo'yicha</h2>
+    <div class="mt-3 h-64"><canvas data-chart="doughnut" data-source="cats-data" role="img" aria-label="Kataloglar bo'yicha kitoblar"></canvas></div>
+  </section>
+  <section class="card card-body">
+    <h2 class="card-title">Davrda eng ko'p olingan</h2>
+    {% if rented_chart.labels %}<div class="mt-3 h-72"><canvas data-chart="bar" data-source="rented-data" role="img" aria-label="Eng ko'p ijaraga olingan kitoblar"></canvas></div>
+    {% else %}<p class="help mt-3">Bu davrda ijara bo'lmagan.</p>{% endif %}
+  </section>
+  <section class="card card-body">
+    <h2 class="card-title">Eng ko'p ko'rilgan</h2>
+    {% if viewed_chart.labels %}<div class="mt-3 h-72"><canvas data-chart="bar" data-source="viewed-data" role="img" aria-label="Eng ko'p ko'rilgan kitoblar"></canvas></div>
+    {% else %}<p class="help mt-3">Hali ko'rish yo'q.</p>{% endif %}
+  </section>
+  <section class="card card-body">
+    <h2 class="card-title">Faol o'quvchilar</h2>
+    <ul class="mt-3 space-y-2.5">
+      {% for p in active_patrons %}
+        <li class="flex items-center justify-between gap-3 text-sm">
+          <span class="min-w-0 truncate">{% if "patrons.view" in perms_flags %}<a href="{% url 'panel:member_detail' p.pk %}" class="hover:underline">{{ p.display_name }}</a>{% else %}{{ p.display_name }}{% endif %} <span class="help">· {{ p.category.name }}</span></span>
+          <b class="tabular-nums">{{ p.rc }}</b>
+        </li>
+      {% empty %}<li class="help">Bu davrda ijara bo'lmagan.</li>{% endfor %}
+    </ul>
+  </section>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-(function () {
-    const gold='#c69a3a', navy='#20335a';
-    const opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
-    const barY={...opts,indexAxis:'y',scales:{x:{beginAtZero:true,ticks:{precision:0}}}};
-    const rc={{ rentals_chart|safe }};
-    new Chart(aRentals,{type:'line',data:{labels:rc.labels,datasets:[{data:rc.data,borderColor:gold,backgroundColor:'rgba(198,154,58,.12)',fill:true,tension:.35,pointRadius:1,borderWidth:2}]},options:{...opts,scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'#eef2f9'}},x:{grid:{display:false}}}}});
-    const cc={{ cats_chart|safe }};
-    new Chart(aCats,{type:'doughnut',data:{labels:cc.labels,datasets:[{data:cc.data,backgroundColor:['#0e1a30','#20335a','#375789','#5474a6','#819cc4','#d6a945','#e1c06c','#ecd89f'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}}}});
-    const vc={{ viewed_chart|safe }};
-    new Chart(aViewed,{type:'bar',data:{labels:vc.labels,datasets:[{data:vc.data,backgroundColor:navy,borderRadius:4}]},options:barY});
-    const rdc={{ rented_chart|safe }};
-    new Chart(aRented,{type:'bar',data:{labels:rdc.labels,datasets:[{data:rdc.data,backgroundColor:gold,borderRadius:4}]},options:barY});
-})();
-</script>
+{{ rentals_chart|json_script:"rentals-data" }}
+{{ cats_chart|json_script:"cats-data" }}
+{{ rented_chart|json_script:"rented-data" }}
+{{ viewed_chart|json_script:"viewed-data" }}
+<script src="{% static 'js/panel-charts.js' %}"></script>
 {% endblock %}

@@ -1,0 +1,82 @@
+{% extends "panel/base.html" %}
+{% load ui_extras %}
+
+{% block title %}Mening hisobim — Kutubxona paneli{% endblock %}
+
+{% block panel_content %}
+<div class="grid gap-4 lg:grid-cols-3">
+  <div class="space-y-4">
+    <section class="card card-body text-center">
+      <span class="avatar avatar-lg mx-auto">{% if user.image %}<img src="{{ user.image.url }}" alt="">{% else %}{{ user|initials }}{% endif %}</span>
+      <h1 class="mt-3 text-lg">{{ user.get_full_name }}</h1>
+      <p class="help font-mono">{{ user.username }}</p>
+      <p class="mt-2"><span class="badge badge-brand">{{ account.label }}</span></p>
+      {% if user.employe_profile.position %}<p class="help mt-2">{{ user.employe_profile.position }}{% if user.employe_profile.department %} · {{ user.employe_profile.department }}{% endif %}</p>{% endif %}
+    </section>
+
+    <section class="card card-body">
+      <h2 class="flex items-center gap-2.5 text-base"><span class="icon-box icon-box-sm icon-box-sun">{% include "ui/_icon.html" with name="palette" class="size-4.5" %}</span> Ko'rinish</h2>
+      <div class="mt-3">{% include "ui/_theme_segment.html" %}</div>
+      <a href="{% url 'logout' %}" class="btn btn-secondary btn-block mt-4 !text-[color:var(--color-danger-700)]">{% include "ui/_icon.html" with name="logout" class="size-4.5" %} Hisobdan chiqish</a>
+    </section>
+  </div>
+
+  <div class="min-w-0 space-y-4 lg:col-span-2">
+  <section class="card card-body">
+    <h2 class="flex items-center gap-2.5 text-base"><span class="icon-box icon-box-sm icon-box-info">{% include "ui/_icon.html" with name="chart" class="size-4.5" %}</span> Mening ishim</h2>
+    <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {% for stat in work_stats %}
+        <div class="stat">
+          <p class="stat-label flex items-center gap-1.5">{% include "ui/_icon.html" with name=stat.icon class="size-4" %} {{ stat.label }}</p>
+          <p class="stat-value">{{ stat.today }}</p>
+          <p class="help">bugun · shu oyda {{ stat.month }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2 class="card-title">Amallar tarixi</h2><span class="help">{{ history.paginator.count }} ta</span></div>
+    {% if history.object_list %}
+      <div class="table-wrap border-0">
+        <table class="table">
+          <thead><tr><th>Vaqt</th><th>Amal</th><th>Tafsilot</th></tr></thead>
+          <tbody>
+            {% for log in history %}
+              <tr>
+                <td class="whitespace-nowrap text-[color:var(--color-content-muted)]">{{ log.at|date:"d.m.Y H:i" }}</td>
+                <td class="whitespace-nowrap font-medium">{{ log.get_action_display }}</td>
+                <td class="min-w-56 text-[color:var(--color-content-muted)]">{{ log.note|default:log.object_repr }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="px-4 pb-4">{% include "ui/_pager.html" with page_obj=history %}</div>
+    {% else %}
+      <p class="card-body help">Hali amal yo'q.</p>
+    {% endif %}
+  </section>
+
+  <section class="card card-body">
+    <h2 class="flex items-center gap-2.5 text-base"><span class="icon-box icon-box-sm">{% include "ui/_icon.html" with name="shield" class="size-4.5" %}</span> Sizga ruxsat etilgan ishlar</h2>
+    <p class="help mt-1">Ruxsatlar rolingizdan olinadi — o'zgartirish uchun administratorga murojaat qiling.</p>
+    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+      {% for title, labels in permission_groups %}
+        <div>
+          <p class="text-sm font-bold">{{ title }}</p>
+          <ul class="mt-2 space-y-1.5 text-sm text-[color:var(--color-content-muted)]">
+            {% for label in labels %}
+              <li class="flex items-start gap-2"><span class="mt-0.5 text-[color:var(--color-success-700)]">{% include "ui/_icon.html" with name="check" class="size-4" %}</span> {{ label }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% empty %}
+        <p class="help">Hozircha ruxsat biriktirilmagan.</p>
+      {% endfor %}
+    </div>
+    <p class="help mt-5 border-t border-[color:var(--color-line)] pt-4">Xodim hisobi bilan kitob ijaraga olinmaydi.</p>
+  </section>
+  </div>
+</div>
+{% endblock %}

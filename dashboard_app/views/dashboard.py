@@ -8,7 +8,7 @@ from django.utils.timezone import localdate, now
 from book_app.courses import published_reserves, reserves_for_student
 from book_app.models import Book, Contributor, Genre, Rental
 from engagement.models import Favorite, Shelf
-from user_app.roles import Roles, effective_role
+from user_app.roles import home_url, is_library_staff
 
 
 def home(request):
@@ -44,15 +44,11 @@ def home(request):
 
 @login_required
 def dashboard(request):
-    role = effective_role(request.user)
+    # Administrator va kutubxona xodimi o'z ish joyiga ketadi
+    if is_library_staff(request.user):
+        return redirect(home_url(request.user))
 
-    if role == Roles.ADMIN:
-        return redirect('/admin/')
-    if role == Roles.LIBRARIAN:
-        return redirect('/panel/')
-
-    # Talaba ham, xodim ham bir xil kabinetni ko'radi: v3 dan boshlab ikkalasi
-    # ham kutubxona a'zosi (Patron) — ijara, navbat, jarima, o'qish tarixi bir xil.
+    # Talaba ham, HEMIS xodimi ham o'quvchi — bir xil kabinetni ko'radi
     return _reader_cabinet(request)
 
 

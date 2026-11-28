@@ -15,6 +15,7 @@ from django.db import IntegrityError, transaction
 from django.utils.timezone import now
 
 from .models import Patron, PatronCategory, User
+from .roles import is_library_staff
 
 logger = logging.getLogger('patrons')
 
@@ -155,8 +156,11 @@ def membership_expiry(category, start=None):
 # --------------------------------------------------------------------------
 
 @transaction.atomic
-def sync_patron(user) -> Patron:
+def sync_patron(user) -> Patron | None:
     """Foydalanuvchiga a'zolik ochadi yoki mavjudini yangilaydi.
+
+    Kutubxona xodimi va administratorga a'zolik ochilmaydi (`None`) — ular
+    kitob olmaydi.
 
     HEMIS'ga har kirishda chaqiriladi:
       - a'zolik bo'lmasa — yaratiladi (bilet raqami beriladi);
@@ -165,6 +169,9 @@ def sync_patron(user) -> Patron:
 
     Bloklangan a'zoni HEMIS kirishi ochib yubormaydi (bu xodimning qaroriga bog'liq).
     """
+    if is_library_staff(user):
+        return None
+
     category = get_category(resolve_category_code(user))
     patron = Patron.objects.filter(user=user).first()
 
@@ -202,6 +209,8 @@ def sync_patron(user) -> Patron:
 
 
 def get_or_create_patron(user):
-    """Qulaylik uchun: a'zolikni oladi, bo'lmasa ochadi."""
+    """O'quvchining a'zoligini oladi, bo'lmasa ochadi. Xodimda — `None`."""
+    if is_library_staff(user):
+        return None
     patron = getattr(user, 'patron', None)
     return patron if patron is not None else sync_patron(user)

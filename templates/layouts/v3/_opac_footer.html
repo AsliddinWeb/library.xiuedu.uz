@@ -24,11 +24,16 @@
     </div>
 
     <div>
-      <p class="text-xs font-bold uppercase tracking-[0.14em] text-[color:var(--color-sun-300)]">Shaxsiy</p>
+      <p class="text-xs font-bold uppercase tracking-[0.14em] text-[color:var(--color-sun-300)]">{% if account.is_staff %}Xodim{% else %}Shaxsiy{% endif %}</p>
       <ul class="mt-4 space-y-3 text-sm font-medium text-white/75">
+      {% if account.is_staff %}
+        <li><a class="inline-flex items-center gap-2 transition hover:translate-x-1 hover:text-white" href="/panel/">{% include "ui/_icon.html" with name="chart" class="size-4" %} Kutubxona paneli</a></li>
+        <li><a class="inline-flex items-center gap-2 transition hover:translate-x-1 hover:text-white" href="{% url 'panel:profile' %}">{% include "ui/_icon.html" with name="user" class="size-4" %} Mening hisobim</a></li>
+      {% else %}
         <li><a class="inline-flex items-center gap-2 transition hover:translate-x-1 hover:text-white" href="{% url 'dashboard' %}">{% include "ui/_icon.html" with name="grid" class="size-4" %} Kabinet</a></li>
         <li><a class="inline-flex items-center gap-2 transition hover:translate-x-1 hover:text-white" href="{% url 'circulation:my_rentals' %}">{% include "ui/_icon.html" with name="history" class="size-4" %} Ijaralarim</a></li>
         <li><a class="inline-flex items-center gap-2 transition hover:translate-x-1 hover:text-white" href="{% url 'engagement:my_library' %}">{% include "ui/_icon.html" with name="heart" class="size-4" %} Kutubxonam</a></li>
+      {% endif %}
       </ul>
     </div>
 

@@ -14,9 +14,9 @@ class EmployeAuthLoginView(View):
                 status=503,
             )
         client = oAuth2Client(
-            client_id=settings.CLIENT_ID,
-            client_secret=settings.CLIENT_SECRET,
-            redirect_uri=settings.REDIRECT_URI,
+            client_id=settings.EMPLOYE_CLIENT_ID,
+            client_secret=settings.EMPLOYE_CLIENT_SECRET,
+            redirect_uri=settings.EMPLOYE_REDIRECT_URI,
             authorize_url=settings.EMPLOYE_AUTHORIZE_URL,
             token_url=settings.EMPLOYE_ACCESS_TOKEN_URL,
             resource_owner_url=settings.EMPLOYE_RESOURCE_OWNER_URL

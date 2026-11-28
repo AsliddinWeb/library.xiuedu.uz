@@ -9,6 +9,8 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils.http import urlencode
 from django.views.decorators.http import require_POST
 
 from book_app.models import Book, Item, ItemStatusLog, Rental
@@ -16,6 +18,7 @@ from book_app.services import change_item_status, withdraw_item
 from user_app.models import Patron
 from user_app.permissions import Perms, has_perm, require_perm
 
+from ..exports import csv_response, wants_csv
 from ..forms import ItemBulkActionForm, PanelItemForm
 
 PER_PAGE = 30
@@ -47,6 +50,17 @@ def item_list(request):
         items = items.filter(library_id=library)
     if item_type:
         items = items.filter(item_type_id=item_type)
+
+    if wants_csv(request):
+        rows = ((i.barcode, i.inventory_number, i.book.title,
+                 i.library.name if i.library_id else '',
+                 i.shelf_location.code if i.shelf_location_id else '',
+                 i.item_type.name if i.item_type_id else '', i.get_status_display(),
+                 i.price, i.acquired_on, i.get_acquisition_source_display())
+                for i in items.iterator(chunk_size=500))
+        return csv_response(request, 'fond',
+                            ['Shtrix-kod', 'Inventar', 'Kitob', 'Filial', 'Javon', 'Turi',
+                             'Holati', 'Narxi', 'Qabul qilingan', 'Manba'], rows)
 
     page = Paginator(items, PER_PAGE).get_page(request.GET.get('page', 1))
 
@@ -113,6 +127,9 @@ def item_detail(request, pk):
         'logs': logs,
         'statuses': Item.Status.choices,
         'active_loan': next((loan for loan in loans if loan.is_active), None),
+        # Kim olganini faqat sirkulyatsiya yoki a'zolar bilan ishlaydigan xodim ko'radi
+        'show_people': has_perm(request.user, Perms.PATRONS_VIEW, Perms.CIRC_CHECKOUT,
+                                Perms.CIRC_CHECKIN),
     })
 
 
@@ -205,6 +222,9 @@ def quick_search(request):
 
     patron = Patron.objects.filter(card_number__iexact=q).first()
     if patron:
+        # Abonementda bilet skanerlandi — darrov berish oynasi ochiladi
+        if has_perm(request.user, Perms.CIRC_CHECKOUT):
+            return redirect(f"{reverse('panel:desk')}?patron={patron.pk}")
         return redirect('panel:member_detail', pk=patron.pk)
 
     # Inventar raqami ham skanerlanishi mumkin
@@ -212,4 +232,4 @@ def quick_search(request):
     if item:
         return redirect('panel:item_detail', pk=item.pk)
 
-    return redirect(f'/panel/books/?q={q}')
+    return redirect(f"{reverse('panel:books')}?{urlencode({'q': q})}")

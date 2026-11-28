@@ -1,21 +1,26 @@
-import os
-from io import BytesIO
+from decimal import Decimal, InvalidOperation
 
-import requests as http
 from django.contrib import messages
-from django.core.files import File
 from django.core.paginator import Paginator
 from django.db.models import F, Q
-from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils.text import slugify
+from django.utils.http import urlencode
 from django.views.decorators.http import require_POST
 
-from book_app.models import Author, Book, Genre, Item
+from audit.models import ActionLog
+from audit.services import log_action, log_change, snapshot
+from book_app.models import Book, Genre, Item, Rental
 from book_app.services import change_item_status, create_items, withdraw_item
-from user_app.permissions import Perms, require_perm
+from circulation.loans import OPEN_HOLDS
+from circulation.models import Reservation
+from holdings.models import ItemType, Library, ShelfLocation
+from user_app.permissions import Perms, has_perm, require_perm
 
+from ..exports import csv_response, wants_csv
 from ..forms import PanelBookForm
+from ..htmx import render_partial_or_page, toast
+
+MAX_COPIES = 100
 
 SORTS = {'title', '-title', '-created_at', 'created_at', '-view_count', 'view_count', '-id'}
 
@@ -40,8 +45,17 @@ def book_list(request):
         ).distinct()
 
     category = request.GET.get('category', '')
+    category = category if category.isdigit() else ''
     if category:
         books = books.filter(category_id=category)
+    # Ma'lumotnomalardan kelgan havolalar: muallif, nashriyot, turkum, mavzu
+    related = {}
+    for param, lookup in (('author', 'authors'), ('publisher', 'publisher_id'),
+                          ('series', 'series_id'), ('subject', 'subjects')):
+        value = request.GET.get(param, '')
+        if value.isdigit():
+            books = books.filter(**{lookup: value})
+            related[param] = value
     mode = request.GET.get('mode', '')
     if mode:
         books = books.filter(reading_mode=mode)
@@ -61,11 +75,22 @@ def book_list(request):
         books = books.filter(faculty__icontains=faculty)
 
     sort = request.GET.get('sort', '-id')
-    books = books.order_by(sort if sort in SORTS else '-id')
+    books = books.order_by(sort if sort in SORTS else '-id', '-pk')
 
-    page_obj = Paginator(books, 12).get_page(request.GET.get('page', 1))
+    if wants_csv(request):
+        return _export_books(request, books)
+
+    page_obj = Paginator(books, 20).get_page(request.GET.get('page', 1))
+    filters = {key: value for key, value in (
+        ('q', q), ('category', category), ('mode', mode), ('active', active), ('sort', sort),
+        ('record_type', record_type), ('textbook', textbook), ('faculty', faculty),
+    ) if value}
+    filters.update(related)
 
     ctx = {
+        'query': '&' + urlencode(filters) if filters else '',
+        'export_query': urlencode({**filters, 'export': 'csv'}),
+        'related': related,
         'active': 'books', 'page_title': 'Kitoblar', 'page_obj': page_obj,
         'q': q, 'category': category, 'mode': mode, 'active_filter': active, 'sort': sort,
         'record_type': record_type, 'textbook': textbook, 'faculty': faculty,
@@ -73,9 +98,25 @@ def book_list(request):
         'record_types': Book.RecordType.choices,
         'total': page_obj.paginator.count,
     }
-    if getattr(request, 'htmx', False):
-        return render(request, 'panel/books/_table.html', ctx)
-    return render(request, 'panel/books/list.html', ctx)
+    return render_partial_or_page(request, 'panel/books/list.html', 'panel/books/_table.html', ctx)
+
+
+def _export_books(request, books):
+    books = books.select_related('publisher')
+    rows = ((b.title, ', '.join(a.full_name for a in b.authors.all()), b.category.name,
+             b.publisher.name if b.publisher_id else '', b.published_year, b.isbn, b.udc,
+             b.language, b.items_count, b.available_count, 'Faol' if b.is_active else 'Nofaol')
+            for b in books.iterator(chunk_size=500))
+    return csv_response(request, 'kitoblar',
+                        ['Sarlavha', 'Mualliflar', 'Katalog', 'Nashriyot', 'Yil', 'ISBN', 'UDK',
+                         'Til', 'Nusxa', 'Mavjud', 'Holat'], rows)
+
+
+def _number(raw, default=0, maximum=100):
+    try:
+        return max(0, min(int(raw), maximum))
+    except (TypeError, ValueError):
+        return default
 
 
 @require_perm(Perms.CATALOG_EDIT)
@@ -83,7 +124,15 @@ def book_create(request):
     form = PanelBookForm(request.POST or None, request.FILES or None)
     if request.method == 'POST' and form.is_valid():
         book = form.save()
-        messages.success(request, "Kitob yaratildi.")
+        log_action(ActionLog.Action.BIBLIO_CREATE, obj=book)
+        copies = _number(request.POST.get('initial_copies'), maximum=MAX_COPIES)
+        if copies and has_perm(request.user, Perms.ITEMS_MANAGE):
+            create_items(book, copies, created_by=request.user)
+            messages.success(request, f"Kitob va {copies} ta nusxa yaratildi.")
+        else:
+            messages.success(request, "Kitob yaratildi.")
+        if 'save_and_new' in request.POST:
+            return redirect('panel:book_create')
         return redirect('panel:book_detail', pk=book.pk)
     return render(request, 'panel/books/form.html',
                   {'form': form, 'active': 'books', 'page_title': 'Yangi kitob'})
@@ -92,13 +141,16 @@ def book_create(request):
 @require_perm(Perms.CATALOG_EDIT)
 def book_edit(request, pk):
     book = get_object_or_404(Book, pk=pk)
+    before = snapshot(book)
     form = PanelBookForm(request.POST or None, request.FILES or None, instance=book)
     if request.method == 'POST' and form.is_valid():
         form.save()
+        log_change(ActionLog.Action.BIBLIO_EDIT, book, before)
         messages.success(request, "Saqlandi.")
         return redirect('panel:book_detail', pk=book.pk)
     return render(request, 'panel/books/form.html',
-                  {'form': form, 'book': book, 'active': 'books', 'page_title': 'Kitobni tahrirlash'})
+                  {'form': form, 'book': book, 'active': 'books',
+                   'page_title': 'Kitobni tahrirlash'})
 
 
 @require_perm(Perms.CATALOG_VIEW)
@@ -115,48 +167,106 @@ def book_detail(request, pk):
         'page_title': book.title,
         'breadcrumb': [{'label': "Kitoblar", 'url': '/panel/books/'},
                        {'label': book.title[:40]}],
+        'contributors': book.contributors_by_role,
+        'queue_count': Reservation.objects.filter(
+            book=book, status__in=OPEN_HOLDS).count(),
     })
     return render(request, 'panel/books/detail.html', ctx)
 
 
+def _delete_summary(book):
+    """O'chirishdan oldin nima yo'qolishini hisoblaydi."""
+    return {
+        'items': Item.objects.filter(book=book).count(),
+        'loans': Rental.objects.filter(copy__book=book).count(),
+        'open_loans': Rental.objects.filter(copy__book=book, return_date__isnull=True).count(),
+        'reviews': book.reviews.count(),
+        'holds': Reservation.objects.filter(book=book, status__in=OPEN_HOLDS).count(),
+    }
+
+
 @require_perm(Perms.CATALOG_DELETE)
 def book_delete(request, pk):
+    """Ijara tarixi bor kitob o'chirilmaydi — aks holda tarix va jarimalar yo'qoladi."""
     book = get_object_or_404(Book, pk=pk)
+    summary = _delete_summary(book)
     if request.method == 'POST':
+        if 'deactivate' in request.POST:
+            book.is_active = False
+            book.save(update_fields=['is_active', 'updated_at'])
+            log_action(ActionLog.Action.BIBLIO_EDIT, obj=book, note="Nofaol qilindi")
+            messages.success(request, "Kitob nofaol qilindi — saytda ko'rinmaydi.")
+            return redirect('panel:book_detail', pk=book.pk)
+        if summary['loans']:
+            messages.error(request, "Ijara tarixi bor kitob o'chirilmaydi.")
+            return redirect('panel:book_delete', pk=book.pk)
+        log_action(ActionLog.Action.BIBLIO_DELETE, obj=book)
         book.delete()
         messages.success(request, "Kitob o'chirildi.")
         return redirect('panel:books')
     return render(request, 'panel/books/delete.html',
-                  {'book': book, 'active': 'books', 'page_title': "Kitobni o'chirish"})
+                  {'book': book, 'summary': summary, 'active': 'books',
+                   'page_title': "Kitobni o'chirish"})
 
 
 # ---------------- Nusxalar (HTMX) ----------------
 
 def _copies_ctx(book):
     """Nusxalar bloki uchun umumiy kontekst (partiya amallari ham shu yerdan)."""
-    from holdings.models import ShelfLocation
     return {
         'book': book,
+        'copies': (Item.objects.filter(book=book)
+                   .select_related('item_type', 'library', 'shelf_location')
+                   .order_by('inventory_number', 'pk')),
         'item_statuses': Item.Status.choices,
+        'item_types': ItemType.objects.filter(is_active=True),
+        'libraries': Library.objects.filter(is_active=True),
+        'sources': Item.Source.choices,
         'shelves': (ShelfLocation.objects.filter(is_active=True)
                     .select_related('library').order_by('library', 'code')),
     }
 
 
-def _render_copies(request, book):
-    return render(request, 'panel/books/_copies.html', _copies_ctx(book))
+def _render_copies(request, book, message='', level='success'):
+    book.refresh_from_db()
+    response = render(request, 'panel/books/_copies.html', _copies_ctx(book))
+    return toast(response, message, level) if message else response
+
+
+def _choice(model, pk):
+    return model.objects.filter(pk=pk, is_active=True).first() if str(pk).isdigit() else None
 
 
 @require_POST
 @require_perm(Perms.ITEMS_MANAGE)
 def copy_add(request, pk):
     book = get_object_or_404(Book, pk=pk)
+    quantity = max(1, _number(request.POST.get('quantity', 1), default=1, maximum=MAX_COPIES))
+
+    shelf = _choice(ShelfLocation, request.POST.get('shelf_location'))
+    library = _choice(Library, request.POST.get('library')) or (shelf.library if shelf else None)
+    if shelf and library and shelf.library_id != library.pk:
+        return _render_copies(request, book, "Tanlangan javon boshqa filialga tegishli.", 'danger')
+
+    source = request.POST.get('source')
+    raw_price = (request.POST.get('price') or '').replace(' ', '').replace(',', '.')
     try:
-        qty = int(request.POST.get('quantity', 1))
-    except (TypeError, ValueError):
-        qty = 1
-    create_items(book, max(1, min(qty, 50)), created_by=request.user)
-    return _render_copies(request, book)
+        price = Decimal(raw_price or '0')
+    except InvalidOperation:
+        price = None
+    if price is None or not price.is_finite() or not 0 <= price < Decimal('1000000000'):
+        return _render_copies(request, book, "Narx noto'g'ri yozilgan.", 'danger')
+
+    created = create_items(
+        book, quantity, created_by=request.user,
+        item_type=_choice(ItemType, request.POST.get('item_type')),
+        library=library, shelf_location=shelf, price=price,
+        acquisition_source=source if source in Item.Source.values else Item.Source.PURCHASE,
+        status=(Item.Status.NOT_FOR_LOAN if request.POST.get('reading_room')
+                else Item.Status.AVAILABLE))
+    codes = (created[0].barcode if len(created) == 1
+             else f"{created[0].barcode} … {created[-1].barcode}")
+    return _render_copies(request, book, f"{len(created)} ta nusxa qo'shildi: {codes}")
 
 
 @require_POST
@@ -167,14 +277,16 @@ def copy_toggle(request, pk):
     Ijaradagi nusxa bu yerdan o'zgartirilmaydi — u qaytarilganda o'zi bo'shaydi.
     """
     item = get_object_or_404(Item, pk=pk)
-    if item.status == Item.Status.ON_LOAN:
-        messages.error(request, "Ijaradagi nusxaning holatini bu yerdan o'zgartirib bo'lmaydi.")
-        return _render_copies(request, item.book)
+    if item.rental_set.filter(return_date__isnull=True).exists():
+        return _render_copies(
+            request, item.book,
+            "Ijaradagi nusxaning holatini bu yerdan o'zgartirib bo'lmaydi.", 'danger')
 
     new_status = (Item.Status.NOT_FOR_LOAN if item.status == Item.Status.AVAILABLE
                   else Item.Status.AVAILABLE)
-    change_item_status(item, new_status, reason="Panelda qo'lda o'zgartirildi", by=request.user)
-    return _render_copies(request, item.book)
+    _, message = change_item_status(item, new_status, reason="Panelda qo'lda o'zgartirildi",
+                                    by=request.user)
+    return _render_copies(request, item.book, message)
 
 
 @require_POST
@@ -185,68 +297,11 @@ def copy_delete(request, pk):
     book = item.book
 
     if item.rental_set.filter(return_date__isnull=True).exists():
-        messages.error(request, "Faol ijaradagi nusxani hisobdan chiqarib bo'lmaydi.")
-    elif item.status == Item.Status.WITHDRAWN:
-        messages.info(request, "Bu nusxa allaqachon hisobdan chiqarilgan.")
-    else:
-        withdraw_item(item, reason=request.POST.get('reason', "Panel orqali"), by=request.user)
-        messages.success(request, f"{item.barcode} hisobdan chiqarildi.")
-    return _render_copies(request, book)
-
-
-@require_perm(Perms.CATALOG_IMPORT)
-def import_books(request):
-    """Tashqi API'dan kitoblarni ommaviy import (har bir kitob xato-bardosh)."""
-    if request.method != 'POST':
-        return render(request, 'panel/import.html', {'active': 'import', 'page_title': 'Kitob import'})
-
-    url = request.POST.get('url', '').strip()
-    if not url:
-        return JsonResponse({'error': 'URL kiriting.'}, status=400)
-    try:
-        resp = http.get(url, timeout=20)
-        resp.raise_for_status()
-        results = resp.json().get('results', [])
-    except Exception as e:
-        return JsonResponse({'error': f"Manbaga ulanib bo'lmadi: {e}"}, status=400)
-
-    created = 0
-    for item in results:
-        try:
-            year_raw = str(item.get('year') or '')
-            published_year = int(year_raw) if year_raw.isdigit() else None
-            author, _ = Author.objects.get_or_create(full_name=item.get('author', {}).get('name') or "Noma'lum")
-            category, _ = Genre.objects.get_or_create(name=item.get('category', {}).get('title') or 'Boshqa')
-            book = Book.objects.create(
-                title=item.get('title') or 'Nomsiz',
-                published_year=published_year,
-                description=item.get('description') or '',
-                page_count=item.get('page_count') or None,
-                category=category,
-                reading_mode=Book.ReadingMode.DIGITAL,
-            )
-            book.authors.add(author)
-            book.slug = f"{slugify(book.title)[:280] or 'kitob'}-{book.pk}"
-            book.save(update_fields=['slug'])
-
-            cover = item.get('photo')
-            if cover:
-                try:
-                    ir = http.get(cover, timeout=15)
-                    if ir.ok:
-                        book.cover_image.save(os.path.basename(cover) or 'cover.jpg', File(BytesIO(ir.content)), save=True)
-                except Exception:
-                    pass
-            src = item.get('source')
-            if src:
-                try:
-                    br = http.get(src, timeout=30)
-                    if br.ok:
-                        book.electronic_version.save(os.path.basename(src) or 'book.pdf', File(BytesIO(br.content)), save=True)
-                except Exception:
-                    pass
-            created += 1
-        except Exception:
-            continue
-
-    return JsonResponse({'success': f"{created} ta kitob muvaffaqiyatli qo'shildi."})
+        return _render_copies(request, book,
+                              "Faol ijaradagi nusxani hisobdan chiqarib bo'lmaydi.", 'danger')
+    if item.status == Item.Status.WITHDRAWN:
+        return _render_copies(request, book, "Bu nusxa allaqachon hisobdan chiqarilgan.",
+                              'warning')
+    reason = request.POST.get('reason', '').strip() or "Panel orqali"
+    withdraw_item(item, reason=reason, by=request.user)
+    return _render_copies(request, book, f"{item.barcode or item.inventory_number} hisobdan chiqarildi.")

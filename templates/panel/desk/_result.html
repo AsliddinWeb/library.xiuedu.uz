@@ -1,0 +1,84 @@
+{% comment %}
+  Oxirgi amal natijasi. Rad etilgan bo'lsa sabablar va (ruxsat bo'lsa) cheklovni
+  chetlab o'tish formasi chiqadi.
+{% endcomment %}
+{% if result and not result.ok %}
+  <div class="notice notice-danger" role="alert">
+    {% include "ui/_icon.html" with name="alert" class="size-5 flex-none" %}
+    <div class="min-w-0 flex-1">
+      {% if blocked_item %}<p class="help">{{ blocked_item.book.title }} · {{ blocked_item.barcode|default:blocked_item.inventory_number }}</p>{% elif result.rental %}<p class="help">{{ result.rental.copy.book.title }}</p>{% endif %}
+      {% if result.blocks %}
+        <ul class="font-semibold">{% for block in result.blocks %}<li>{{ block.message }}</li>{% endfor %}</ul>
+      {% else %}
+        <p class="font-semibold">{{ result.message }}</p>
+      {% endif %}
+
+      {% if retry and result.can_override and "circ.override" in perms_flags %}
+        <form class="mt-3 flex flex-wrap gap-2" method="post" action="{% url retry.url %}"
+              hx-post="{% url retry.url %}" hx-sync="this:drop">
+          {% csrf_token %}
+          <input type="hidden" name="override" value="1">
+          <input type="hidden" name="patron" value="{{ patron.pk }}">
+          {% if retry.item %}<input type="hidden" name="item" value="{{ retry.item }}">{% endif %}
+          {% if retry.rental %}<input type="hidden" name="rental" value="{{ retry.rental }}">{% endif %}
+          {% if retry.due_date %}<input type="hidden" name="due_date" value="{{ retry.due_date }}">{% endif %}
+          <input type="text" name="reason" class="input min-w-48 flex-1" required maxlength="200"
+                 placeholder="Sabab (jurnalga yoziladi)" aria-label="Cheklovni chetlab o'tish sababi">
+          <button type="submit" class="btn btn-danger btn-sm !h-auto">Baribir bajarish</button>
+        </form>
+      {% endif %}
+
+      {% if hold_book and "circ.holds" in perms_flags %}
+        <button type="button" class="btn btn-secondary btn-sm mt-3"
+                hx-post="{% url 'panel:desk_hold' %}"
+                hx-vals='{"patron": "{{ patron.pk }}", "book": "{{ hold_book }}"}'>
+          {% include "ui/_icon.html" with name="clock" class="size-4" %} Shu kitobga navbatga yozish
+        </button>
+      {% endif %}
+    </div>
+  </div>
+{% elif returned %}
+  <div class="notice notice-success" role="status">
+    {% include "ui/_icon.html" with name="check-circle" class="size-5 flex-none" %}
+    <div class="min-w-0 flex-1">
+      <p class="font-semibold">{{ returned.rental.copy.book.title }} qabul qilindi</p>
+      <p class="help">
+        {{ returned.rental.copy.barcode|default:returned.rental.copy.inventory_number }}
+        {% if "circ.checkout" in perms_flags and returned.rental.patron_id %}
+          · <a class="underline" href="{% url 'panel:desk' %}?patron={{ returned.rental.patron_id }}" hx-get="{% url 'panel:desk' %}?patron={{ returned.rental.patron_id }}" hx-push-url="true">{{ returned.rental.borrower_name }}</a>
+        {% else %} · {{ returned.rental.borrower_name }}{% endif %}
+        {% if returned.rental.copy.shelf_location %} · Javon: {{ returned.rental.copy.shelf_location.directions }}{% endif %}
+      </p>
+
+      {% if returned.days_late %}
+        <p class="mt-2 text-sm font-semibold text-[color:var(--color-danger-700)]">
+          {{ returned.days_late }} kun kechikib qaytarildi{% if returned.fine and not returned.fine.is_paid %} · jarima {{ returned.fine.amount|floatformat:0 }} so'm{% endif %}
+        </p>
+        {% if returned.fine and not returned.fine.is_paid and "billing.collect" in perms_flags %}
+          <button type="button" class="btn btn-secondary btn-sm mt-2"
+                  hx-post="{% url 'panel:desk_fine_pay' %}"
+                  hx-vals='{"fine": "{{ returned.fine.pk }}", "mode": "{{ mode }}"}'
+                  data-confirm="{{ returned.fine.amount|floatformat:0 }} so'm to'lov qabul qilindimi?" data-confirm-label="Ha, qabul qilindi">
+            {% include "ui/_icon.html" with name="cash" class="size-4" %} To'lovni qabul qilish
+          </button>
+        {% endif %}
+      {% endif %}
+
+      {% if returned.next_hold %}
+        <div class="notice notice-info mt-3">
+          {% include "ui/_icon.html" with name="bookmark" class="size-5 flex-none" %}
+          <p class="text-sm"><b>Javonga qo'ymang — chetga olib qo'ying.</b>
+            Navbatda: {{ returned.next_hold.borrower_name }}, {{ returned.next_hold.hold_until|date:"d.m.Y" }} gacha saqlanadi.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% elif result and result.ok %}
+  <div class="notice notice-success" role="status">
+    {% include "ui/_icon.html" with name="check-circle" class="size-5 flex-none" %}
+    <div class="min-w-0">
+      {% if result.rental %}<p class="font-semibold">{{ result.rental.copy.book.title }}</p>{% endif %}
+      <p class="{% if result.rental %}help{% else %}font-semibold{% endif %}">{{ result.message }}</p>
+    </div>
+  </div>
+{% endif %}

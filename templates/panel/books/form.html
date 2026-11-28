@@ -94,6 +94,18 @@
         </div>
       </div>
 
+      {% if not book and "items.manage" in perms_flags %}
+      <div class="card">
+        <div class="card-head"><h2 class="card-title">Fond</h2></div>
+        <div class="card-body field">
+          <label class="label" for="initial-copies">Nusxalar soni</label>
+          <input id="initial-copies" type="number" name="initial_copies" value="{{ request.POST.initial_copies|default:0 }}" min="0" max="100" class="input">
+          <p class="help">Shtrix-kod va inventar raqami avtomatik beriladi. Faqat elektron kitob bo'lsa — 0.</p>
+          <button type="submit" name="save_and_new" value="1" class="btn btn-secondary btn-sm mt-2">Saqlab, yana qo'shish</button>
+        </div>
+      </div>
+      {% endif %}
+
       {% if book %}
       <div class="card">
         <div class="card-head"><h2 class="card-title">Fond</h2></div>

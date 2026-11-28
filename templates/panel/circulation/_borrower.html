@@ -1,0 +1,3 @@
+{% comment %}Jadvaldagi a'zo katagi. Kirish: `patron`, `name`.{% endcomment %}
+{% if patron and "patrons.view" in perms_flags %}<a href="{% url 'panel:member_detail' patron.pk %}" class="font-medium hover:underline">{{ name }}</a>{% else %}<span class="font-medium">{{ name }}</span>{% endif %}
+{% if patron %}<span class="help block">{{ patron.card_number }} · {{ patron.category.name }}</span>{% endif %}

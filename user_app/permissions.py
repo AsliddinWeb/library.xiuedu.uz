@@ -17,14 +17,19 @@ Ishlatish:
 Shablonda:
     {% if perms_flags.circ_checkout %}   (context processor orqali)
 
-Orqaga moslik: eski `role_required` dekoratorlari o'z joyida ishlayveradi.
+Ruxsatlar FAQAT xodim rollaridan olinadi: `Student`/`Employee` (o'quvchi) rollari
+hech qanday ruxsat bermaydi — o'quvchi xodim sahifalariga kira olmaydi.
+
 Ruxsatlar `Role.permissions` (JSON ro'yxat) ichida saqlanadi; `"*"` — hammasi.
+O'quvchiga mo'ljallangan amallar uchun `reader_required` ishlatiladi.
 """
 from functools import wraps
 
+from django.contrib import messages
+from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import redirect, render
 
-from .roles import Roles, effective_role
+from .roles import Roles, home_url, is_library_staff, staff_roles
 
 
 class Perms:
@@ -135,17 +140,19 @@ DEFAULT_ROLE_PERMISSIONS = {
         Perms.REPORTS_VIEW, Perms.REPORTS_EXPORT, Perms.MODERATE_REVIEWS,
         Perms.SETTINGS_MANAGE,
     ],
-    Roles.EMPLOYEE: [Perms.CATALOG_VIEW],
-    Roles.STUDENT: [Perms.CATALOG_VIEW],
+    # O'quvchilar — xodim ruxsati yo'q
+    Roles.EMPLOYEE: [],
+    Roles.STUDENT: [],
 }
 
-#: Tayyor ish o'rinlari — kelajakda yangi rol yaratishda namuna bo'ladi
+#: Tayyor ish o'rinlari. Birinchi ikkitasi migratsiya bilan bazaga yoziladi;
+#: qolganlari tegishli modul (o'quv zali, ta'minot) yoqilganda kerak bo'ladi.
 ROLE_PRESETS = {
     "Kataloglovchi": [Perms.CATALOG_VIEW, Perms.CATALOG_EDIT, Perms.CATALOG_IMPORT,
-                      Perms.ITEMS_MANAGE],
+                      Perms.ITEMS_MANAGE, Perms.REPORTS_EXPORT],
     "Abonement xodimi": [Perms.CATALOG_VIEW, Perms.CIRC_CHECKOUT, Perms.CIRC_CHECKIN,
                          Perms.CIRC_RENEW, Perms.CIRC_HOLDS, Perms.PATRONS_VIEW,
-                         Perms.BILLING_CHARGE, Perms.BILLING_COLLECT],
+                         Perms.PATRONS_EDIT, Perms.BILLING_CHARGE, Perms.BILLING_COLLECT],
     "Zal xodimi": [Perms.CATALOG_VIEW, Perms.ROOM_DESK, Perms.PATRONS_VIEW],
     "Ta'minot xodimi": [Perms.CATALOG_VIEW, Perms.ACQ_MANAGE, Perms.SERIALS_MANAGE,
                         Perms.ITEMS_MANAGE],
@@ -153,28 +160,15 @@ ROLE_PRESETS = {
 
 
 def user_permissions(user) -> set:
-    """Foydalanuvchining amaldagi ruxsatlari to'plami."""
+    """Foydalanuvchining amaldagi ruxsatlari to'plami (o'quvchida — bo'sh)."""
     if user is None or not user.is_authenticated:
         return set()
     if user.is_superuser:
         return set(ALL_PERMISSIONS)
 
-    role_name = effective_role(user)
-    profile = getattr(user, 'employe_profile', None)
-
-    # Xodimda bir nechta rol bo'lishi mumkin — hammasining ruxsatlari qo'shiladi
-    roles = []
-    if profile is not None:
-        roles = list(profile.roles.all())
-        if profile.current_role and profile.current_role not in roles:
-            roles.append(profile.current_role)
-
-    if not roles and role_name:
-        from .models import Role
-        roles = list(Role.objects.filter(name=role_name))
-
     flags = set()
-    for role in roles:
+    # Xodimda bir nechta rol bo'lishi mumkin — hammasining ruxsatlari qo'shiladi
+    for role in staff_roles(user):
         perms = role.permissions or []
         if '*' in perms:
             return set(ALL_PERMISSIONS)
@@ -192,15 +186,50 @@ def has_perm(user, *flags) -> bool:
     return any(flag in granted for flag in flags)
 
 
+def _forbidden(request):
+    return render(request, '403.html', status=403)
+
+
 def require_perm(*flags):
-    """View uchun ruxsat talab qiladigan dekorator (kamida bittasi yetarli)."""
+    """Xodim view'i: berilgan ruxsatlardan kamida bittasi talab qilinadi."""
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped(request, *args, **kwargs):
             if not request.user.is_authenticated:
-                return redirect('student_login')
+                return redirect_to_login(request.get_full_path())
             if has_perm(request.user, *flags):
                 return view_func(request, *args, **kwargs)
-            return render(request, '403.html', status=403)
+            return _forbidden(request)
         return _wrapped
     return decorator
+
+
+def staff_required(view_func):
+    """Istalgan kutubxona xodimi (aniq ruxsat shart emas)."""
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect_to_login(request.get_full_path())
+        if is_library_staff(request.user):
+            return view_func(request, *args, **kwargs)
+        return _forbidden(request)
+    return _wrapped
+
+
+def reader_required(view_func):
+    """Faqat o'quvchi: kitob olish, navbat, sevimli, sharh, shaxsiy sahifalar.
+
+    Kutubxona xodimi va administrator sahifani ochsa — o'z ish joyiga
+    yo'naltiriladi; amal (POST/HTMX) yuborsa — 403.
+    """
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect_to_login(request.get_full_path())
+        if is_library_staff(request.user):
+            if request.method != 'GET' or getattr(request, 'htmx', False):
+                return _forbidden(request)
+            messages.info(request, "Bu sahifa o'quvchilar uchun — siz xodim hisobidasiz.")
+            return redirect(home_url(request.user))
+        return view_func(request, *args, **kwargs)
+    return _wrapped

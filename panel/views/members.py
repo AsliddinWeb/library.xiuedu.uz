@@ -9,11 +9,14 @@ Imkoniyatlar: qidiruv (ism/bilet/HEMIS ID/guruh), toifa va holat filtri,
 a'zo kartasi (ijaralar, so'rovlar, navbatlar, jarimalar), bloklash/ochish,
 qo'lda a'zo qo'shish va tahrirlash.
 """
+from datetime import date
+
 from django import forms
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.http import urlencode
 from django.utils.timezone import now
 from django.views.decorators.http import require_POST
 
@@ -25,6 +28,8 @@ from circulation.services import recalc_patron_counters
 from user_app.models import Patron, PatronCategory
 from user_app.permissions import Perms, require_perm
 from user_app.services import membership_expiry, next_card_number
+
+from ..exports import csv_response, wants_csv
 
 PER_PAGE = 25
 
@@ -100,10 +105,9 @@ def _members_ctx(request):
 
     page = Paginator(qs, PER_PAGE).get_page(request.GET.get('page', 1))
 
-    query = ''
-    for key, value in (('q', q), ('category', category), ('status', status)):
-        if value:
-            query += f"&{key}={value}"
+    filters = {key: value for key, value in
+               (('q', q), ('category', category), ('status', status)) if value}
+    query = '&' + urlencode(filters) if filters else ''
 
     return {
         'active': 'members',
@@ -116,6 +120,8 @@ def _members_ctx(request):
         'categories': PatronCategory.objects.filter(is_active=True),
         'statuses': Patron.Status.choices,
         'query': query,
+        'export_query': urlencode({**filters, 'export': 'csv'}),
+        'filtered': qs,
         'total': qs.count(),
     }
 
@@ -123,9 +129,25 @@ def _members_ctx(request):
 @require_perm(Perms.PATRONS_VIEW)
 def members(request):
     ctx = _members_ctx(request)
+    if wants_csv(request):
+        rows = ((p.card_number, p.display_name, p.category.name, p.get_status_display(),
+                 p.contact_phone, p.contact_email, p.registered_on, p.expires_on,
+                 p.active_loans_count, p.overdue_count, p.balance)
+                for p in ctx['filtered'].iterator(chunk_size=500))
+        return csv_response(request, 'azolar',
+                            ['Bilet', 'F.I.Sh.', 'Toifa', 'Holat', 'Telefon', 'E-pochta',
+                             "Ro'yxatga olingan", 'Amal qiladi', 'Ijarada', 'Kechikkan',
+                             "Qarz (so'm)"], rows)
     template = ('panel/members/_table.html' if getattr(request, 'htmx', False)
                 else 'panel/members/list.html')
     return render(request, template, ctx)
+
+
+def _can_delete(patron):
+    """Faqat qo'lda qo'shilgan va hech qanday izi yo'q a'zo o'chiriladi."""
+    return not patron.user_id and not any(
+        model.objects.filter(patron=patron).exists()
+        for model in (Rental, RentalRequest, Reservation, Fine))
 
 
 @require_perm(Perms.PATRONS_VIEW)
@@ -166,6 +188,7 @@ def member_detail(request, pk):
         'history': history,
         'can_borrow': can_borrow,
         'block_reason': block_reason,
+        'can_delete': _can_delete(patron),
         'active_rentals': [r for r in rentals if r.is_active],
         'unpaid_fines': [f for f in fines if not f.is_paid],
     })
@@ -222,15 +245,22 @@ def member_edit(request, pk):
 def member_block(request, pk):
     patron = get_object_or_404(Patron, pk=pk)
     reason = (request.POST.get('reason') or '').strip()
-    until = request.POST.get('until') or None
+    raw_until = (request.POST.get('until') or '').strip()
+    try:
+        until = date.fromisoformat(raw_until) if raw_until else None
+    except ValueError:
+        until = False
+    if until is False or (until and until < now().date()):
+        messages.error(request, "Blok muddati noto'g'ri — bugundan keyingi sana tanlang.")
+        return redirect('panel:member_detail', pk=patron.pk)
 
     patron.status = Patron.Status.BLOCKED
     patron.block_reason = reason[:255]
-    patron.blocked_until = until or None
+    patron.blocked_until = until
     patron.save(update_fields=['status', 'block_reason', 'blocked_until', 'updated_at'])
 
     log_action(ActionLog.Action.PATRON_BLOCK, obj=patron,
-               note=f"Bloklandi: {reason or 'sabab ko`rsatilmagan'}")
+               note="Bloklandi: " + (reason or "sabab ko'rsatilmagan"))
     messages.warning(request, f"{patron.display_name} bloklandi.")
     return redirect('panel:member_detail', pk=patron.pk)
 
@@ -265,3 +295,18 @@ def member_renew(request, pk):
                note=f"A'zolik uzaytirildi: {expiry or 'muddatsiz'}")
     messages.success(request, "A'zolik muddati uzaytirildi.")
     return redirect('panel:member_detail', pk=patron.pk)
+
+
+@require_POST
+@require_perm(Perms.PATRONS_EDIT)
+def member_delete(request, pk):
+    patron = get_object_or_404(Patron, pk=pk)
+    if not _can_delete(patron):
+        messages.error(request, "Bu a'zoni o'chirib bo'lmaydi: HEMIS hisobi yoki tarixi bor. "
+                                "Kerak bo'lsa bloklang.")
+        return redirect('panel:member_detail', pk=patron.pk)
+    name = patron.display_name
+    log_action(ActionLog.Action.PATRON_EDIT, obj=patron, note="A'zo o'chirildi")
+    patron.delete()
+    messages.success(request, f"A'zo o'chirildi: {name}")
+    return redirect('panel:members')

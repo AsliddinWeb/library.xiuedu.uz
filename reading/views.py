@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_POST
 
 from book_app.models import Book
+from user_app.roles import is_library_staff
 
 from .models import ReadingHistory, ReadingProgress
 
@@ -89,7 +90,13 @@ def stream_audio(request, pk):
 # --------------------------------------------------------------- reader / player
 
 def _open_book(request, book, mode):
-    """Ko'rishni qayd qiladi va oxirgi joyni qaytaradi."""
+    """Ko'rishni qayd qiladi va oxirgi joyni qaytaradi.
+
+    Kutubxona xodimi faylni tekshirish uchun ochadi — o'quvchi statistikasi
+    (ko'rishlar, tarix) buzilmaydi.
+    """
+    if is_library_staff(request.user):
+        return 0
     Book.objects.filter(pk=book.pk).update(view_count=F('view_count') + 1)
     ReadingHistory.objects.create(user=request.user, book=book)
     progress = ReadingProgress.objects.filter(user=request.user, book=book, mode=mode).first()
@@ -126,6 +133,9 @@ def save_progress(request, pk):
         percent = max(0, min(100, int(float(request.POST.get('percent', 0)))))
     except (TypeError, ValueError):
         return JsonResponse({'ok': False}, status=400)
+
+    if is_library_staff(request.user):
+        return JsonResponse({'ok': True})
 
     ReadingProgress.objects.update_or_create(
         user=request.user, book=book, mode=mode,

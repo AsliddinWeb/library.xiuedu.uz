@@ -1,0 +1,56 @@
+{% if not patron %}
+  <div class="mx-auto max-w-2xl">
+    <div class="card card-body">
+      <div class="flex items-center gap-3">
+        <span class="icon-box">{% include "ui/_icon.html" with name="id-card" class="size-5" %}</span>
+        <div>
+          <h2 class="card-title">A'zoni tanlang</h2>
+          <p class="help">Biletni skanerlang yoki ism, familiya, guruhni yozing.</p>
+        </div>
+      </div>
+      <form method="get" action="{% url 'panel:desk' %}" class="mt-4 flex gap-2"
+            hx-get="{% url 'panel:desk' %}" hx-sync="this:replace">
+        <input type="search" name="q" value="{{ q }}" class="input desk-input flex-1" autocomplete="off"
+               placeholder="Bilet raqami yoki F.I.Sh." aria-label="A'zo qidiruvi" autofocus data-autofocus
+               hx-get="{% url 'panel:desk_patrons' %}" hx-trigger="input changed delay:350ms"
+               hx-target="#desk-matches" hx-swap="innerHTML" hx-sync="closest form:abort">
+        <button type="submit" class="btn btn-primary desk-btn">{% include "ui/_icon.html" with name="search" class="size-4" %} <span class="max-sm:sr-only">Topish</span></button>
+      </form>
+    </div>
+    <div id="desk-matches" class="mt-3" aria-live="polite">
+      {% include "panel/desk/_patron_results.html" %}
+    </div>
+  </div>
+{% else %}
+  <div class="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+    <div class="min-w-0 space-y-4">
+      {% include "panel/desk/_patron_card.html" %}
+      {% include "panel/desk/_result.html" %}
+
+      <form class="card card-body" method="post" action="{% url 'panel:desk_checkout' %}"
+            hx-post="{% url 'panel:desk_checkout' %}" hx-sync="this:drop" hx-disabled-elt="find button">
+        {% csrf_token %}
+        <input type="hidden" name="patron" value="{{ patron.pk }}">
+        <label class="label" for="desk-code">Kitob shtrix-kodi, inventar raqami yoki nomi</label>
+        <div class="mt-1.5 flex gap-2">
+          <input id="desk-code" type="text" name="code" value="{{ code|default:'' }}" class="input desk-input flex-1"
+                 autocomplete="off" spellcheck="false" placeholder="Skanerlang..." autofocus data-autofocus>
+          <button type="submit" class="btn btn-primary desk-btn">{% include "ui/_icon.html" with name="check" class="size-4" %} Berish</button>
+        </div>
+        <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <label class="flex items-center gap-2 text-sm text-[color:var(--color-content-muted)]">
+            Qaytarish muddati
+            <input type="date" name="due_date" value="{{ due|default:'' }}" min="{{ today|date:'Y-m-d' }}" class="input !w-44">
+          </label>
+          <p class="help">Bo'sh qolsa {{ loan_days }} kun: {{ default_due|date:"d.m.Y" }} gacha.</p>
+        </div>
+      </form>
+
+      {% include "panel/desk/_candidates.html" %}
+    </div>
+
+    <div class="min-w-0 space-y-4">
+      {% include "panel/desk/_patron_side.html" %}
+    </div>
+  </div>
+{% endif %}

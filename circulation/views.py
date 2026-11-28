@@ -1,10 +1,9 @@
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.timezone import localdate
 from django.views.decorators.http import require_POST
 
 from book_app.models import Book, Rental
-from user_app.permissions import Perms, require_perm
+from user_app.permissions import Perms, reader_required, require_perm
 from user_app.services import get_or_create_patron
 
 from . import services
@@ -38,7 +37,7 @@ def _render_actions(request, book, message=None, ok=True):
 
 
 @require_POST
-@login_required
+@reader_required
 def request_rental(request, pk):
     book = get_object_or_404(Book, pk=pk)
     patron = _patron(request)
@@ -49,7 +48,7 @@ def request_rental(request, pk):
 
 
 @require_POST
-@login_required
+@reader_required
 def cancel_request(request, pk):
     book = get_object_or_404(Book, pk=pk)
     patron = _patron(request)
@@ -60,7 +59,7 @@ def cancel_request(request, pk):
 
 
 @require_POST
-@login_required
+@reader_required
 def reserve_book(request, pk):
     book = get_object_or_404(Book, pk=pk)
     patron = _patron(request)
@@ -71,7 +70,7 @@ def reserve_book(request, pk):
 
 
 @require_POST
-@login_required
+@reader_required
 def cancel_reservation(request, pk):
     book = get_object_or_404(Book, pk=pk)
     patron = _patron(request)
@@ -81,7 +80,7 @@ def cancel_reservation(request, pk):
     return _render_actions(request, book, msg)
 
 
-@login_required
+@reader_required
 def my_rentals(request):
     """"Mening ijaralarim" — endi talabaga ham, xodimga ham ochiq."""
     patron = _patron(request)

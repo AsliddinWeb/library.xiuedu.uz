@@ -97,6 +97,11 @@ def make_librarian(username=None, **kwargs):
     return make_employee(username, role=Roles.LIBRARIAN, **kwargs)
 
 
+def make_admin(username=None, **kwargs):
+    """Tizim administratori: superuser, `/admin/` ga kira oladi."""
+    return make_employee(username, is_superuser=True, is_staff=True, **kwargs)
+
+
 def make_teacher(username=None, **kwargs):
     """Professor-o'qituvchi: xodim + a'zo toifasi `PROF_OQITUVCHI`."""
     from user_app.models import PatronCategory

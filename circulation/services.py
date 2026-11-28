@@ -9,7 +9,6 @@ yozuvlarda vaqtincha to'ldirilib boriladi (eski hisobotlar uchun) va P3'da
 Muddat va limitlar a'zo TOIFASIDAN olinadi (`PatronCategory`); toifada qiymat
 berilmagan bo'lsa — umumiy `LibrarySettings` zaxira sifatida ishlatiladi.
 """
-from datetime import timedelta
 
 from django.db import transaction
 from django.utils.timezone import now
@@ -48,6 +47,13 @@ def loan_limit_for(patron):
     if patron is not None and patron.category.loan_limit:
         return patron.category.loan_limit
     return settings.max_active_rentals
+
+
+def fine_rate_for(patron):
+    """Kuniga jarima: avval a'zo toifasidan, bo'lmasa umumiy sozlamadan."""
+    if patron is not None and patron.category.fine_per_day:
+        return patron.category.fine_per_day
+    return LibrarySettings.load().fine_per_day
 
 
 def hold_limit_for(patron):
@@ -190,50 +196,33 @@ def cancel_reservation(patron, book):
 
 @transaction.atomic
 def approve_request(req, librarian=None):
-    """So'rovni tasdiqlaydi: bo'sh nusxa biriktiradi va ijara yaratadi."""
+    """So'rovni tasdiqlaydi: bo'sh nusxa biriktiradi va ijara yaratadi.
+
+    Berish qoidalari (blok, qarz, limit, navbat) deskdagi bilan bir xil —
+    `loans.checkout` ichida tekshiriladi.
+    """
+    from .loans import checkout
+
     if req.status != RentalRequest.Status.PENDING:
         return None, "Bu so'rov allaqachon hal qilingan."
 
-    copy = (Item.objects
-            .select_for_update()
-            .filter(book=req.book, status=Item.Status.AVAILABLE)
-            .first())
+    if req.patron is None and req.student_id:
+        from user_app.services import get_or_create_patron
+        req.patron = get_or_create_patron(req.student.user)
+        if req.patron:
+            req.save(update_fields=['patron'])
+    if req.patron is None:
+        return None, "Kutubxona a'zoligi topilmadi."
+
+    free = Item.objects.filter(book=req.book, status=Item.Status.AVAILABLE).order_by('pk')
+    copy = free.exclude(item_type__is_loanable=False).first() or free.first()
     if copy is None:
         return None, "Mavjud nusxa yo'q. Tasdiqlab bo'lmaydi."
 
-    today = now().date()
-    rental = Rental.objects.create(
-        copy=copy,
-        patron=req.patron,
-        student=req.student or student_of(req.patron),
-        library_admin_checked=True,
-        borrowed_date=today,
-        due_date=today + timedelta(days=loan_days_for(req.patron)),
-    )
-    # Nusxa holati yagona joydan o'zgaradi: jurnal + audit + ko'rsatkichlar
-    from book_app.services import change_item_status
-    change_item_status(copy, Item.Status.ON_LOAN,
-                       reason=f"Ijaraga berildi — {rental.borrower_name}", by=librarian)
-
-    req.status = RentalRequest.Status.APPROVED
-    req.rental = rental
-    req.decided_at = now()
-    req.decided_by = librarian
-    req.save(update_fields=['status', 'rental', 'decided_at', 'decided_by'])
-
-    recalc_patron_counters(req.patron)
-
-    from notifications.models import Notification
-    notify_patron(req.patron, "So'rovingiz tasdiqlandi",
-                  f"«{req.book.title}» — kutubxonadan olishingiz mumkin. "
-                  f"Qaytarish: {rental.due_date}.",
-                  type=Notification.Type.REQUEST_APPROVED, link='/circulation/my-rentals/')
-
-    from audit.models import ActionLog
-    from audit.services import log_action
-    log_action(ActionLog.Action.CHECKOUT, obj=rental,
-               note=f"{req.book.title} — {rental.borrower_name}")
-    return rental, "So'rov tasdiqlandi."
+    result = checkout(req.patron, copy, librarian, request=req)
+    if not result.ok:
+        return None, result.message
+    return result.rental, "So'rov tasdiqlandi."
 
 
 def reject_request(req, librarian=None, note=""):
@@ -252,50 +241,15 @@ def reject_request(req, librarian=None, note=""):
     return True, "So'rov rad etildi."
 
 
-@transaction.atomic
-def return_rental(rental):
-    """Ijarani qaytarish: nusxani bo'shatadi va navbatdagi 1-a'zoga ushlab turadi."""
-    if rental.return_date is not None:
-        return False, "Bu ijara allaqachon qaytarilgan."
+def return_rental(rental, librarian=None):
+    """Ijarani qaytarish (batafsil natija kerak bo'lsa — `loans.checkin`)."""
+    from .loans import checkin
 
-    rental.return_date = now().date()
-    rental.save(update_fields=['return_date'])
-
-    copy = rental.copy
-    from book_app.services import change_item_status
-    change_item_status(copy, Item.Status.AVAILABLE,
-                       reason=f"Qaytarildi — {rental.borrower_name}")
-    copy.loan_count = (copy.loan_count or 0) + 1
-    copy.save(update_fields=['loan_count'])
-
-    recalc_patron_counters(rental.patron)
-
-    # Navbatdagi 1-a'zoga kitobni ushlab turamiz
-    settings = LibrarySettings.load()
-    nxt = (Reservation.objects
-           .filter(book=copy.book, status=Reservation.Status.WAITING)
-           .order_by('created_at')
-           .first())
-    if nxt:
-        nxt.status = Reservation.Status.AVAILABLE
-        nxt.hold_until = now() + timedelta(days=settings.reservation_hold_days)
-        nxt.save(update_fields=['status', 'hold_until'])
-
-        from notifications.models import Notification
-        notify_patron(nxt.patron, "Navbatdagi kitob bo'shadi",
-                      f"«{copy.book.title}» bo'shadi — {settings.reservation_hold_days} kun "
-                      f"ichida ijaraga so'rang.",
-                      type=Notification.Type.RESERVATION_AVAILABLE,
-                      link=f'/books/{copy.book_id}/')
-
-    from audit.models import ActionLog
-    from audit.services import log_action
-    log_action(ActionLog.Action.CHECKIN, obj=rental,
-               note=f"{copy.book.title} — {rental.borrower_name}")
-    return True, "Kitob qaytarildi."
+    result = checkin(rental, librarian)
+    return result.ok, result.message
 
 
-def mark_fine_paid(fine):
+def mark_fine_paid(fine, librarian=None):
     if fine.is_paid:
         return False, "Bu jarima allaqachon to'langan."
     fine.is_paid = True
@@ -305,8 +259,8 @@ def mark_fine_paid(fine):
 
     from audit.models import ActionLog
     from audit.services import log_action
-    log_action(ActionLog.Action.PAYMENT, obj=fine,
-               note=f"{fine.borrower_name} — {fine.amount} so'm")
+    log_action(ActionLog.Action.PAYMENT, obj=fine, actor=librarian,
+               note=f"{fine.borrower_name} — {fine.amount:.0f} so'm")
     return True, "Jarima to'langan deb belgilandi."
 
 

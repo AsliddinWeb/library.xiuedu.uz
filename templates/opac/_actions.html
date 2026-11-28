@@ -80,10 +80,10 @@
       {% endif %}
     {% endif %}
 
-    {# --------- Sevimli va ro'yxatlar --------- #}
+    {# --------- Sevimli (faqat o'quvchi) va ro'yxatlar --------- #}
     {% if user.is_authenticated %}
       <div class="ml-auto flex items-center gap-2">
-        {% include "engagement/partials/_favorite_button.html" %}
+        {% if not account.is_staff %}{% include "engagement/partials/_favorite_button.html" %}{% endif %}
         <div x-data="{ open: false }" class="relative" @keydown.escape="open = false">
           <button type="button" class="btn btn-secondary" @click="open = !open" :aria-expanded="open"
                   hx-get="{% url 'engagement:shelf_picker' book.pk %}"
@@ -102,7 +102,7 @@
 
   {% if not book.electronic_version and not book.audio_version and not book.items_count %}
     <p class="help mt-3">
-      Bu yozuvda na raqamli fayl, na jismoniy nusxa bor — kutubxonachiga murojaat qiling.
+      Bu kitobning elektron fayli ham, qog'oz nusxasi ham yo'q — kutubxonachiga murojaat qiling.
     </p>
   {% endif %}
 </div>

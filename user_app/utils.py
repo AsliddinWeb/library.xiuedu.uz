@@ -15,7 +15,7 @@ def role_required(*allowed_roles):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
             if not request.user.is_authenticated:
-                return redirect('student_login')
+                return redirect('login')
 
             if effective_role(request.user) in allowed_roles:
                 return view_func(request, *args, **kwargs)

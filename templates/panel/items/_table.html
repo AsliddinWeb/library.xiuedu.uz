@@ -27,7 +27,7 @@
           {% if item.status == 'AVAILABLE' %}{% include "ui/_badge.html" with text="Mavjud" variant="success" dot=1 %}
           {% elif item.status == 'ON_LOAN' %}{% include "ui/_badge.html" with text="Ijarada" variant="info" dot=1 %}
           {% elif item.status == 'NOT_FOR_LOAN' %}{% include "ui/_badge.html" with text="Faqat zalda" variant="warning" dot=1 %}
-          {% elif item.status == 'WITHDRAWN' %}{% include "ui/_badge.html" with text="Chiqarilgan" variant="neutral" dot=1 %}
+          {% elif item.status == 'WITHDRAWN' %}{% include "ui/_badge.html" with text="Hisobdan chiqarilgan" variant="neutral" dot=1 %}
           {% elif item.status == 'LOST' %}{% include "ui/_badge.html" with text="Yo'qolgan" variant="danger" dot=1 %}
           {% elif item.status == 'DAMAGED' %}{% include "ui/_badge.html" with text="Shikastlangan" variant="danger" dot=1 %}
           {% else %}{% include "ui/_badge.html" with text=item.get_status_display variant="neutral" dot=1 %}{% endif %}

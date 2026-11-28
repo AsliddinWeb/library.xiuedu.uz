@@ -1,0 +1,17 @@
+{% extends "layouts/opac.html" %}
+{% load static %}
+{% comment %}Kirish turini tanlash — himoyalangan sahifaga kirmasdan o'tilganda.{% endcomment %}
+
+{% block title %}Kirish — XIU Kutubxona{% endblock %}
+
+{% block content %}
+<section class="container-page flex min-h-[70vh] items-center justify-center py-10">
+  <div class="enter w-full max-w-md text-center">
+    <img src="{% static 'img/xiu-logo-192.png' %}" alt="Xalqaro Innovatsion Universitet" width="96" height="96"
+         class="logo-chip mx-auto size-24 rounded-full p-1 shadow-[var(--shadow-md)]">
+    <h1 class="mt-5 text-3xl">Kutubxonaga kirish</h1>
+    <p class="mt-2 text-[color:var(--color-content-muted)]">HEMIS hisobingiz bilan — alohida parol shart emas.</p>
+    <div class="mt-8">{% include "oauth/_choices.html" %}</div>
+  </div>
+</section>
+{% endblock %}

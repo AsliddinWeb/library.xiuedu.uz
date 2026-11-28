@@ -1,0 +1,25 @@
+{% extends "panel/base.html" %}
+
+{% block title %}Bildirishnomalar — Kutubxona paneli{% endblock %}
+
+{% block panel_content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Bildirishnomalar</h1>
+    <p class="page-sub">Sizning hisobingizga kelgan xabarlar.</p>
+  </div>
+  {% if unread_notifications %}
+    <form method="post" action="{% url 'notifications:read_all' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-secondary">{% include "ui/_icon.html" with name="check-circle" class="size-4" %} Hammasini o'qilgan qilish</button>
+    </form>
+  {% endif %}
+</div>
+<div class="card max-w-3xl overflow-hidden">
+  {% for n in items %}
+    {% include "notifications/partials/_row.html" %}
+  {% empty %}
+    {% include "ui/_empty.html" with icon="bell" title="Bildirishnoma yo'q" %}
+  {% endfor %}
+</div>
+{% endblock %}
