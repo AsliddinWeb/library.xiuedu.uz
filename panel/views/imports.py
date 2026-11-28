@@ -2,9 +2,13 @@
 Kitob import qilish: universitet kitoblar bazasidan (arm-admin) yoki Excel
 (CSV) fayldan.
 """
+from datetime import datetime
+from pathlib import Path
+
 from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from audit.models import ActionLog, JobRun
@@ -58,11 +62,22 @@ def _status_context():
     return context
 
 
+def _export_info():
+    """Serverdagi eksport fayli (bo'lsa) — manba sifatida ko'rsatiladi."""
+    path = Path(settings.ARM_EXPORT_FILE)
+    if not path.is_file():
+        return None
+    return {'made_at': datetime.fromtimestamp(path.stat().st_mtime, timezone.get_current_timezone()),
+            'media_found': Path(settings.ARM_MEDIA_ROOT).is_dir(),
+            'media_root': settings.ARM_MEDIA_ROOT}
+
+
 def _import_page(request, **extra):
     return render(request, 'panel/import.html', {
         'active': 'import', 'page_title': 'Kitoblarni import qilish',
         'columns': importers.template_header(), 'max_rows': importers.MAX_ROWS,
         'source_url': settings.ARM_API_URL,
+        'export': _export_info(),
         'linked_total': ExternalRecord.objects.filter(source=arm_import.SOURCE).count(),
         'book_total': Book.objects.count(),
         'free_gb': round(free_bytes() / 1024 ** 3, 1),

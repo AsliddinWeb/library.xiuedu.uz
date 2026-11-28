@@ -12,11 +12,14 @@ Qoidalar:
 
 «Solishtirish» rejimi (`dry`) hech narsa yozmasdan natijani sanaydi.
 """
+import json
 import logging
 import time
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
+from pathlib import Path
+from urllib.parse import quote, urlsplit
 
 import requests
 from django.conf import settings
@@ -95,6 +98,49 @@ class ArmClient:
                 raise SourceError("Manba javobida kitoblar ro'yxati yo'q — API o'zgargan bo'lishi mumkin.")
             return data
         raise SourceError(problem)
+
+
+class FileClient:
+    """`bin/arm_export.py` yozgan fayl — arm-admin shu serverda bo'lganda."""
+
+    PAGE_SIZE = 200
+
+    def __init__(self, path):
+        try:
+            data = json.loads(Path(path).read_text(encoding='utf-8'))
+            rows = data['results']
+            if not isinstance(rows, list):
+                raise TypeError
+        except (OSError, ValueError, KeyError, TypeError):
+            raise SourceError("Eksport faylini o'qib bo'lmadi — uni qaytadan yarating.") from None
+        self.rows = [self._addressed(row) for row in rows]
+
+    @staticmethod
+    def _addressed(row):
+        """Nisbiy fayl yo'llarini manba manziliga aylantiradi (API bergani kabi)."""
+        if not isinstance(row, dict):
+            return row
+        source = urlsplit(settings.ARM_API_URL)
+        row = dict(row)
+        for key in ('source', 'photo'):
+            name = row.get(key)
+            if name and '://' not in name:
+                row[key] = f"{source.scheme}://{source.netloc}/media/{quote(name.lstrip('/'))}"
+        return row
+
+    def page(self, number):
+        start = (number - 1) * self.PAGE_SIZE
+        chunk = self.rows[start:start + self.PAGE_SIZE]
+        if not chunk and number > 1:
+            return None
+        return {'count': len(self.rows), 'results': chunk,
+                'next': start + len(chunk) < len(self.rows)}
+
+
+def default_client():
+    """Eksport fayli bor bo'lsa — undan, bo'lmasa API'dan."""
+    path = Path(settings.ARM_EXPORT_FILE)
+    return FileClient(path) if path.is_file() else ArmClient()
 
 
 # --------------------------------------------------------------------------
@@ -443,7 +489,7 @@ class Importer:
 def run(*, dry=False, covers=True, files=False, progress=lambda stats: False,
         client=None, max_pages=None):
     """Importni shu oqimda bajaradi va hisoblagichlarni qaytaradi."""
-    client = client or ArmClient()
+    client = client or default_client()
     with exclusive(LOCK_KEY) as locked:
         if not locked:
             raise SourceError("Boshqa import hozir ishlayapti.")

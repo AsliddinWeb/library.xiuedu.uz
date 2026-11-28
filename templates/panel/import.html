@@ -123,7 +123,16 @@
           <li>Hech narsa o'chirilmaydi. Qayta ishga tushirish xavfsiz: faqat yangilari qo'shiladi.</li>
           <li>Qog'oz nusxa ochilmaydi — nusxalarni kitob sahifasidan qo'shasiz.</li>
         </ul>
-        <p class="help mt-3 break-all">Manba: {{ source_url }}</p>
+        {% if export %}
+          <p class="help mt-3">Manba: serverdagi eksport fayli, {{ export.made_at|date:"d.m.Y H:i" }} da yaratilgan.</p>
+          {% if export.media_found %}
+            <p class="help break-all">PDF va muqovalar shu serverdan olinadi: {{ export.media_root }}</p>
+          {% else %}
+            <div class="notice notice-warning mt-2"><p class="break-all">arm-admin fayllar papkasi topilmadi: {{ export.media_root }}</p></div>
+          {% endif %}
+        {% else %}
+          <p class="help mt-3 break-all">Manba: {{ source_url }}</p>
+        {% endif %}
       </div>
     </div>
   </div>

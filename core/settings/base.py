@@ -148,6 +148,10 @@ HEMIS_API_TOKEN = os.getenv('HEMIS_API_TOKEN', '').strip()
 # Fayl va muqovalar faqat shu manzilning serveridan yuklanadi.
 # ---------------------------------------------------------------------------
 ARM_API_URL = os.getenv('ARM_API_URL') or 'https://arm-admin.xiuedu.uz/api/v1/books/'
+# arm-admin shu serverda tursa tarmoq kerak emas: `bin/arm_export.py` yozgan
+# fayl bo'lsa import undan o'qiydi, PDF va muqovalar esa media papkasidan olinadi.
+ARM_EXPORT_FILE = os.getenv('ARM_EXPORT_FILE') or BASE_DIR / 'var' / 'arm-books.json'
+ARM_MEDIA_ROOT = os.getenv('ARM_MEDIA_ROOT') or BASE_DIR.parent / 'arm-admin.xiuedu.uz' / 'media'
 #: Diskda shuncha joy qolganda fayl yuklash to'xtaydi (GB)
 MEDIA_MIN_FREE_GB = 5
 

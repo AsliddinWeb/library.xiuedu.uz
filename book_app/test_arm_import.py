@@ -1,7 +1,9 @@
 """Universitet kitoblar bazasidan import. Yozuv shakli arm-admin API'sidan olingan."""
+import json
 import shutil
 import tempfile
 from io import BytesIO
+from pathlib import Path
 from unittest import mock
 
 import requests
@@ -72,7 +74,10 @@ class ArmCase(TestCase):
     def setUp(self):
         media = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, media, True)
-        settings = override_settings(ARM_API_URL=SOURCE, MEDIA_ROOT=media, MEDIA_MIN_FREE_GB=0)
+        self.arm_media = Path(media) / 'arm-media'
+        self.export = Path(media) / 'arm-books.json'
+        settings = override_settings(ARM_API_URL=SOURCE, MEDIA_ROOT=media, MEDIA_MIN_FREE_GB=0,
+                                     ARM_MEDIA_ROOT=self.arm_media, ARM_EXPORT_FILE=self.export)
         settings.enable()
         self.addCleanup(settings.disable)
         self.requested = []
@@ -324,6 +329,81 @@ class SourceTests(ArmCase):
             remote.download('https://arm.test/a.pdf', 100)
 
 
+class LocalExportTests(ArmCase):
+    """arm-admin shu serverda: eksport fayli va uning media papkasi."""
+
+    def setUp(self):
+        super().setUp()
+        (self.arm_media / 'books').mkdir(parents=True)
+        (self.arm_media / 'images' / 'books').mkdir(parents=True)
+        (self.arm_media / 'books' / "O'quv qo'llanma 1.pdf").write_bytes(b'%PDF-1.7 lokal')
+        (self.arm_media / 'images' / 'books' / '1.png').write_bytes(png())
+        self.write(raw(source="books/O'quv qo'llanma 1.pdf", photo='images/books/1.png'))
+
+    def write(self, *rows):
+        self.export.write_text(json.dumps({'count': len(rows), 'results': list(rows)}),
+                               encoding='utf-8')
+
+    def test_export_file_is_used_and_nothing_is_requested_over_network(self):
+        stats = arm_import.run(covers=True, files=True)
+
+        book = Book.objects.get()
+        self.assertEqual((stats['new'], stats['covers'], stats['files']), (1, 1, 1))
+        self.assertEqual(book.electronic_version.read(), b'%PDF-1.7 lokal')
+        self.assertTrue(book.cover_image)
+        self.assertTrue(book.remote_file_url.startswith('https://arm.test/media/books/O%27quv'))
+        self.assertEqual(self.requested, [])
+
+    def test_first_open_copies_the_local_file(self):
+        arm_import.run(covers=False)
+        book = Book.objects.get()
+
+        remote.fetch_ebook(book.pk)
+
+        book.refresh_from_db()
+        self.assertEqual(book.electronic_version.read(), b'%PDF-1.7 lokal')
+        self.assertEqual(self.requested, [])
+
+    def test_missing_file_is_reported_not_fetched(self):
+        self.write(raw(source='books/yoq.pdf', photo=''))
+        arm_import.run(covers=False)
+        book = Book.objects.get()
+
+        remote.fetch_ebook(book.pk)
+
+        book.refresh_from_db()
+        self.assertIn('topilmadi', book.remote_file_error)
+        self.assertEqual(self.requested, [])
+
+    def test_path_cannot_leave_the_media_folder(self):
+        (self.arm_media.parent / 'sir.pdf').write_bytes(b'%PDF-1.7 sir')
+        for url in ('https://arm.test/media/../sir.pdf', 'https://arm.test/media/%2e%2e/sir.pdf',
+                    'https://arm.test/media/books/..%2f..%2fsir.pdf'):
+            with self.subTest(url=url), self.assertRaises(remote.FetchError):
+                remote.download(url, 1000)
+
+    def test_long_listing_is_paged(self):
+        self.write(*[raw(n, title=f"Kitob {n}", source='', photo='') for n in range(1, 451)])
+        client = arm_import.default_client()
+
+        sizes = [len(client.page(n)['results']) for n in (1, 2, 3)]
+
+        self.assertEqual((sizes, client.page(4)), ([200, 200, 50], None))
+
+    def test_broken_file_is_a_clear_message(self):
+        self.export.write_text('{yarim', encoding='utf-8')
+
+        with self.assertRaisesMessage(arm_import.SourceError, 'Eksport faylini'):
+            arm_import.default_client()
+
+    def test_page_shows_the_file_as_source(self):
+        self.client.force_login(make_librarian())
+
+        response = self.client.get(reverse('panel:import_books'))
+
+        self.assertContains(response, 'serverdagi eksport fayli')
+
+
 class LazyReadingTests(ArmCase):
     def setUp(self):
         super().setUp()
@@ -376,7 +456,7 @@ class LazyReadingTests(ArmCase):
         self.assertContains(response, reverse('reading:read', args=[self.book.pk]))
 
 
-@override_settings(ARM_API_URL=SOURCE)
+@override_settings(ARM_API_URL=SOURCE, ARM_EXPORT_FILE='/yoq/arm-books.json')
 class ImportPageTests(TestCase):
     def setUp(self):
         self.client.force_login(make_librarian())

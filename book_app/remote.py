@@ -10,7 +10,7 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import unquote, urlsplit, urlunsplit
 
 import requests
 from django.conf import settings
@@ -55,11 +55,32 @@ def has_room() -> bool:
     return free_bytes() > settings.MEDIA_MIN_FREE_GB * 1024 ** 3
 
 
+def local_file(address):
+    """arm-admin shu serverda bo'lsa — manzilga mos fayl yo'li, aks holda `None`."""
+    root = Path(settings.ARM_MEDIA_ROOT)
+    path = unquote(urlsplit(address).path)
+    if not root.is_dir() or not path.startswith('/media/'):
+        return None
+    root = root.resolve()
+    candidate = (root / path[len('/media/'):]).resolve()
+    # «../» bilan papkadan tashqariga chiqib bo'lmaydi
+    if root not in candidate.parents:
+        raise FetchError("Fayl manzili noto'g'ri.")
+    return candidate
+
+
 def download(url, max_bytes):
-    """Faylni vaqtinchalik joyga yuklaydi (boshiga qaytarilgan holda)."""
+    """Faylni ochiq holda qaytaradi: lokal papkadan yoki manba serveridan yuklab."""
     address = source_url(url)
     if not address:
         raise FetchError("Manzil universitet kitoblar bazasiniki emas.")
+    local = local_file(address)
+    if local is not None:
+        if not local.is_file():
+            raise FetchError("Fayl arm-admin papkasida topilmadi.")
+        if local.stat().st_size > max_bytes:
+            raise FetchError("Fayl juda katta.")
+        return local.open('rb')
     target = tempfile.SpooledTemporaryFile(max_size=5 * 1024 * 1024)  # noqa: SIM115
     try:
         with requests.get(address, stream=True, timeout=TIMEOUT, allow_redirects=False) as response:
