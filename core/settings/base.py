@@ -63,6 +63,8 @@ MIDDLEWARE = [
     'django_htmx.middleware.HtmxMiddleware',
     # `/panel/` ostidagi hamma narsa faqat kutubxona xodimiga
     'user_app.middleware.StaffAreaMiddleware',
+    # Kunlik vazifalar (cron o'rniga) — `AUTO_JOBS` yoqilgan bo'lsa
+    'core.autojobs.AutoJobsMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -125,6 +127,13 @@ AUTH_USER_MODEL = "user_app.User"
 # bo'yicha ustun qiymat beriladi. Muhitdan: FLAG_<NOM>=1/0
 # ---------------------------------------------------------------------------
 FEATURE_FLAGS: dict[str, bool] = {}
+
+# ---------------------------------------------------------------------------
+# Kunlik vazifalarni sayt ichidan ishga tushirish (`core/autojobs.py`).
+# Dev va testlarda o'chiq, production'da yoqiq.
+# ---------------------------------------------------------------------------
+AUTO_JOBS = os.getenv('AUTO_JOBS', '0') == '1'
+AUTO_JOBS_HOUR = 6          # Toshkent vaqti; shundan oldin ishga tushmaydi
 
 # Autentifikatsiya yo'naltirishlari
 LOGIN_URL = '/auth/login/'          # talaba yoki xodim tanlovi

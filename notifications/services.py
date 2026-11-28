@@ -1,3 +1,5 @@
+from django.utils.text import Truncator
+
 from .models import Notification
 
 
@@ -5,8 +7,12 @@ def notify(user, title, message='', type=Notification.Type.GENERAL, link=''):
     """Foydalanuvchiga bildirishnoma yuboradi."""
     if user is None:
         return None
+    # Kitob nomi 500 belgigacha — maydonga sig'masa amalning o'zi yiqilmasin
+    field = Notification._meta.get_field
     return Notification.objects.create(
-        user=user, type=type, title=title, message=message, link=link)
+        user=user, type=type, link=link,
+        title=Truncator(title).chars(field('title').max_length),
+        message=Truncator(message).chars(field('message').max_length))
 
 
 def unread_count(user):

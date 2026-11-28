@@ -313,7 +313,14 @@ gunzip -c var/backups/20261127-120000-abc1234.sql.gz | \
 
 ## 4. Davriy vazifalar
 
-`/etc/cron.d/library` orqali har kuni 01:00 da:
+**Serverda hech narsa sozlash shart emas.** Sayt 06:00 dan (Toshkent vaqti)
+keyingi birinchi tashrifda bugungi vazifalarni o'zi fonda bajaradi. Deploydan
+keyingi sayt tekshiruvi ham tashrif hisoblanadi. O'chirish: `.env` ga
+`AUTO_JOBS=0`.
+
+`bin/server-setup.sh` bilan o'rnatilgan serverda qo'shimcha ravishda cron ham
+bor (`/etc/cron.d/library`); bir kunda ikki marta bajarilsa ham takroriy xabar
+yoki jarima yaratilmaydi:
 
 ```cron
 0 1 * * * <user> cd /srv/library && DJANGO_ENV=production venv/bin/python manage.py run_jobs --schedule daily >> /srv/library/var/jobs.log 2>&1
@@ -321,7 +328,8 @@ gunzip -c var/backups/20261127-120000-abc1234.sql.gz | \
 
 Jarima hisoblash, muddat-yaqin ogohlantirish, navbat muddati. Har ishga tushish
 `audit.JobRun` jadvaliga yoziladi — admin panelda ko'rinadi
-(**Audit va vazifalar → Vazifalar jurnali**), natijalar `var/jobs.log` da.
+(**Audit va vazifalar → Vazifalar jurnali**). Cron ishlatilsa, natijalar
+`var/jobs.log` da ham bo'ladi.
 
 Qo'lda ishga tushirish:
 
@@ -366,6 +374,6 @@ DJANGO_ENV=production venv/bin/python manage.py collectstatic --noinput
 - [ ] `check --deploy` 0 xato
 - [ ] `/protected-media/` nginx'da `internal`
 - [ ] HTTPS (certbot) + sertifikat avto-yangilanishi
-- [ ] cron `run_jobs --schedule daily` ishlayapti
+- [ ] Vazifalar jurnalida bugungi muvaffaqiyatli yozuvlar bor
 - [ ] `var/backups/` to'ldirilmoqda va boshqa diskka ham nusxalanadi
 - [ ] `media/` papkasi zaxiraga kiritilgan (kitob fayllari!)

@@ -15,9 +15,13 @@ Ishga tushirish:  python manage.py run_jobs            # barcha 'daily' vazifala
                   python manage.py run_jobs fines_accrual
                   python manage.py run_jobs --list
 
-Nega broker yo'q: bitta serverda cron yetarli va operatsion jihatdan sodda.
-Keyinchalik django-q2/Celery qo'shilsa, `run_job()` o'sha yerdan chaqiriladi —
-vazifa kodiga tegilmaydi.
+Nega broker yo'q: bitta serverda ortiqcha xizmat kerak emas. Production'da
+kunlik vazifalarni saytning o'zi ishga tushiradi (`core/autojobs.py`), cron
+ixtiyoriy. Keyinchalik django-q2/Celery qo'shilsa, `run_job()` o'sha yerdan
+chaqiriladi — vazifa kodiga tegilmaydi.
+
+Vazifa qayta ishga tushsa zarar qilmasligi shart (takroriy xabar yoki yozuv
+yaratmasin): xatodan keyin u qayta uriniladi.
 """
 import logging
 import time

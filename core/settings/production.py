@@ -17,6 +17,9 @@ ALLOWED_HOSTS = os.getenv(
 
 CSRF_TRUSTED_ORIGINS = ["https://library.xiuedu.uz", "https://www.library.xiuedu.uz"]
 
+# Serverda cron talab qilinmaydi; o'chirish uchun .env'ga AUTO_JOBS=0
+AUTO_JOBS = os.getenv('AUTO_JOBS', '1') == '1'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',

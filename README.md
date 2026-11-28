@@ -95,16 +95,24 @@ Barcha komponentlarni ko'rish: **`/_design/`** (xodim uchun, `design_styleguide`
 Yarim tayyor modullarni yoqib/o'chirish: `core/flags.py`. Muhitdan ham boshqariladi —
 masalan `FLAG_ACQUISITIONS=1`. Shablonda: `{{ flags.acquisitions }}`.
 
-## Davriy vazifalar (cron)
+## Davriy vazifalar
 
-Barcha davriy ish bitta buyruqdan boshqariladi va har ishga tushish
-`audit.JobRun` jadvaliga yoziladi:
+**Production'da cron shart emas.** Ertalab 06:00 dan (Toshkent vaqti) keyingi
+birinchi so'rov bugungi vazifalarni fonda ishga tushiradi (`core/autojobs.py`).
+Bugun muvaffaqiyatli bajarilgan vazifa qayta yurmaydi, xato bo'lsa kuniga
+3 martagacha uriniladi. O'chirish: `.env` ga `AUTO_JOBS=0`. Dev muhitda
+o'chiq, yoqish: `AUTO_JOBS=1`.
+
+Har ishga tushish `audit.JobRun` jadvaliga yoziladi. Qo'lda yurgizish:
 
 ```bash
 make jobs-list                       # vazifalar ro'yxati
 python manage.py run_jobs --schedule daily
 python manage.py run_jobs fines_accrual
 ```
+
+Aniq soatda yurishi kerak bo'lsa cron ham qo'shish mumkin — ikkalasi bir-biriga
+xalaqit bermaydi:
 
 ```cron
 0 1 * * *  /path/to/venv/bin/python /path/to/manage.py run_jobs --schedule daily
