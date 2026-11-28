@@ -27,49 +27,6 @@
     </a>
   {% endif %}
 
-  {% if "catalog.view" in perms_flags %}
-    <p class="nav-group-title">Katalog va fond</p>
-    <a href="/panel/books/" class="nav-link {% if '/panel/books/' in request.path %}nav-link-active{% endif %}">
-      {% include "ui/_icon.html" with name="book" class="size-4" %}<span>Kitoblar</span>
-    </a>
-    <a href="/panel/items/" class="nav-link {% if '/panel/items/' in request.path %}nav-link-active{% endif %}">
-      {% include "ui/_icon.html" with name="barcode" class="size-4" %}<span>Nusxalar (fond)</span>
-    </a>
-    <a href="/panel/genres/" class="nav-link {% if '/panel/genres/' in request.path %}nav-link-active{% endif %}">
-      {% include "ui/_icon.html" with name="folder" class="size-4" %}<span>Kataloglar</span>
-    </a>
-    <a href="/panel/authors/" class="nav-link {% if '/panel/authors/' in request.path %}nav-link-active{% endif %}">
-      {% include "ui/_icon.html" with name="feather" class="size-4" %}<span>Mualliflar</span>
-    </a>
-    <a href="/panel/publishers/" class="nav-link {% if '/panel/publishers/' in request.path %}nav-link-active{% endif %}">
-      {% include "ui/_icon.html" with name="building" class="size-4" %}<span>Nashriyotlar</span>
-    </a>
-    <a href="/panel/series/" class="nav-link {% if '/panel/series/' in request.path %}nav-link-active{% endif %}">
-      {% include "ui/_icon.html" with name="layers" class="size-4" %}<span>Turkumlar</span>
-    </a>
-    <a href="/panel/subjects/" class="nav-link {% if '/panel/subjects/' in request.path %}nav-link-active{% endif %}">
-      {% include "ui/_icon.html" with name="bookmark" class="size-4" %}<span>Mavzular</span>
-    </a>
-    {% if "items.manage" in perms_flags %}
-      <a href="/panel/holdings/" class="nav-link {% if '/panel/holdings/' in request.path %}nav-link-active{% endif %}">
-        {% include "ui/_icon.html" with name="map-pin" class="size-4" %}<span>Fond tuzilmasi</span>
-      </a>
-    {% endif %}
-    {% if "catalog.import" in perms_flags %}
-      <a href="/panel/import/" class="nav-link {% if '/panel/import/' in request.path %}nav-link-active{% endif %}">
-        {% include "ui/_icon.html" with name="upload" class="size-4" %}<span>Import</span>
-      </a>
-    {% endif %}
-    {% if "catalog.edit" in perms_flags %}
-      <a href="{% url 'book_app:course_list' %}" class="nav-link">
-        {% include "ui/_icon.html" with name="graduation" class="size-4" %}<span>Fan adabiyoti</span>
-      </a>
-      <a href="{% url 'engagement:shelf_list' %}" class="nav-link">
-        {% include "ui/_icon.html" with name="heart" class="size-4" %}<span>Tavsiya ro'yxatlari</span>
-      </a>
-    {% endif %}
-  {% endif %}
-
   {% if "circ.checkout" in perms_flags or "circ.holds" in perms_flags or "billing.charge" in perms_flags %}
     <p class="nav-group-title">Sirkulyatsiya</p>
     {% if "circ.checkout" in perms_flags %}
@@ -107,6 +64,49 @@
       <a href="/panel/reviews/" class="nav-link {% if '/panel/reviews/' in request.path %}nav-link-active{% endif %}">
         {% include "ui/_icon.html" with name="star" class="size-4" %}<span>Sharh moderatsiyasi</span>
         {% if lib_stats.pending_reviews %}<span class="nav-badge">{{ lib_stats.pending_reviews }}</span>{% endif %}
+      </a>
+    {% endif %}
+  {% endif %}
+
+  {% if "catalog.view" in perms_flags %}
+    <p class="nav-group-title">Katalog va fond</p>
+    <a href="/panel/books/" class="nav-link {% if '/panel/books/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="book" class="size-4" %}<span>Kitoblar</span>
+    </a>
+    <a href="/panel/items/" class="nav-link {% if '/panel/items/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="barcode" class="size-4" %}<span>Nusxalar (fond)</span>
+    </a>
+    <a href="/panel/genres/" class="nav-link {% if '/panel/genres/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="folder" class="size-4" %}<span>Kataloglar</span>
+    </a>
+    <a href="/panel/authors/" class="nav-link {% if '/panel/authors/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="feather" class="size-4" %}<span>Mualliflar</span>
+    </a>
+    <a href="/panel/publishers/" class="nav-link {% if '/panel/publishers/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="building" class="size-4" %}<span>Nashriyotlar</span>
+    </a>
+    <a href="/panel/series/" class="nav-link {% if '/panel/series/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="layers" class="size-4" %}<span>Turkumlar</span>
+    </a>
+    <a href="/panel/subjects/" class="nav-link {% if '/panel/subjects/' in request.path %}nav-link-active{% endif %}">
+      {% include "ui/_icon.html" with name="bookmark" class="size-4" %}<span>Mavzular</span>
+    </a>
+    {% if "items.manage" in perms_flags %}
+      <a href="/panel/holdings/" class="nav-link {% if '/panel/holdings/' in request.path %}nav-link-active{% endif %}">
+        {% include "ui/_icon.html" with name="map-pin" class="size-4" %}<span>Fond tuzilmasi</span>
+      </a>
+    {% endif %}
+    {% if "catalog.import" in perms_flags %}
+      <a href="/panel/import/" class="nav-link {% if '/panel/import/' in request.path %}nav-link-active{% endif %}">
+        {% include "ui/_icon.html" with name="upload" class="size-4" %}<span>Import</span>
+      </a>
+    {% endif %}
+    {% if "catalog.edit" in perms_flags %}
+      <a href="{% url 'book_app:course_list' %}" class="nav-link {% if '/books/courses/' in request.path %}nav-link-active{% endif %}">
+        {% include "ui/_icon.html" with name="graduation" class="size-4" %}<span>Fan adabiyoti</span>
+      </a>
+      <a href="{% url 'engagement:shelf_list' %}" class="nav-link {% if '/engagement/lists/' in request.path %}nav-link-active{% endif %}">
+        {% include "ui/_icon.html" with name="heart" class="size-4" %}<span>Tavsiya ro'yxatlari</span>
       </a>
     {% endif %}
   {% endif %}

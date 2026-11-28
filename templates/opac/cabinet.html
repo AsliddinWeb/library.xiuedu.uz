@@ -76,7 +76,7 @@
       <a href="{% url 'circulation:my_rentals' %}" class="card card-hover flex items-center gap-3.5 p-4" data-reveal style="--i:1">
         <span class="icon-box icon-box-accent">{% include "ui/_icon.html" with name="wallet" class="size-5.5" %}</span>
         <span><span class="block font-bold">{{ unpaid_fines }} ta to'lanmagan jarima</span>
-          <span class="help">{% if patron.balance %}Qarz: {{ patron.balance|floatformat:0 }} so'm{% else %}Kutubxonaga murojaat qiling.{% endif %}</span></span>
+          <span class="help">{% if patron.balance %}Qarz: {{ patron.balance|floatformat:"0g" }} so'm{% else %}Kutubxonaga murojaat qiling.{% endif %}</span></span>
       </a>
     {% endif %}
     {% if available_res %}

@@ -13,6 +13,9 @@
     {% if "reports.export" in perms_flags %}
       <a href="?{{ export_query }}" class="btn btn-secondary" download>{% include "ui/_icon.html" with name="download" class="size-4" %} CSV</a>
     {% endif %}
+    {% if "settings.manage" in perms_flags %}
+      <a href="{% url 'panel:hemis' %}" class="btn btn-secondary">{% include "ui/_icon.html" with name="download" class="size-4" %} HEMIS'dan yuklash</a>
+    {% endif %}
     {% if "patrons.edit" in perms_flags %}
       <a href="{% url 'panel:member_create' %}" class="btn btn-primary">
         {% include "ui/_icon.html" with name="plus" class="size-4" %}

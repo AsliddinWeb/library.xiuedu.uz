@@ -36,7 +36,7 @@
           {% else %}{% include "ui/_badge.html" with text="Yopilgan" variant="neutral" dot=1 %}{% endif %}
         </td>
         <td class="table-num">{{ m.active_loans_count }}</td>
-        <td class="table-num">{% if m.balance %}<span class="text-[color:var(--color-danger-700)]">{{ m.balance|floatformat:0 }}</span>{% else %}—{% endif %}</td>
+        <td class="table-num">{% if m.balance %}<span class="text-[color:var(--color-danger-700)]">{{ m.balance|floatformat:"0g" }}</span>{% else %}—{% endif %}</td>
         <td>
           <div class="table-actions">
             <a href="{% url 'panel:member_detail' m.pk %}" class="btn btn-ghost btn-icon btn-sm" aria-label="Ko'rish">

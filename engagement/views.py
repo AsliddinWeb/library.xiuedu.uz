@@ -93,6 +93,7 @@ def shelf_list(request):
                      .exclude(owner=request.user)
                      .filter(books_count__gt=0))
     return render(request, 'opac/shelves.html', {
+        'page_title': "Tavsiya ro'yxatlari",
         'my_shelves': _own_shelves(request.user),
         'official_shelves': [s for s in published if s.is_official],
         'other_shelves': [s for s in published if not s.is_official],
@@ -109,7 +110,8 @@ def shelf_create(request):
             messages.success(request, msg)
             return redirect(shelf)
         form.add_error(None, msg)
-    return render(request, 'opac/shelf_form.html', {'form': form, 'shelf': None})
+    return render(request, 'opac/shelf_form.html',
+                  {'form': form, 'shelf': None, 'page_title': "Yangi ro'yxat"})
 
 
 @login_required
@@ -119,6 +121,7 @@ def shelf_detail(request, slug):
                  .select_related('book__category', 'book__publisher', 'book__series')
                  .prefetch_related('book__authors'))
     return render(request, 'opac/shelf_detail.html', {
+        'page_title': shelf.name,
         'shelf': shelf,
         'items': items,
         'citations': [gost(item.book) for item in items],
@@ -136,7 +139,8 @@ def shelf_edit(request, slug):
         return redirect(shelf)
     # Yaroqsiz forma `instance`ni o'zgartirib yuboradi — sahifaga asl yozuvni beramiz
     shelf = Shelf.objects.get(pk=shelf.pk)
-    return render(request, 'opac/shelf_form.html', {'form': form, 'shelf': shelf})
+    return render(request, 'opac/shelf_form.html',
+                  {'form': form, 'shelf': shelf, 'page_title': shelf.name})
 
 
 @require_POST

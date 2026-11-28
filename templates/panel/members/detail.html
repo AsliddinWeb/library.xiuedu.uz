@@ -60,7 +60,7 @@
   <div class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
     {% include "ui/_stat.html" with label="Faol ijaralar" value=patron.active_loans_count icon="book" trend=patron.category.loan_limit|stringformat:"s"|add:" tadan" %}
     {% include "ui/_stat.html" with label="Kechikkan" value=patron.overdue_count icon="clock" %}
-    {% include "ui/_stat.html" with label="Qarz (so'm)" value=patron.balance|floatformat:0 icon="cash" %}
+    {% include "ui/_stat.html" with label="Qarz (so'm)" value=patron.balance|floatformat:"0g" icon="cash" %}
     {% include "ui/_stat.html" with label="Navbatlar" value=reservations|length icon="users" %}
   </div>
 
@@ -184,7 +184,7 @@
                 <span class="truncate">{{ fine.rental.copy.book.title|truncatechars:24 }}
                   <span class="help">· {{ fine.days_overdue }} kun</span></span>
                 <span class="whitespace-nowrap {% if fine.is_paid %}text-[color:var(--color-content-subtle)]{% else %}font-semibold text-[color:var(--color-danger-700)]{% endif %}">
-                  {{ fine.amount|floatformat:0 }} so'm
+                  {{ fine.amount|floatformat:"0g" }} so'm
                 </span>
               </div>
             {% empty %}<p class="help">Jarima yo'q.</p>{% endfor %}

@@ -41,20 +41,21 @@ _next_check = 0.0
 
 
 @contextmanager
-def exclusive():
+def exclusive(key=None):
     """Jarayonlararo qulf: boshqasi bajarayotgan bo'lsa `False` qaytaradi."""
+    key = LOCK_KEY if key is None else key
     if connection.vendor != 'postgresql':
         yield True
         return
     with connection.cursor() as cursor:
-        cursor.execute('SELECT pg_try_advisory_lock(%s)', [LOCK_KEY])
+        cursor.execute('SELECT pg_try_advisory_lock(%s)', [key])
         locked = cursor.fetchone()[0]
     try:
         yield locked
     finally:
         if locked:
             with connection.cursor() as cursor:
-                cursor.execute('SELECT pg_advisory_unlock(%s)', [LOCK_KEY])
+                cursor.execute('SELECT pg_advisory_unlock(%s)', [key])
 
 
 def due_jobs():

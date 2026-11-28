@@ -75,6 +75,7 @@ PAGES = {
     '/panel/rentals/':            (LOGIN, DENY, DENY, OK,    OK),
     '/panel/members/':            (LOGIN, DENY, DENY, OK,    OK),
     '/panel/members/{patron}/':   (LOGIN, DENY, DENY, OK,    OK),
+    '/panel/members/hemis/':      (LOGIN, DENY, DENY, OK,    OK),
     '/panel/analytics/':          (LOGIN, DENY, DENY, OK,    OK),
     '/panel/settings/':           (LOGIN, DENY, DENY, OK,    OK),
     '/panel/profile/':            (LOGIN, DENY, DENY, OK,    OK),

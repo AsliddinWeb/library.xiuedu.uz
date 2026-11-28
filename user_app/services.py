@@ -14,8 +14,8 @@ from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils.timezone import now
 
-from .models import Patron, PatronCategory, User
-from .roles import is_library_staff
+from .models import Patron, PatronCategory, Role, User
+from .roles import Roles, is_library_staff
 
 logger = logging.getLogger('patrons')
 
@@ -52,6 +52,35 @@ def next_card_number() -> str:
         if match:
             number = int(match.group(1))
     return f"{prefix}{number + 1:0{CARD_DIGITS}d}"
+
+
+# --------------------------------------------------------------------------
+#  HEMIS hisobi (oAuth kirish va ro'yxat sinxronlash uchun umumiy)
+# --------------------------------------------------------------------------
+
+def hemis_username(hemis_id, user_type, prefix):
+    """HEMIS raqamidan login nomi.
+
+    Talaba va xodim raqamlari ikki alohida HEMIS'dan keladi. Bir xil raqam
+    chiqib qolsa, biri ikkinchisining hisobini egallab olmasligi uchun
+    keyingisiga prefiks qo'shiladi.
+    """
+    username = str(hemis_id)
+    if User.objects.filter(username=username).exclude(user_type=user_type).exists():
+        username = f'{prefix}-{username}'
+        logger.warning("HEMIS raqami ikki turdagi hisobda uchradi, %s ishlatildi", username)
+    return username
+
+
+def ensure_reader_role(profile):
+    """HEMIS xodimiga o'quvchi roli beradi; mavjud rollarga tegmaydi."""
+    role, _ = Role.objects.get_or_create(name=Roles.EMPLOYEE)
+    # current_role faqat birinchi marta o'rnatiladi (mavjudini bekor qilmaslik uchun)
+    if profile.current_role is None:
+        profile.current_role = role
+        profile.save(update_fields=['current_role'])
+    if not profile.roles.filter(pk=role.pk).exists():
+        profile.roles.add(role)
 
 
 # --------------------------------------------------------------------------

@@ -36,15 +36,19 @@ _REGISTRY: dict[str, dict] = {}
 _discovered = False
 
 
-def job(name, description='', schedule='daily'):
-    """Vazifani reyestrga qo'shadigan dekorator."""
+def job(name, description='', schedule='daily', when=None):
+    """Vazifani reyestrga qo'shadigan dekorator.
+
+    `when` — berilsa, vazifa jadval bo'yicha faqat u `True` qaytarganda yuradi
+    (masalan, kerakli token sozlangan bo'lsa). Nomi bilan chaqirish doim mumkin.
+    """
     if schedule not in SCHEDULES:
         raise ValueError(f"Noto'g'ri schedule: {schedule} (ruxsat: {SCHEDULES})")
 
     def decorator(func):
         if name in _REGISTRY:
             raise ValueError(f"'{name}' vazifasi allaqachon ro'yxatdan o'tgan")
-        _REGISTRY[name] = {'name': name, 'func': func,
+        _REGISTRY[name] = {'name': name, 'func': func, 'when': when,
                            'description': description, 'schedule': schedule}
         return func
 
@@ -63,7 +67,8 @@ def registry(schedule=None):
     discover()
     items = sorted(_REGISTRY.values(), key=lambda j: j['name'])
     if schedule:
-        items = [j for j in items if j['schedule'] == schedule]
+        items = [j for j in items if j['schedule'] == schedule
+                 and (j.get('when') is None or j['when']())]
     return items
 
 

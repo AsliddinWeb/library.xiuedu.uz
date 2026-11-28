@@ -1,4 +1,4 @@
-{% extends "layouts/opac.html" %}
+{% extends account.is_staff|yesno:"layouts/staff.html,layouts/opac.html" %}
 {% comment %}Fan adabiyoti: talaba fanini topadi, o'qituvchi o'z ro'yxatini boshqaradi.{% endcomment %}
 
 {% block title %}Fan adabiyoti — XIU Kutubxona{% endblock %}

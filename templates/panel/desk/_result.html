@@ -52,13 +52,13 @@
 
       {% if returned.days_late %}
         <p class="mt-2 text-sm font-semibold text-[color:var(--color-danger-700)]">
-          {{ returned.days_late }} kun kechikib qaytarildi{% if returned.fine and not returned.fine.is_paid %} · jarima {{ returned.fine.amount|floatformat:0 }} so'm{% endif %}
+          {{ returned.days_late }} kun kechikib qaytarildi{% if returned.fine and not returned.fine.is_paid %} · jarima {{ returned.fine.amount|floatformat:"0g" }} so'm{% endif %}
         </p>
         {% if returned.fine and not returned.fine.is_paid and "billing.collect" in perms_flags %}
           <button type="button" class="btn btn-secondary btn-sm mt-2"
                   hx-post="{% url 'panel:desk_fine_pay' %}"
                   hx-vals='{"fine": "{{ returned.fine.pk }}", "mode": "{{ mode }}"}'
-                  data-confirm="{{ returned.fine.amount|floatformat:0 }} so'm to'lov qabul qilindimi?" data-confirm-label="Ha, qabul qilindi">
+                  data-confirm="{{ returned.fine.amount|floatformat:"0g" }} so'm to'lov qabul qilindimi?" data-confirm-label="Ha, qabul qilindi" data-confirm-tone="primary">
             {% include "ui/_icon.html" with name="cash" class="size-4" %} To'lovni qabul qilish
           </button>
         {% endif %}

@@ -1,0 +1,21 @@
+{% load ui_extras %}
+{% if error %}
+  <div class="notice notice-danger" role="alert">
+    {% include "ui/_icon.html" with name="alert" class="size-5 flex-none" %}
+    <p class="min-w-0 break-words">{{ error }}</p>
+  </div>
+{% elif started %}
+  <div class="notice notice-success" role="status">
+    {% include "ui/_icon.html" with name="check-circle" class="size-5 flex-none" %}
+    <p>Yuklash boshlandi. Jarayon yonda ko'rinadi — sahifani yopsangiz ham davom etadi.</p>
+  </div>
+{% else %}
+  <div class="notice notice-info" role="status">
+    {% include "ui/_icon.html" with name="info" class="size-5 flex-none" %}
+    <div>
+      <p class="font-semibold">Token ishlayapti. HEMIS'da:</p>
+      <p>{% for label, count in counts %}{{ label }} — <b>{{ count|spaced }}</b>{% if not forloop.last %}; {% endif %}{% endfor %}</p>
+      <p class="help">Hali hech narsa yozilmadi.{% if counts|length > 1 %} Xodim bir necha o'rinda ishlasa, bir marta hisoblanadi.{% endif %}</p>
+    </div>
+  </div>
+{% endif %}

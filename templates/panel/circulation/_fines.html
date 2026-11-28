@@ -29,7 +29,7 @@
                   <div class="table-actions">
                     {% if "billing.collect" in perms_flags %}
                       <button type="button" class="btn btn-primary btn-sm" hx-post="{% url 'panel:fine_mark_paid' fine.pk %}" hx-include="#circ-view, #circ-page, #circ-q"
-                              data-confirm="{{ fine.borrower_name }}: {{ fine.amount|floatformat:0 }} so'm to'lov qabul qilindimi?" data-confirm-label="Ha, qabul qilindi">To'landi</button>
+                              data-confirm="{{ fine.borrower_name }}: {{ fine.amount|floatformat:"0g" }} so'm to'lov qabul qilindimi?" data-confirm-label="Ha, qabul qilindi" data-confirm-tone="primary">To'landi</button>
                     {% endif %}
                     {% if "billing.charge" in perms_flags %}
                       <button type="button" class="btn btn-ghost btn-icon btn-sm" aria-label="Summani o'zgartirish" data-tip="Summani o'zgartirish"

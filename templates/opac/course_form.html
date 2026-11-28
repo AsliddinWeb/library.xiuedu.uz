@@ -1,4 +1,4 @@
-{% extends "layouts/opac.html" %}
+{% extends account.is_staff|yesno:"layouts/staff.html,layouts/opac.html" %}
 
 {% block title %}{% if reserve %}Fan ro'yxatini tahrirlash{% else %}Yangi fan{% endif %} — XIU Kutubxona{% endblock %}
 

@@ -12,7 +12,7 @@
   const options = {
     line: () => ({
       interaction: { mode: 'index', intersect: false },
-      scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } },
+      scales: { y: { beginAtZero: true, suggestedMax: 5, ticks: { precision: 0 } }, x: { grid: { display: false } } },
     }),
     bar: () => ({
       indexAxis: 'y',
@@ -34,7 +34,7 @@
       if (type === 'bar') return { label: item.name, data: item.data, backgroundColor: color, borderRadius: 4 };
       return {
         label: item.name, data: item.data, borderColor: color, backgroundColor: color + '22',
-        fill: index === 0, tension: 0.35, borderWidth: 2.5, pointRadius: item.data.length > 60 ? 0 : 2,
+        fill: index === 0, cubicInterpolationMode: 'monotone', borderWidth: 2.5, pointRadius: item.data.length > 60 ? 0 : 2,
         pointHoverRadius: 5, pointBackgroundColor: color,
       };
     });

@@ -53,12 +53,16 @@
                        for="{{ item.field.id_for_label }}">{{ item.field.label }}</label>
 
                 {% if item.field.name == 'authors' %}
-                  <div class="max-h-44 overflow-y-auto rounded-[var(--radius-sm)] border border-[color:var(--color-line)] p-2">
-                    {% for choice in item.field %}
-                      <label class="check-row py-0.5">{{ choice.tag }} {{ choice.choice_label }}</label>
-                    {% empty %}
-                      <p class="help">Muallif yo'q — avval "Mualliflar" bo'limidan qo'shing.</p>
-                    {% endfor %}
+                  <div data-filter class="space-y-2">
+                    <input type="search" class="input" data-filter-input placeholder="Muallifni qidirish..." aria-label="Muallifni qidirish" autocomplete="off">
+                    <div class="max-h-44 overflow-y-auto rounded-[var(--radius-sm)] border border-[color:var(--color-line)] p-2">
+                      {% for choice in item.field %}
+                        <label class="check-row py-0.5" data-filter-item>{{ choice.tag }} {{ choice.choice_label }}</label>
+                      {% empty %}
+                        <p class="help">Muallif yo'q — avval "Mualliflar" bo'limidan qo'shing.</p>
+                      {% endfor %}
+                      <p class="help hidden" data-filter-empty>Bunday muallif topilmadi.</p>
+                    </div>
                   </div>
                 {% elif item.field.name == 'is_textbook' or item.field.name == 'is_active' or item.field.name == 'download_allowed' %}
                   <label class="check-row">{{ item.field }} <span class="help">{{ item.field.help_text }}</span></label>

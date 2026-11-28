@@ -1,0 +1,67 @@
+{% extends "panel/base.html" %}
+{% comment %}HEMIS'dan talaba va xodimlarni yuklash.{% endcomment %}
+
+{% block title %}HEMIS'dan yuklash — XIU Kutubxona{% endblock %}
+
+{% block panel_content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">HEMIS'dan yuklash</h1>
+    <p class="page-sub">Talaba va xodimlar saytga kirishini kutmasdan a'zo bo'ladi — kitobni darhol berish mumkin.</p>
+  </div>
+  <a href="{% url 'panel:members' %}" class="btn btn-secondary">{% include "ui/_icon.html" with name="users" class="size-4" %} A'zolar</a>
+</div>
+
+<div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+  <div class="min-w-0 space-y-4">
+    <form class="card" method="post" action="{% url 'panel:hemis_start' %}"
+          hx-post="{% url 'panel:hemis_start' %}" hx-target="#hemis-result" hx-disabled-elt="find button">
+      {% csrf_token %}
+      <div class="card-head"><h2 class="card-title">Yangi yuklash</h2></div>
+      <div class="card-body space-y-4">
+        <div class="field">
+          <label class="label {% if not has_server_token %}label-required{% endif %}" for="hemis-token">HEMIS API tokeni</label>
+          <input id="hemis-token" type="password" name="token" class="input" autocomplete="off" spellcheck="false"
+                 {% if not has_server_token %}required{% endif %}>
+          <p class="help">
+            {% if has_server_token %}Serverda token sozlangan — bo'sh qoldirsangiz shu ishlatiladi.
+            {% else %}HEMIS administratori beradi: «API User» roli bor foydalanuvchining tokeni. Kutubxona uni saqlamaydi.{% endif %}
+          </p>
+        </div>
+
+        <fieldset class="flex flex-wrap gap-x-6 gap-y-2">
+          <legend class="label mb-1.5">Nimani yuklash</legend>
+          <label class="check-row"><input type="checkbox" class="checkbox" name="kinds" value="students" checked> Talabalar (o'qiyotganlar)</label>
+          <label class="check-row"><input type="checkbox" class="checkbox" name="kinds" value="employees" checked> O'qituvchi va xodimlar</label>
+        </fieldset>
+
+        <div id="hemis-result" aria-live="polite"></div>
+      </div>
+      <div class="card-body flex flex-wrap justify-end gap-2 border-t border-[color:var(--color-line)]">
+        <button type="button" class="btn btn-secondary" hx-post="{% url 'panel:hemis_check' %}"
+                hx-include="closest form" hx-target="#hemis-result" hx-disabled-elt="this">
+          {% include "ui/_icon.html" with name="search" class="size-4" %} Avval tekshirish
+        </button>
+        <button type="submit" class="btn btn-primary">
+          {% include "ui/_icon.html" with name="download" class="size-4" %} Yuklashni boshlash
+        </button>
+      </div>
+    </form>
+
+    <div class="card card-body text-sm leading-6">
+      <h2 class="card-title mb-2">Nima o'zgaradi</h2>
+      <ul class="list-disc space-y-1 pl-5 text-[color:var(--color-content-muted)]">
+        <li>Yangi odamga hisob va kitobxon bileti ochiladi.</li>
+        <li>Mavjud a'zoning ismi, fakulteti, guruhi va lavozimi yangilanadi.</li>
+        <li>Hech kim o'chirilmaydi, bloklanmaydi; qarz va ijaralarga tegilmaydi.</li>
+        <li>Kutubxona xodimlarining rollari o'zgarmaydi.</li>
+      </ul>
+      <p class="help mt-3 break-all">Manba: {{ api_url }}</p>
+    </div>
+  </div>
+
+  <div class="min-w-0">
+    {% include "panel/hemis/_status.html" %}
+  </div>
+</div>
+{% endblock %}

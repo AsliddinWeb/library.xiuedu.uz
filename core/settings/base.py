@@ -135,6 +135,14 @@ FEATURE_FLAGS: dict[str, bool] = {}
 AUTO_JOBS = os.getenv('AUTO_JOBS', '0') == '1'
 AUTO_JOBS_HOUR = 6          # Toshkent vaqti; shundan oldin ishga tushmaydi
 
+# ---------------------------------------------------------------------------
+# HEMIS Backend API — talaba va xodimlar ro'yxatini yuklash (`user_app/hemis/`).
+# Token bo'sh bo'lsa, administrator uni panelda qo'lda kiritadi (saqlanmaydi);
+# to'ldirilsa, ro'yxat har kuni o'zi yangilanadi.
+# ---------------------------------------------------------------------------
+HEMIS_API_URL = os.getenv('HEMIS_API_URL') or 'https://student.xiuedu.uz/rest'
+HEMIS_API_TOKEN = os.getenv('HEMIS_API_TOKEN', '').strip()
+
 # Autentifikatsiya yo'naltirishlari
 LOGIN_URL = '/auth/login/'          # talaba yoki xodim tanlovi
 LOGIN_REDIRECT_URL = '/dashboard/'
@@ -157,6 +165,7 @@ LOGGING = {
         'circulation': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
         'audit': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
         'jobs': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'hemis': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
     },
 }
 

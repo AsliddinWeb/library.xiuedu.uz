@@ -54,12 +54,12 @@
       {% for fine in unpaid %}
         <li class="flex flex-wrap items-center gap-3 px-4 py-3">
           <span class="min-w-0 flex-1"><b class="block truncate">{{ fine.rental.copy.book.title }}</b><span class="help">{{ fine.days_overdue }} kun kechikish</span></span>
-          <b class="tabular-nums">{{ fine.amount|floatformat:0 }} so'm</b>
+          <b class="tabular-nums">{{ fine.amount|floatformat:"0g" }} so'm</b>
           {% if not fine.rental.return_date %}
             <span class="help w-full">Kitob qaytgach to'lanadi.</span>
           {% elif "billing.collect" in perms_flags %}
             <button type="button" class="btn btn-secondary btn-sm" hx-post="{% url 'panel:desk_fine_pay' %}" hx-vals='{"fine": "{{ fine.pk }}", "mode": "checkout"}'
-                    data-confirm="{{ fine.amount|floatformat:0 }} so'm to'lov qabul qilindimi?" data-confirm-label="Ha, qabul qilindi">To'landi</button>
+                    data-confirm="{{ fine.amount|floatformat:"0g" }} so'm to'lov qabul qilindimi?" data-confirm-label="Ha, qabul qilindi" data-confirm-tone="primary">To'landi</button>
           {% endif %}
         </li>
       {% endfor %}

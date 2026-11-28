@@ -463,6 +463,12 @@
     }
     [data-tip]:hover::after, [data-tip]:focus-visible::after { opacity: 1; transform: translate(-50%, 0); transition-delay: .35s; }
     [aria-expanded="true"][data-tip]::after { display: none; }
+
+    /* Jadvalda yorliq tugmaning chap tomonida: pastga yoki o'ngga chiqsa
+       (ko'rinmas holida ham) jadvalga ortiqcha aylantirish chizig'i qo'shiladi
+       va oxirgi qatorda qirqilib qoladi */
+    .table [data-tip]::after { left: auto; right: calc(100% + 0.375rem); top: 50%; transform: translate(0.25rem, -50%); }
+    .table [data-tip]:hover::after, .table [data-tip]:focus-visible::after { transform: translate(0, -50%); }
   }
 
   /* --- Katalog: to'r / ro'yxat ko'rinishi --------------------------------- */

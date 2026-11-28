@@ -33,7 +33,7 @@
               <td><a href="{% url 'panel:category_edit' c.pk %}" class="font-medium hover:underline">{{ c.name }}</a></td>
               <td class="table-num">{{ c.default_loan_days|default:"umumiy" }}</td>
               <td class="table-num">{{ c.loan_limit|default:"umumiy" }}</td>
-              <td class="table-num">{% if c.fine_per_day %}{{ c.fine_per_day|floatformat:0 }}{% else %}umumiy{% endif %}</td>
+              <td class="table-num">{% if c.fine_per_day %}{{ c.fine_per_day|floatformat:"0g" }}{% else %}umumiy{% endif %}</td>
             </tr>
           {% endfor %}
         </tbody>

@@ -35,7 +35,7 @@
     <div class="card card-body mb-4 border-l-4 border-l-[color:var(--color-danger-500)]">
       <p class="font-medium text-[color:var(--color-danger-700)]">To'lanmagan jarima bor</p>
       <p class="help mt-1">
-        {% if patron.balance %}Qarz: {{ patron.balance|floatformat:0 }} so'm. {% endif %}
+        {% if patron.balance %}Qarz: {{ patron.balance|floatformat:"0g" }} so'm. {% endif %}
         Kutubxonaga murojaat qiling — qarz chegaradan oshsa yangi kitob berilmaydi.
       </p>
     </div>
@@ -121,7 +121,7 @@
             <tr>
               <td>{{ fine.rental.copy.book.title|truncatechars:42 }}</td>
               <td>{{ fine.days_overdue }} kun</td>
-              <td class="table-num">{{ fine.amount|floatformat:0 }} so'm</td>
+              <td class="table-num">{{ fine.amount|floatformat:"0g" }} so'm</td>
               <td>{% include "ui/_badge.html" with text="To'lanmagan" variant="danger" dot=1 %}</td>
             </tr>
             {% endfor %}

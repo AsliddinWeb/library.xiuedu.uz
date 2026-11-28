@@ -134,7 +134,7 @@ class DeskCheckinTests(DeskFixture):
 
         self.rental.refresh_from_db()
         self.assertIsNotNone(self.rental.return_date)
-        self.assertContains(response, '2000')
+        self.assertContains(response, "2\xa0000 so'm")
 
         fine = Fine.objects.get()
         self.post('fine', {'fine': fine.pk, 'mode': 'checkin'})

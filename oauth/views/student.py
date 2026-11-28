@@ -11,24 +11,10 @@ from django.views import View
 
 from oauth.client import oAuth2Client
 from oauth.views.choice import NEXT_KEY
-from user_app.models import EmployeProfile, Role, StudentProfile, User
-from user_app.services import sync_patron
+from user_app.models import EmployeProfile, StudentProfile, User
+from user_app.services import ensure_reader_role, hemis_username, sync_patron
 
 logger = logging.getLogger(__name__)
-
-
-def _account_username(hemis_id, user_type, prefix):
-    """HEMIS raqamidan login nomi.
-
-    Talaba va xodim raqamlari ikki alohida HEMIS'dan keladi. Bir xil raqam
-    chiqib qolsa, biri ikkinchisining hisobini egallab olmasligi uchun
-    keyingisiga prefiks qo'shiladi.
-    """
-    username = str(hemis_id)
-    if User.objects.filter(username=username).exclude(user_type=user_type).exists():
-        username = f'{prefix}-{username}'
-        logger.warning("HEMIS raqami ikki turdagi hisobda uchradi, %s ishlatildi", username)
-    return username
 
 
 def _parse_birth_date(value):
@@ -163,8 +149,8 @@ class AuthCallbackView(View):
         faculty = student_data.get('faculty', {})
 
         user, _ = User.objects.update_or_create(
-            username=_account_username(student_data.get('student_id_number'),
-                                       User.UserType.STUDENT, 'st'),
+            username=hemis_username(student_data.get('student_id_number'),
+                                   User.UserType.STUDENT, 'st'),
             defaults={
                 'first_name': student_data.get('first_name', ''),
                 'second_name': student_data.get('second_name', ''),
@@ -213,8 +199,8 @@ class AuthCallbackView(View):
         position = departments[0].get('staffPosition', {}).get('name', '')
 
         user, _ = User.objects.update_or_create(
-            username=_account_username(employe_data.get('employee_id_number'),
-                                       User.UserType.EMPLOYE, 'emp'),
+            username=hemis_username(employe_data.get('employee_id_number'),
+                                   User.UserType.EMPLOYE, 'emp'),
             defaults={
                 'first_name': employe_data.get('firstname', ''),
                 'second_name': employe_data.get('surname', ''),
@@ -230,8 +216,6 @@ class AuthCallbackView(View):
 
         _download_profile_image(user, employe_data.get('picture', ''))
 
-        employee_role, _ = Role.objects.get_or_create(name="Employee")
-
         profile, _ = EmployeProfile.objects.update_or_create(
             user=user,
             defaults={
@@ -243,11 +227,6 @@ class AuthCallbackView(View):
         # o'qituvchi "Xodim" toifasiga tushib qoladi
         user.employe_profile = profile
 
-        # current_role faqat birinchi marta o'rnatiladi (mavjudini bekor qilmaslik uchun)
-        if profile.current_role is None:
-            profile.current_role = employee_role
-            profile.save(update_fields=['current_role'])
-        if not profile.roles.filter(name="Employee").exists():
-            profile.roles.add(employee_role)
+        ensure_reader_role(profile)
 
         return user

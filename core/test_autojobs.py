@@ -19,6 +19,7 @@ def _at(hour):
     return timezone.make_aware(datetime(today.year, today.month, today.day, hour, 0))
 
 
+@override_settings(HEMIS_API_TOKEN='')
 class DueJobsTests(TestCase):
     def test_first_run_executes_every_daily_job(self):
         runs = autojobs.run_due_jobs()
@@ -107,7 +108,7 @@ class TriggerTests(TestCase):
         self.thread.assert_not_called()
 
 
-@override_settings(AUTO_JOBS=True, AUTO_JOBS_HOUR=0)
+@override_settings(AUTO_JOBS=True, AUTO_JOBS_HOUR=0, HEMIS_API_TOKEN='')
 class ThreadTests(TransactionTestCase):
     """Haqiqiy fon oqimi: o'z baza ulanishi bilan ishlaydi."""
 

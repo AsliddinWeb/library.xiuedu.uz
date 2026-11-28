@@ -23,9 +23,9 @@
   <div class="ml-auto flex items-center gap-1">
     {# Global qidiruv — klaviaturadan "/" yoki Ctrl+K #}
     <form action="/panel/search/" method="get" class="hidden md:block">
-      <label class="search h-8 w-64">
+      <label class="search h-8 w-64 xl:w-80">
         <span class="text-[color:var(--color-content-subtle)]">{% include "ui/_icon.html" with name="search" class="size-4" %}</span>
-        <input type="search" name="q" data-global-search placeholder="Shtrix-kod, bilet raqami yoki kitob..."
+        <input type="search" name="q" data-global-search placeholder="Shtrix-kod, bilet yoki kitob..."
                aria-label="Global qidiruv">
         <span class="kbd">/</span>
       </label>
@@ -43,7 +43,7 @@
     <div x-data="{ open: false }" class="relative">
       <button type="button" class="btn btn-ghost btn-sm gap-2 !px-1.5" @click="open = !open" :aria-expanded="open" aria-label="Profil menyusi">
         <span class="avatar !size-7 !text-[11px]">{% if user.image %}<img src="{{ user.image.url }}" alt="">{% else %}{{ user|initials }}{% endif %}</span>
-        <span class="hidden max-w-32 truncate lg:inline">{{ user.get_full_name }}</span>
+        <span class="hidden max-w-32 truncate lg:inline xl:max-w-64">{{ user.get_full_name }}</span>
         {% include "ui/_icon.html" with name="chevron-down" class="size-3.5" %}
       </button>
       <div x-show="open" x-cloak @click.outside="open = false" class="menu-panel !w-56">

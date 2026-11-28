@@ -18,7 +18,7 @@
   <dl class="grid grid-cols-3 border-t border-[color:var(--color-line)] text-center">
     <div class="px-2 py-3"><dt class="help">Qo'lida</dt><dd class="text-xl font-semibold tabular-nums">{{ patron.active_loans_count }}{% if loan_limit %}<span class="text-sm font-normal text-[color:var(--color-content-subtle)]">/{{ loan_limit }}</span>{% endif %}</dd></div>
     <div class="border-x border-[color:var(--color-line)] px-2 py-3"><dt class="help">Kechikkan</dt><dd class="text-xl font-semibold tabular-nums {% if patron.overdue_count %}text-[color:var(--color-danger-700)]{% endif %}">{{ patron.overdue_count }}</dd></div>
-    <div class="px-2 py-3"><dt class="help">Qarz (so'm)</dt><dd class="text-xl font-semibold tabular-nums {% if patron.balance %}text-[color:var(--color-danger-700)]{% endif %}">{{ patron.balance|floatformat:0 }}</dd></div>
+    <div class="px-2 py-3"><dt class="help">Qarz (so'm)</dt><dd class="text-xl font-semibold tabular-nums {% if patron.balance %}text-[color:var(--color-danger-700)]{% endif %}">{{ patron.balance|floatformat:"0g" }}</dd></div>
   </dl>
 </section>
 

@@ -42,6 +42,7 @@ def course_list(request):
     page_obj = Paginator(reserves, PER_PAGE).get_page(request.GET.get('page'))
 
     context = {
+        'page_title': "Fan adabiyoti",
         'page_obj': page_obj,
         'query': query,
         'faculty': faculty,
@@ -88,6 +89,7 @@ def course_detail(request, pk):
     book_query = request.GET.get('book_q', '').strip() if can_edit else ''
 
     return render(request, 'opac/course_detail.html', {
+        'page_title': reserve.course_name,
         'reserve': reserve,
         'items': items,
         'groups': [(title, group) for title, group in groups if group],
@@ -111,6 +113,7 @@ def _course_form(request, reserve=None):
         # Yaroqsiz forma `instance`ni o'zgartirib yuboradi — sahifaga asl yozuvni beramiz
         reserve = CourseReserve.objects.get(pk=reserve.pk)
     return render(request, 'opac/course_form.html', {
+        'page_title': "Fan adabiyoti",
         'form': form,
         'reserve': reserve,
         'faculties': courses.faculty_choices(),

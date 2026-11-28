@@ -1,0 +1,48 @@
+{% load ui_extras %}
+{% comment %}Oxirgi yuklash holati. Ishlab turganida har 2 soniyada yangilanadi.{% endcomment %}
+<div id="hemis-status" class="card" hx-get="{% url 'panel:hemis_status' %}" hx-swap="outerHTML"
+     hx-trigger="hemis-started from:body{% if running %}, every 2s{% endif %}">
+  <div class="card-head">
+    <h2 class="card-title">Oxirgi yuklash</h2>
+    {% if latest %}
+      {% if running %}{% include "ui/_badge.html" with text="Bajarilmoqda" variant="info" dot=1 %}
+      {% elif latest.status == 'SUCCESS' %}{% include "ui/_badge.html" with text="Tugadi" variant="success" dot=1 %}
+      {% else %}{% include "ui/_badge.html" with text="Xato" variant="danger" dot=1 %}{% endif %}
+    {% endif %}
+  </div>
+
+  {% if not latest %}
+    <div class="empty">
+      <span class="icon-box icon-box-lg">{% include "ui/_icon.html" with name="users" class="size-7" %}</span>
+      <p class="mt-3 font-semibold">Hali yuklanmagan</p>
+      <p class="help">Tokenni kiriting va «Avval tekshirish» tugmasini bosing.</p>
+    </div>
+  {% else %}
+    <div class="card-body space-y-4">
+      <p class="help">{{ latest.started_at|date:"d.m.Y H:i" }}{% if latest.message %} · {{ latest.message }}{% endif %}</p>
+      {% for row in rows %}
+        <div>
+          <div class="flex items-baseline justify-between gap-3 text-sm">
+            <b>{{ row.label }}</b>
+            <span class="tabular-nums">{{ row.done|spaced }}{% if row.total %} / {{ row.total|spaced }}{% endif %}</span>
+          </div>
+          <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-[color:var(--color-surface-sunken)]" role="progressbar"
+               aria-valuenow="{{ row.percent }}" aria-valuemin="0" aria-valuemax="100" aria-label="{{ row.label }}">
+            <div class="h-full rounded-full bg-[color:var(--color-brand)]" style="width: {{ row.percent }}%"></div>
+          </div>
+          <p class="help mt-1">Yangi: {{ row.new|spaced }} · yangilandi: {{ row.updated|spaced }} · o'zgarmadi: {{ row.same|spaced }}{% if row.skipped %} · o'tkazib yuborildi: {{ row.skipped|spaced }}{% endif %}{% if row.failed %} · <span class="text-[color:var(--color-danger-700)]">xato: {{ row.failed|spaced }}</span>{% endif %}</p>
+        </div>
+      {% endfor %}
+    </div>
+    {% if runs|length > 1 %}
+      <ul class="divide-y divide-[color:var(--color-line)] border-t border-[color:var(--color-line)] text-sm">
+        {% for run in runs|slice:"1:" %}
+          <li class="flex flex-wrap items-baseline justify-between gap-2 px-4 py-2.5">
+            <span class="help">{{ run.started_at|date:"d.m.Y H:i" }}</span>
+            <span class="min-w-0 flex-1 text-right {% if run.status == 'FAILED' %}text-[color:var(--color-danger-700)]{% endif %}">{{ run.message|default:run.get_status_display }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endif %}
+</div>

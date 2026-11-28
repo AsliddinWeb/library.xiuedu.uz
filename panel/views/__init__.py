@@ -2,6 +2,7 @@ from .books import *  # noqa: F401,F403
 from .circulation import *  # noqa: F401,F403
 from .common import *  # noqa: F401,F403
 from .desk import *  # noqa: F401,F403
+from .hemis import *  # noqa: F401,F403
 
 # A'zolar moduli `system.py` dagi eski talaba ro'yxatini almashtiradi —
 # shuning uchun oxirida import qilinadi.

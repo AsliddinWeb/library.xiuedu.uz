@@ -197,18 +197,56 @@
     window.dispatchEvent(new CustomEvent('open-login'));
   });
 
+  /* --- Yon menyu: joriy bo'lim ko'rinib tursin ------------------------- */
+  const sideNav = document.querySelector('.shell-sidebar nav');
+  const currentLink = sideNav && sideNav.querySelector('.nav-link-active');
+  if (currentLink) {
+    const box = sideNav.getBoundingClientRect();
+    const link = currentLink.getBoundingClientRect();
+    if (link.top < box.top || link.bottom > box.bottom) {
+      sideNav.scrollTop += link.top - box.top - box.height / 2;
+    }
+  }
+
+  /* --- Ro'yxat ichida qidiruv (data-filter) ---------------------------- */
+  // O'zbekcha tutuq belgisi har xil klaviaturada har xil yoziladi
+  const plain = (text) => text.toLowerCase().replace(/[\u02bb\u02bc\u2018\u2019`]/g, "'").trim();
+  document.body.addEventListener('input', (event) => {
+    const input = event.target.closest('[data-filter-input]');
+    if (!input) return;
+    const box = input.closest('[data-filter]');
+    const needle = plain(input.value);
+    let shown = 0;
+    box.querySelectorAll('[data-filter-item]').forEach((item) => {
+      const match = plain(item.textContent).includes(needle);
+      item.hidden = !match;
+      if (match) shown += 1;
+    });
+    const empty = box.querySelector('[data-filter-empty]');
+    if (empty) empty.classList.toggle('hidden', !needle || shown > 0);
+  });
+  document.body.addEventListener('keydown', (event) => {
+    // Qidiruv maydonida Enter butun formani yubormasin
+    if (event.key === 'Enter' && event.target.closest('[data-filter-input]')) event.preventDefault();
+  });
+
   /* --- 4. Tasdiq (data-confirm) ---------------------------------------- */
-  const askConfirm = (message, label) => new Promise((resolve) => {
+  const askConfirm = (message, label, tone) => new Promise((resolve) => {
     if (typeof HTMLDialogElement !== 'function') { resolve(window.confirm(message)); return; }
     const dialog = document.createElement('dialog');
     dialog.className = 'confirm';
-    dialog.innerHTML = '<span class="icon-box icon-box-lg icon-box-danger">'
+    // data-confirm-tone="primary" — oddiy tasdiq (qabul qilish, to'lov)
+    const safe = tone === 'primary';
+    const shape = safe
+      ? '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/>'
+      : '<path d="M10.3 4.5 2.8 17.5a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.5a2 2 0 0 0-3.4 0Z"/><path d="M12 9.500v4M12 17v.01"/>';
+    dialog.innerHTML = '<span class="icon-box icon-box-lg' + (safe ? '' : ' icon-box-danger') + '">'
       + '<svg viewBox="0 0 24 24" class="size-7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-      + '<path d="M10.3 4.5 2.8 17.5a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.5a2 2 0 0 0-3.4 0Z"/><path d="M12 9.500v4M12 17v.01"/></svg></span>'
+      + shape + '</svg></span>'
       + '<p class="mt-4 text-base font-bold" data-text></p>'
       + '<div class="confirm-actions">'
       + '<button type="button" class="btn btn-secondary" value="no">Bekor qilish</button>'
-      + '<button type="button" class="btn btn-danger" value="yes"></button></div>';
+      + '<button type="button" class="btn ' + (safe ? 'btn-primary' : 'btn-danger') + '" value="yes"></button></div>';
     dialog.querySelector('[data-text]').textContent = message;   // XSS'dan himoya
     dialog.querySelector('[value="yes"]').textContent = label || 'Tasdiqlash';
     const close = (answer) => { dialog.close(); dialog.remove(); resolve(answer); };
@@ -228,7 +266,7 @@
     if (!trigger || trigger.dataset.confirmed) return;
     event.preventDefault();
     event.stopPropagation();
-    askConfirm(trigger.getAttribute('data-confirm'), trigger.dataset.confirmLabel).then((ok) => {
+    askConfirm(trigger.getAttribute('data-confirm'), trigger.dataset.confirmLabel, trigger.dataset.confirmTone).then((ok) => {
       if (!ok) return;
       trigger.dataset.confirmed = '1';
       trigger.click();                       // forma yuborilishi yoki HTMX so'rovi

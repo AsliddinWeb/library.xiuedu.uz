@@ -560,6 +560,7 @@
     background: var(--color-sidebar);
     color: #cfe0db;
   }
+  .shell-sidebar nav { scrollbar-width: thin; scrollbar-color: rgb(255 255 255 / 0.18) transparent; }
   .nav-group-title {
     padding: 1.125rem 1.25rem 0.375rem;
     font-size: 0.65625rem;
@@ -618,6 +619,9 @@
   .nav-item:hover > svg { color: var(--color-link); }
 
   .shell-topbar {
+    /* backdrop-filter alohida qatlam ochadi: z-index bo'lmasa ochiladigan
+       menyular sahifa kontenti ostida qoladi */
+    position: relative; z-index: 30;
     display: flex; align-items: center; gap: var(--ui-gap);
     height: 4rem; flex: none;
     padding-inline: 1rem;

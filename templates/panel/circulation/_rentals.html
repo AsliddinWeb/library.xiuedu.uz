@@ -30,7 +30,7 @@
                   {% endif %}
                   {% if "circ.checkin" in perms_flags %}
                     <button type="button" class="btn btn-secondary btn-sm" hx-post="{% url 'panel:rental_return' rental.pk %}" hx-include="#circ-view, #circ-page, #circ-q"
-                            data-confirm="«{{ rental.copy.book.title }}» qabul qilinsinmi?" data-confirm-label="Qabul qilish">Qabul qilish</button>
+                            data-confirm="«{{ rental.copy.book.title|truncatechars:80 }}» qabul qilinsinmi?" data-confirm-tone="primary" data-confirm-label="Qabul qilish">Qabul qilish</button>
                     <button type="button" class="btn btn-ghost btn-icon btn-sm" aria-label="Yo'qolgan deb belgilash" data-tip="Yo'qolgan"
                             hx-post="{% url 'panel:rental_lost' rental.pk %}" hx-include="#circ-view, #circ-page, #circ-q"
                             data-form-title="Kitob yo'qolgan deb belgilansinmi?" data-form-label="Belgilash"
@@ -40,7 +40,7 @@
                   {% endif %}
                 </div>
               {% elif rental.fine and not rental.fine.is_paid %}
-                <span class="badge badge-danger">Jarima {{ rental.fine.amount|floatformat:0 }} so'm</span>
+                <span class="badge badge-danger">Jarima {{ rental.fine.amount|floatformat:"0g" }} so'm</span>
               {% endif %}
             </td>
           </tr>

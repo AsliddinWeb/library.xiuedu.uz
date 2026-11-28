@@ -82,7 +82,7 @@ class MyRentalsPageTests(TestCase):
 
         self.assertTemplateUsed(response, 'opac/my_rentals.html')
         for text in ("Joriy kitob", "Qaytarilgan kitob", "So&#x27;ralgan kitob",
-                     "Navbatdagi kitob", "INV-1", "4 kun", "4000 so'm",
+                     "Navbatdagi kitob", "INV-1", "4 kun", "4\xa0000 so'm",
                      "Muddat o'tgan", "Sizni kutmoqda", self.patron.card_number):
             with self.subTest(text):
                 self.assertContains(response, text)

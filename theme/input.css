@@ -21,6 +21,16 @@
 @import "./site.css";
 @import "./dark.css";
 
+/* Tailwind v4 tugma va tanlov elementlariga "qo'l" kursorini o'zi bermaydi */
+@layer base {
+  button:not(:disabled), [role="button"]:not([aria-disabled="true"]), summary,
+  select:not(:disabled), input[type="checkbox"]:not(:disabled), input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled), input[type="file"]::file-selector-button,
+  input[type="submit"]:not(:disabled), input[type="button"]:not(:disabled),
+  input::-webkit-calendar-picker-indicator,
+  label:has(> input[type="checkbox"]:not(:disabled)), label:has(> input[type="radio"]:not(:disabled)) { cursor: pointer; }
+}
+
 /* ===========================================================================
    ESKI (v2) YORDAMCHILAR — hali ko'chirilmagan sahifalar uchun.
    Har phase o'z ekranlarini v3 komponentlariga ko'chiradi; hammasi
