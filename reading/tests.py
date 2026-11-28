@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.test import TestCase, override_settings
 
@@ -20,6 +21,16 @@ class StreamTests(TestCase):
 
     def test_reader_page(self):
         self.assertEqual(self.client.get(f'/reading/read/{self.book.pk}/').status_code, 200)
+
+    def test_reader_scripts_exist_and_use_a_type_nginx_knows(self):
+        """Serverdagi nginx `.mjs` ni octet-stream qilib beradi — modul ishlamaydi."""
+        html = self.client.get(f'/reading/read/{self.book.pk}/').content.decode()
+
+        for name in ('pdf.min.js', 'pdf.worker.min.js'):
+            self.assertIn(f'js/vendor/{name}', html)
+            self.assertTrue((settings.BASE_DIR / 'static' / 'js' / 'vendor' / name).is_file())
+        scripts = list((settings.BASE_DIR / 'static').rglob('*.mjs'))
+        self.assertEqual(scripts, [])
 
     def test_stream_inline_and_range(self):
         url = f'/reading/stream/ebook/{self.book.pk}/'

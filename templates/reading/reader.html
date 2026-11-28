@@ -62,8 +62,10 @@
 
 {% block extra_js %}
 <script type="module">
-import * as pdfjsLib from "{% static 'js/vendor/pdf.min.mjs' %}";
-pdfjsLib.GlobalWorkerOptions.workerSrc = "{% static 'js/vendor/pdf.worker.min.mjs' %}";
+// `.js` nomi ataylab: serverdagi nginx `.mjs` turini bilmaydi va faylni
+// application/octet-stream qilib beradi — brauzer modulni ishga tushirmaydi
+import * as pdfjsLib from "{% static 'js/vendor/pdf.min.js' %}";
+pdfjsLib.GlobalWorkerOptions.workerSrc = "{% static 'js/vendor/pdf.worker.min.js' %}";
 
 const url = "{% url 'reading:stream_ebook' book.pk %}";
 const progressUrl = "{% url 'reading:save_progress' book.pk %}";
